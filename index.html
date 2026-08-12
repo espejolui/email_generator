@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de email</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<header>
+  <h1>Generador de email</h1>
+  <div class="acciones">
+    <button class="btn-restaurar" id="btnRestaurar" type="button">Restaurar valores</button>
+    <button class="btn-descargar" id="btnDescargar" type="button">Descargar HTML</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Contenido del email</h2>
+    <div class="campo">
+      <label for="f-empresa">Nombre de la empresa <span class="req">*</span></label>
+      <input type="text" id="f-empresa">
+    </div>
+
+    <div class="campo">
+      <label for="f-franja">Sede <span class="req">*</span></label>
+      <select id="f-franja">
+        <option value="">Selecciona la sede</option>
+        <option value="Cesap">Cesap</option>
+        <option value="Chapinero">Chapinero</option>
+        <option value="Sesiones virtuales">Sesiones virtuales</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="f-titulo">Título del email <span class="req">*</span></label>
+      <input type="text" id="f-titulo">
+    </div>
+
+    <div class="campo">
+      <label for="f-desc">Descripción <span class="req">*</span></label>
+      <textarea id="f-desc" rows="3" placeholder="Descripción del curso"></textarea>
+    </div>
+
+    <h3 class="sub-titulo">Detalles del curso</h3>
+
+    <div class="campo">
+      <label for="f-mod">Modalidad <span class="req">*</span></label>
+      <select id="f-mod">
+        <option value="">Selecciona la modalidad</option>
+        <option value="Presencial">Presencial</option>
+        <option value="Virtual">Sesiones virtuales</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="f-clases">Número de clases</label>
+      <select id="f-clases">
+        <option value="">Selecciona el número</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="f-dur">Duración <span class="req">*</span></label>
+      <input type="text" id="f-dur">
+    </div>
+
+    <div class="campo">
+      <label for="f-horario">Horario en vivo <span class="req">*</span></label>
+      <input type="text" id="f-horario">
+    </div>
+
+    <div class="campo">
+      <label for="f-fecha">Fecha de inicio <span class="req">*</span></label>
+      <input type="date" id="f-fecha">
+    </div>
+
+    <div class="campo">
+      <label for="f-inv">Inversión <span class="req">*</span></label>
+      <div class="con-prefijo">
+        <span class="prefijo">$</span>
+        <input type="text" id="f-inv" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="f-img">Link de la imagen <span class="req">*</span></label>
+      <input type="url" id="f-img">
+      <img class="mini-img" id="img-mini" alt="Vista previa de la imagen">
+      <p class="ayuda">¿La imagen todavía no está en internet? Súbela gratis en <a href="https://cloudinary.com/users/login" target="_blank" rel="noopener">Cloudinary</a> y pega aquí el enlace que te genera.</p>
+    </div>
+
+    <div class="campo">
+      <label for="f-cta">Texto llamada a la acción</label>
+      <input type="text" id="f-cta">
+    </div>
+
+    <div class="campo">
+      <label for="f-boton">Texto del botón de WhatsApp</label>
+      <input type="text" id="f-boton" placeholder="Escríbeme por WhatsaAp">
+    </div>
+
+    <div class="campo">
+      <label for="f-wa">Número de WhatsApp <span class="req">*</span></label>
+      <div class="con-prefijo">
+        <span class="prefijo">+57</span>
+        <input type="text" id="f-wa" inputmode="numeric" placeholder="3224418087">
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="f-msg">Mensaje predeterminado de WhatsApp</label>
+      <input type="text" id="f-msg">
+    </div>
+
+    <div class="campo">
+      <label for="f-asesor">Asesor <span class="req">*</span></label>
+      <input type="text" id="f-asesor">
+    </div>
+
+    <div class="campo">
+      <label for="f-equipo">Equipo <span class="req">*</span></label>
+      <input type="text" id="f-equipo">
+    </div>
+
+    <div class="fila-colores">
+      <div class="campo">
+        <label for="f-color1">Color principal</label>
+        <div class="con-hex">
+          <input type="color" id="f-color1" value="#41b6e6">
+          <input type="text" id="f-color1hex" maxlength="7" value="#41b6e6">
+        </div>
+      </div>
+      <div class="campo">
+        <label for="f-color2">Color secundario</label>
+        <div class="con-hex">
+          <input type="color" id="f-color2" value="#8de1f7">
+          <input type="text" id="f-color2hex" maxlength="7" value="#8de1f7">
+        </div>
+      </div>
+    </div>
+
+    <p class="nota">Tus datos se guardan automáticamente en este navegador. Al volver a abrir este archivo, todo seguirá ahí.</p>
+  </section>
+
+  <section class="panel marco-preview">
+    <h2>Vista previa en vivo</h2>
+    <iframe id="vista" title="Vista previa del email"></iframe>
+
+    <div class="seccion-prompt">
+      <h2 class="prompt-titulo">Prompt para la imagen</h2>
+      <p class="prompt-nota">Esta sección es solo una ayuda para generar la imagen con IA. No hace parte de la plantilla del email que se descarga.</p>
+      <textarea id="f-prompt" class="prompt" rows="11" readonly></textarea>
+      <div class="prompt-acciones">
+        <button class="btn-copiar" id="btnCopiar" type="button">Copiar prompt</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast">Email generado correctamente</div>
+
+<script type="module" src="js/config.js"></script>
+<script type="module" src="js/plantilla.js"></script>
+<script type="module" src="js/prompt.js"></script>
+<script type="module" src="js/almacenamiento.js"></script>
+<script type="module" src="js/ui.js"></script>
+</body>
+</html>
