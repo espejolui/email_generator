@@ -208,6 +208,39 @@ test('aplicarVista: parcha aunque el HTML nuevo sea distinto al render inicial',
   assert.equal(doc.documentElement.childNodes[1].childNodes[0].textContent, 'bloque nuevo');
 });
 
+function llenarPoblar() {
+  const opciones = [];
+  const select = {
+    appendChild(o) { opciones.push(o); },
+    _opciones: opciones
+  };
+  globalThis.document = {
+    createElement(tag) { return { tag, value: '', textContent: '' }; }
+  };
+  UI.campos = {
+    franja: select, mod: select, clases: select,
+    color1: { value: '' }, color1hex: { value: '' },
+    color2: { value: '' }, color2hex: { value: '' },
+    wa: { placeholder: '' }, boton: { placeholder: '' }
+  };
+  return select;
+}
+
+test('poblarOpciones: llena selects y campos desde Config sin hardcodear', () => {
+  const select = llenarPoblar();
+  UI.poblarOpciones();
+  const valores = select._opciones.map((o) => o.value);
+  assert.deepEqual(valores, ['Cesap', 'Chapinero', 'Sesiones virtuales', 'Presencial', 'Virtual', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
+  const etiquetas = select._opciones.map((o) => o.textContent);
+  assert.ok(etiquetas.includes('Sesiones virtuales'));
+  assert.equal(UI.campos.color1.value, Config.valoresDefecto.color1);
+  assert.equal(UI.campos.color1hex.value, Config.valoresDefecto.color1);
+  assert.equal(UI.campos.color2.value, Config.valoresDefecto.color2);
+  assert.equal(UI.campos.color2hex.value, Config.valoresDefecto.color2);
+  assert.equal(UI.campos.wa.placeholder, Config.valoresDefecto.wa);
+  assert.equal(UI.campos.boton.placeholder, Config.valoresDefecto.boton);
+});
+
 test('autocompletarMsg: rellena el mensaje de WhatsApp con el compuesto si está vacío', () => {
   UI.campos = { titulo: { value: 'Curso de Excel Avanzado' }, msg: { value: '' } };
   UI.autocompletarMsg();

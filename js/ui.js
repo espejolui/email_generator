@@ -41,6 +41,27 @@ const UI = {
     UI.campoPrompt = document.getElementById('f-prompt');
   },
 
+  poblarOpciones: function () {
+    UI._llenarSelect(UI.campos.franja, Config.opcionesSede.map(function (v) { return [v, v]; }));
+    UI._llenarSelect(UI.campos.mod, Config.opcionesModalidad);
+    UI._llenarSelect(UI.campos.clases, Config.numeroClases.map(function (n) { return [String(n), String(n)]; }));
+    UI.campos.color1.value = Config.valoresDefecto.color1;
+    UI.campos.color1hex.value = Config.valoresDefecto.color1;
+    UI.campos.color2.value = Config.valoresDefecto.color2;
+    UI.campos.color2hex.value = Config.valoresDefecto.color2;
+    UI.campos.wa.placeholder = Config.valoresDefecto.wa;
+    UI.campos.boton.placeholder = Config.valoresDefecto.boton;
+  },
+
+  _llenarSelect: function (select, pares) {
+    for (const par of pares) {
+      const opcion = document.createElement('option');
+      opcion.value = String(par[0]);
+      opcion.textContent = String(par[1]);
+      select.appendChild(opcion);
+    }
+  },
+
   guardar: function () {
     const datos = {};
     for (const k in UI.campos) {
@@ -256,6 +277,7 @@ const UI = {
 
   iniciar: function () {
     UI.referenciar();
+    UI.poblarOpciones();
 
     document.addEventListener('input', function (evt) {
       if (evt.target.id === 'f-titulo') UI.autocompletarMsg();

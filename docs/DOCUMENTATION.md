@@ -77,7 +77,7 @@ Vuelca un objeto de datos en el formulario, repitiendo la limpieza de inversión
 2. **`js/config.js`**:
    - Añadir `ubicacion: ''` a `valoresDefecto` (para que "Restaurar valores" y la carga inicial funcionen).
    - Añadir `['f-ubicacion', 'Ubicación']` a `requeridos` si es obligatorio.
-   - Si es un select, añadir las opciones a `opcionesSede`/`opcionesModalidad` (o una lista nueva).
+   - Si es un select, añadir las opciones a `opcionesSede`/`opcionesModalidad` (o una lista nueva). Los `<option>` no se escriben en `index.html`: `UI.poblarOpciones()` los genera desde `config.js` al iniciar (al igual que los colores por defecto y los placeholders de WhatsApp).
 3. **`js/ui.js`**: añadir la referencia `ubicacion: document.getElementById('f-ubicacion')` en `UI.referenciar()` y, si el valor necesita limpieza al cargar/restaurar, su línea en `UI.aplicar()`.
 4. **`js/plantilla.js`**: si el campo va al email, añadirlo a `leerValores()` (recuerda `Plantilla.e()` si se concatena en HTML) y a `generar()` en el lugar correcto de la maqueta.
 5. **`js/prompt.js`**: solo si el campo debe alimentar el prompt de la imagen; las dimensiones y reglas no cambian.
