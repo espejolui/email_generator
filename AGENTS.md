@@ -30,7 +30,7 @@
 
 - No agregar frameworks, librerías de npm, CDNs (scripts, estilos, fuentes), ni cambiar la estructura de archivos, sin autorización explícita del usuario.
 - El proyecto solo tiene UN `package.json` (en la raíz). No crear `package.json` en ningún otro subdirectorio.
-- El proyecto no usa ni necesita `node_modules`: tiene cero dependencias y los scripts (`./dev.sh test`, `./dev.sh start`) usan solo módulos nativos de Node. Nunca debe aparecer `node_modules` en el árbol; si aparece, se elimina.
+- El proyecto no usa ni necesita `node_modules`: tiene cero dependencias y todo corre con módulos nativos de Node (`node server.js`, `node --test`).
 - La única dependencia externa permitida y existente es el Google Fonts dentro del HTML que genera `Plantilla.generar()`. No la dupliques.
 - Los tests deben seguir usando el runner nativo de Node (`node --test`), sin dependencias.
 
@@ -40,4 +40,4 @@
 
 ## 6. Verificación
 
-- Después de tocar código, ejecuta `./dev.sh test` desde la raíz del proyecto y asegúrate de que todo pasa (emplea siempre Node directamente, nunca pnpm ni npm).
+- Después de tocar código, ejecuta `node --test` desde la raíz del proyecto y asegúrate de que todo pasa (emplea siempre Node directamente, nunca pnpm ni npm).

@@ -81,7 +81,7 @@ Vuelca un objeto de datos en el formulario, repitiendo la limpieza de inversión
 3. **`js/ui.js`**: añadir la referencia `ubicacion: document.getElementById('f-ubicacion')` en `UI.referenciar()` y, si el valor necesita limpieza al cargar/restaurar, su línea en `UI.aplicar()`.
 4. **`js/plantilla.js`**: si el campo va al email, añadirlo a `leerValores()` (recuerda `Plantilla.e()` si se concatena en HTML) y a `generar()` en el lugar correcto de la maqueta.
 5. **`js/prompt.js`**: solo si el campo debe alimentar el prompt de la imagen; las dimensiones y reglas no cambian.
-6. **`tests/`**: añadir (o ampliar) los tests de la capa afectada y ejecutar `./dev.sh test`.
+6. **`tests/`**: añadir (o ampliar) los tests de la capa afectada y ejecutar `node --test`.
 
 **Notas:**
 - Los campos opcionales no se agregan a `requeridos`; las líneas vacías de `detalles` ya se filtran solas en `leerValores()`.

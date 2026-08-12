@@ -28,7 +28,6 @@ email-generator/             ← raíz del proyecto (es también el sitio desple
 │   ├── ui.js                # interacción: preview, miniatura, validación, descarga, toast
 │   └── almacenamiento.js    # persistencia con cookies
 ├── server.js                # servidor estático local (solo Node, sin dependencias)
-├── dev.sh                    # ejecuta server o tests: ./dev.sh start | ./dev.sh test
 ├── tests/                   # pruebas por capa (node --test, sin dependencias)
 ├── package.json             # único package.json ("type": "module", sin scripts ni dependencias)
 ├── docs/DOCUMENTATION.md    # documentación de desarrollo
@@ -40,7 +39,7 @@ email-generator/             ← raíz del proyecto (es también el sitio desple
 > Los scripts son **ES Modules** (`import`/`export`): abrir `index.html` con doble clic (`file://`) no funciona porque los navegadores bloquean los módulos por CORS. Hay que servirlo:
 
 ```
-./dev.sh start   # o: node server.js   (puerto configurable con PORT=8080 ./dev.sh start)
+node server.js                 # puerto configurable con PORT=8080 node server.js
 ```
 
 Sirve el proyecto en `http://localhost:8000` (no hace falta `node_modules` ni instalar nada). También puede servir la carpeta con cualquier servidor estático (`python3 -m http.server 8000`), sin diferencias.
@@ -48,12 +47,12 @@ Sirve el proyecto en `http://localhost:8000` (no hace falta `node_modules` ni in
 ## Tests
 
 ```
-./dev.sh test
+node --test
 ```
 
 Ejecuta las pruebas por capa (validador, `+57`, fecha, inversión, prompt genérico, cookies y estructura del HTML) con el runner nativo de Node. No instala ninguna dependencia.
 
-> **Sin dependencias**: el proyecto no declara ni instala dependencias de paquetes (`package.json` no tiene `dependencies` ni `scripts`). Todo corre con `node` vía `./dev.sh start` y `./dev.sh test`; no hay nada que instalar y nunca aparece `node_modules`.
+> **Sin dependencias**: el proyecto no declara ni instala dependencias de paquetes (`package.json` no tiene `dependencies` ni `scripts`). Todo corre con `node` (`node server.js` y `node --test`); no hay nada que instalar y nunca aparece `node_modules`.
 
 ## Documentación
 
