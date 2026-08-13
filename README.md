@@ -2,6 +2,10 @@
 
 Herramienta web para crear emails de cursos: se llenan los datos, se ve la vista previa en vivo y se descarga un HTML listo para enviar. Incluye un panel con el prompt para generar la imagen del curso con IA.
 
+## Probar en vivo
+
+<https://genmail.pages.dev/> — desplegado en Cloudflare Pages desde el branch `main`; cada push actualiza el sitio automáticamente.
+
 ## Funciones
 
 - 13 campos obligatorios con validación visual (borde rojo + toast con los faltantes).
