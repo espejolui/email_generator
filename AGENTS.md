@@ -33,6 +33,7 @@ El usuario debe poder:
 5. **Accesibilidad**: roles ARIA en las zonas de drag & drop (`aria-grabbed`, `aria-dropeffect` o el patrón moderno con `aria-live` para anunciar cambios de orden).
 6. **Compatibilidad con clientes de correo**: el HTML que se genera en el **Preview** (y el que se descarga) debe maquetarse con `<table>` en lugar de `display: grid`/`flexbox`, y usar **estilos inline** en cada elemento. Esto es obligatorio porque Outlook, Gmail y la mayoría de webmails ignoran o eliminan `<style>` en `<head>` y no soportan CSS moderno, lo que además reduce el riesgo de que el correo caiga en spam.
 7. **Descarga de la plantilla**: el Preview debe incluir un botón que exporte exactamente el HTML mostrado (mismo contenido, mismo orden de bloques) como archivo `.html` descargable, listo para pegar en un ESP (Mailchimp, SendGrid, etc.) o enviar directo.
+8. **Gestor de paquetes**: **npm está prohibido**. Usar exclusivamente **pnpm** (`pnpm install`, `pnpm run build`, `pnpm start`, `pnpm run check`). No generar ni commitear `package-lock.json`; el lockfile válido es `pnpm-lock.yaml`.
 
 > ⚠️ Importante: la regla 4 (CSS puro con nesting) aplica a la **interfaz del editor** (Paleta, Lienzo, controles). El **HTML exportado para email** es un caso especial y **no** usa nesting ni hojas de estilo externas — ver sección 9.
 
