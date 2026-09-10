@@ -16,7 +16,9 @@ export function setDragPayload(event: DragEvent, payload: DragPayload): void {
   const dt = event.dataTransfer;
   if (dt === null) return;
   dt.setData(MIME, JSON.stringify(payload));
-  dt.effectAllowed = payload.sourceId === undefined ? "copy" : "move";
+  // Debe ser compatible con el dropEffect ("move") fijado en dragover;
+  // si no, el navegador rechaza el drop y el evento drop nunca se dispara.
+  dt.effectAllowed = payload.sourceId === undefined ? "copyMove" : "move";
 }
 
 export function getDragPayload(event: DragEvent): DragPayload | undefined {
