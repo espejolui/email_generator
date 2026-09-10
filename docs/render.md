@@ -7,16 +7,18 @@ funciones para no desincronizarse.
 
 - `RenderedRow` — `{ html: "<tr>…</tr>" }`.
 - `renderTitle(data, corners?)` — `h1`–`h6` con tamaño, color (o el del
-  nivel), alineación, banda de fondo y márgenes superior/inferior.
-- `renderText(data, corners?)` — párrafo 16 px/1.75 con alineación, fondo
-  y márgenes superior/inferior.
+  nivel), alineación, banda de fondo, márgenes y formato (la negrita solo
+  se emite si aporta: los niveles ya son bold).
+- `renderText(data, corners?)` — párrafo 16 px/1.75 con alineación, fondo,
+  márgenes y formato (negrita/cursiva/subrayado/tachado).
 - `renderImage(data)` — imagen con radio 12 px o aviso si la URL no es válida.
 - `renderList(data)` — `ul`/`ol` con alineación.
-- `renderQuote(data)` — cita con borde de marca y alineación.
+- `renderQuote(data)` — cita con borde de marca, alineación, fondo, color
+  y formato.
 - `renderDivider(data, corners?)` — barra de 2 px (color propio o degradado
   de marca) con márgenes superior/inferior configurables.
-- `renderButton(data)` — pill centrada/izquierda/derecha con enlace
-  `wa.me` oficial; sin teléfono, pill sin enlace.
+- `renderButton(data)` — pill con enlace `wa.me` oficial y márgenes
+  superior/inferior; sin teléfono, pill sin enlace.
 - `renderBlockToRow(data, index?, total?)` — despacha por `type` y calcula
   si la fila es primera/última para heredar el radio de la tarjeta.
 - `buildEmailDocument(blocks)` — documento `.html` completo descargable.

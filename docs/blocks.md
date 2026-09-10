@@ -26,14 +26,16 @@ Cada una recibe `id` en el constructor, sanitiza en sus setters decorados
 con `@Editable()` y convierte a datos con `toData()`:
 
 - `TitleBlock` — `content`, `level` (h1–h6), `align`, `bg`, `color`,
-  `marginTop`, `marginBottom`.
-- `TextBlock` — `content`, `align`, `bg`, `color`, `marginTop`, `marginBottom`.
+  `marginTop`, `marginBottom`, `bold`, `italic`, `underline`, `strike`.
+- `TextBlock` — `content`, `align`, `bg`, `color`, `marginTop`, `marginBottom`,
+  `bold`, `italic`, `underline`, `strike`.
 - `ImageBlock` — `src` (solo https/data), `alt` (sin pie de foto).
 - `ListBlock` — `items` (máx. 20), `ordered`, `align`.
-- `QuoteBlock` — `content`, `cite`, `align`.
+- `QuoteBlock` — `content`, `cite`, `align`, `bg`, `color`, `bold`, `italic`,
+  `underline`, `strike`.
 - `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom` (0–80).
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,
-  `color`, `align`.
+  `color`, `align`, `marginTop`, `marginBottom`.
 
 ## `index.ts`
 

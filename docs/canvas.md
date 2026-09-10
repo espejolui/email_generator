@@ -20,7 +20,10 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
     contenedor vivo, cierra con Escape o clic fuera y su cierre es
     re-entrante. En título/párrafo fondo y texto comparten una fila.
   - `marginControls` — números de margen superior/inferior (0–80 px)
-    usados en título, párrafo y divisor.
+    usados en título, párrafo, botón y divisor.
+  - `colorRow` — junta dos controles de color en una fila horizontal.
+  - `formatRow` — casillas Negrita/Cursiva/Subrayado/Tachado en fila
+    (título, párrafo y cita).
   - `lucideIcon` / `refreshIcons` — iconos Lucide tras cada render.
   - `ensurePlaceholder` / `clearPlaceholder` / `movePlaceholder` —
     indicador visual de inserción.
