@@ -1,4 +1,4 @@
-import { sanitizeHref, sanitizeImageSrc, sanitizeText } from "../sanitize/sanitize.js";
+import { buildWhatsAppUrl, sanitizeImageSrc } from "../sanitize/sanitize.js";
 import type {
   AnyBlockData,
   ButtonBlockData,
@@ -8,6 +8,7 @@ import type {
   QuoteBlockData,
   TextBlockData,
   TitleBlockData,
+  TitleLevel,
 } from "../../blocks/types.js";
 
 export interface RenderedRow {
@@ -24,81 +25,88 @@ const BODY_TEXT = "#444444";
 const MUTED = "#888888";
 const GREEN = "#25d366";
 
-function row(inner: string): RenderedRow {
-  return { html: `<tr><td style="padding:0 48px 20px; font-family:${FONT};">${inner}</td></tr>` };
+function row(inner: string, bg = ""): RenderedRow {
+  const bgStyle = bg === "" ? "" : ` background-color:${bg};`;
+  return { html: `<tr><td style="padding:0 48px 20px; font-family:${FONT};${bgStyle}">${inner}</td></tr>` };
 }
 
 function spacer(height: number): string {
   return `<tr><td style="padding:0 48px; font-family:${FONT};"><div style="height:${String(height)}px; line-height:${String(height)}px;">&nbsp;</div></td></tr>`;
 }
 
+const TITLE_STYLE: Record<TitleLevel, string> = {
+  1: "font-size:26px; font-weight:900; color:#111111;",
+  2: "font-size:22px; font-weight:700; color:#444444;",
+  3: "font-size:17px; font-weight:900; color:#41b6e6;",
+  4: "font-size:16px; font-weight:700; color:#444444;",
+  5: "font-size:14px; font-weight:700; color:#555555;",
+  6: "font-size:12px; font-weight:700; color:#888888; letter-spacing:1px; text-transform:uppercase;",
+};
+
 export function renderTitle(data: TitleBlockData): RenderedRow {
-  const tag = data.level === 1 ? "h1" : data.level === 3 ? "h3" : "h2";
-  const style = data.level === 1
-    ? `font-size:26px; font-weight:900; color:#111111;`
-    : data.level === 3
-      ? `font-size:17px; font-weight:900; color:${PRIMARY};`
-      : `font-size:19px; font-weight:700; color:${BODY_TEXT};`;
-  const text = sanitizeText(data.content);
+  // Contrato: el contenido llega ya escapado desde el store (Canvas sanitiza
+  // al guardar, AGENTS §7). No re-escapar aquí para evitar doble escape.
+  const tag = `h${String(data.level)}`;
   return row(
-    `<${tag} style="margin:0 0 12px; font-family:${FONT}; ${style}">${text}</${tag}>`,
+    `<${tag} style="margin:0 0 12px; font-family:${FONT}; text-align:${data.align}; ${TITLE_STYLE[data.level]}">${data.content}</${tag}>`,
+    data.bg,
   );
 }
 
 export function renderText(data: TextBlockData): RenderedRow {
   return row(
-    `<p style="margin:0; font-family:${FONT}; font-size:16px; line-height:1.75; color:${BODY_TEXT};">${sanitizeText(data.content)}</p>`,
+    `<p style="margin:0; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${BODY_TEXT};">${data.content}</p>`,
+    data.bg,
   );
 }
 
 export function renderImage(data: ImageBlockData): RenderedRow {
   const src = sanitizeImageSrc(data.src);
-  const alt = sanitizeText(data.alt);
-  const caption = sanitizeText(data.caption);
   const img = src === ""
     ? `<p style="margin:0; font-size:13px; color:${MUTED};">[Imagen sin URL válida]</p>`
-    : `<img src="${src}" width="504" alt="${alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
-  const cap = caption === ""
+    : `<img src="${src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
+  const cap = data.caption === ""
     ? ""
-    : `<p style="margin:8px 0 0; font-size:12px; color:${MUTED};">${caption}</p>`;
+    : `<p style="margin:8px 0 0; font-size:12px; text-align:${data.captionAlign}; color:${MUTED};">${data.caption}</p>`;
   return row(`${img}${cap}`);
 }
 
 export function renderList(data: ListBlockData): RenderedRow {
   const tag = data.ordered ? "ol" : "ul";
   const items = data.items
-    .map((item) => `<li style="font-size:16px; line-height:1.75; color:${BODY_TEXT};">${sanitizeText(item)}</li>`)
+    .map((item) => `<li style="font-size:16px; line-height:1.75; color:${BODY_TEXT};">${item}</li>`)
     .join("");
   return row(
-    `<${tag} style="margin:0; padding-left:20px; font-family:${FONT};">${items}</${tag}>`,
+    `<${tag} style="margin:0; padding-left:20px; font-family:${FONT}; text-align:${data.align};">${items}</${tag}>`,
   );
 }
 
 export function renderQuote(data: QuoteBlockData): RenderedRow {
-  const cite = sanitizeText(data.cite);
   return row(
-    `<blockquote style="margin:0; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; color:#555555;">` +
-      `<p style="margin:0; font-size:16px; line-height:1.75;">${sanitizeText(data.content)}</p>` +
-      (cite === "" ? "" : `<cite style="font-size:12px; color:${MUTED};">— ${cite}</cite>`) +
+    `<blockquote style="margin:0; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; text-align:${data.align}; color:#555555;">` +
+      `<p style="margin:0; font-size:16px; line-height:1.75;">${data.content}</p>` +
+      (data.cite === "" ? "" : `<cite style="font-size:12px; color:${MUTED};">— ${data.cite}</cite>`) +
       `</blockquote>`,
   );
 }
 
 export function renderDivider(_data: DividerBlockData): RenderedRow {
-  return row(
-    `<div style="height:3px; margin:12px 0 8px; background:linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%); border-radius:2px;"></div>`,
-  );
+  return {
+    html: `<tr><td style="padding:0 48px 8px; font-family:${FONT};">` +
+      `<div style="height:2px; margin:4px 0; background:linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%); border-radius:2px;"></div>` +
+      `</td></tr>`,
+  };
 }
 
 export function renderButton(data: ButtonBlockData): RenderedRow {
   const bg = data.color === "blue" ? PRIMARY : GREEN;
-  const label = sanitizeText(data.label);
-  const href = sanitizeHref(data.href);
+  // message viaja en crudo hasta aquí y se codifica para URL (nunca toca HTML).
+  const href = buildWhatsAppUrl(data.phone, data.message);
   const text = href === ""
-    ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${label}</span>`
-    : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${label}</a>`;
+    ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${data.label}</span>`
+    : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${data.label}</a>`;
   return row(
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${data.align}" style="margin:0 auto;">` +
       `<tr><td align="center" style="background-color:${bg}; border-radius:50px;">${text}</td></tr>` +
       `</table>`,
   );
