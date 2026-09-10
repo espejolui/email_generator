@@ -2,6 +2,12 @@ export type BlockType = "title" | "text" | "image" | "list" | "quote" | "divider
 
 export type ButtonColor = "green" | "blue";
 
+export type TitleLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+export type TextAlign = "left" | "center" | "justify";
+
+export type ButtonAlign = "left" | "center" | "right";
+
 export interface BaseBlockData {
   readonly id: string;
   readonly type: BlockType;
@@ -10,12 +16,16 @@ export interface BaseBlockData {
 export interface TitleBlockData extends BaseBlockData {
   readonly type: "title";
   content: string;
-  level: 1 | 2 | 3;
+  level: TitleLevel;
+  align: TextAlign;
+  bg: string;
 }
 
 export interface TextBlockData extends BaseBlockData {
   readonly type: "text";
   content: string;
+  align: TextAlign;
+  bg: string;
 }
 
 export interface ImageBlockData extends BaseBlockData {
@@ -23,18 +33,21 @@ export interface ImageBlockData extends BaseBlockData {
   src: string;
   alt: string;
   caption: string;
+  captionAlign: TextAlign;
 }
 
 export interface ListBlockData extends BaseBlockData {
   readonly type: "list";
   items: readonly string[];
   ordered: boolean;
+  align: TextAlign;
 }
 
 export interface QuoteBlockData extends BaseBlockData {
   readonly type: "quote";
   content: string;
   cite: string;
+  align: TextAlign;
 }
 
 export interface DividerBlockData extends BaseBlockData {
@@ -44,8 +57,10 @@ export interface DividerBlockData extends BaseBlockData {
 export interface ButtonBlockData extends BaseBlockData {
   readonly type: "button";
   label: string;
-  href: string;
+  phone: string;
+  message: string;
   color: ButtonColor;
+  align: ButtonAlign;
 }
 
 export type AnyBlockData =
@@ -71,4 +86,16 @@ export function isBlockType(value: string): value is BlockType {
 
 export function isButtonColor(value: string): value is ButtonColor {
   return value === "green" || value === "blue";
+}
+
+export function isTitleLevel(value: unknown): value is TitleLevel {
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6;
+}
+
+export function isTextAlign(value: string): value is TextAlign {
+  return value === "left" || value === "center" || value === "justify";
+}
+
+export function isButtonAlign(value: string): value is ButtonAlign {
+  return value === "left" || value === "center" || value === "right";
 }

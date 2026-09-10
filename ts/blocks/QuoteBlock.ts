@@ -1,13 +1,15 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeText } from "../core/sanitize/sanitize.js";
-import type { QuoteBlockData } from "./types.js";
+import type { QuoteBlockData, TextAlign } from "./types.js";
+import { isTextAlign } from "./types.js";
 
 @Block({ type: "quote", label: "Cita", icon: "💬" })
 export class QuoteBlock {
   readonly id: string;
   #content = "";
   #cite = "";
+  #align: TextAlign = "left";
 
   constructor(id: string) {
     this.id = id;
@@ -31,7 +33,16 @@ export class QuoteBlock {
     return this.#cite;
   }
 
+  @Editable()
+  set align(value: string) {
+    this.#align = isTextAlign(value) ? value : "left";
+  }
+
+  get align(): TextAlign {
+    return this.#align;
+  }
+
   toData(): QuoteBlockData {
-    return { id: this.id, type: "quote", content: this.#content, cite: this.#cite };
+    return { id: this.id, type: "quote", content: this.#content, cite: this.#cite, align: this.#align };
   }
 }

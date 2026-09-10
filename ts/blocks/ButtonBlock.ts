@@ -1,15 +1,17 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeHref, sanitizeText } from "../core/sanitize/sanitize.js";
-import type { ButtonBlockData, ButtonColor } from "./types.js";
-import { isButtonColor } from "./types.js";
+import { sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
+import type { ButtonAlign, ButtonBlockData, ButtonColor } from "./types.js";
+import { isButtonAlign, isButtonColor } from "./types.js";
 
-@Block({ type: "button", label: "Botón", icon: "🔘" })
+@Block({ type: "button", label: "Botón WhatsApp", icon: "💬" })
 export class ButtonBlock {
   readonly id: string;
   #label = "";
-  #href = "";
+  #phone = "";
+  #message = "";
   #color: ButtonColor = "green";
+  #align: ButtonAlign = "center";
 
   constructor(id: string) {
     this.id = id;
@@ -25,12 +27,22 @@ export class ButtonBlock {
   }
 
   @Editable()
-  set href(value: string) {
-    this.#href = sanitizeHref(value);
+  set phone(value: string) {
+    this.#phone = sanitizePhone(value);
   }
 
-  get href(): string {
-    return this.#href;
+  get phone(): string {
+    return this.#phone;
+  }
+
+  @Editable()
+  set message(value: string) {
+    // En crudo (recorte + tope): se codifica para URL al renderizar, nunca toca HTML.
+    this.#message = value.trim().slice(0, 300);
+  }
+
+  get message(): string {
+    return this.#message;
   }
 
   @Editable()
@@ -42,7 +54,24 @@ export class ButtonBlock {
     return this.#color;
   }
 
+  @Editable()
+  set align(value: string) {
+    this.#align = isButtonAlign(value) ? value : "center";
+  }
+
+  get align(): ButtonAlign {
+    return this.#align;
+  }
+
   toData(): ButtonBlockData {
-    return { id: this.id, type: "button", label: this.#label, href: this.#href, color: this.#color };
+    return {
+      id: this.id,
+      type: "button",
+      label: this.#label,
+      phone: this.#phone,
+      message: this.#message,
+      color: this.#color,
+      align: this.#align,
+    };
   }
 }

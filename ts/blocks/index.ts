@@ -24,18 +24,26 @@ export function createId(): string {
 export function createBlockData(type: BlockType, id: string): AnyBlockData {
   switch (type) {
     case "title":
-      return { id, type, content: "Título de ejemplo", level: 2 };
+      return { id, type, content: "Título de ejemplo", level: 2, align: "left", bg: "" };
     case "text":
-      return { id, type, content: "Texto de ejemplo. Edítalo en el lienzo." };
+      return { id, type, content: "Texto de ejemplo. Edítalo en el lienzo.", align: "left", bg: "" };
     case "image":
-      return { id, type, src: "", alt: "", caption: "" };
+      return { id, type, src: "", alt: "", caption: "", captionAlign: "left" };
     case "list":
-      return { id, type, items: ["Primer punto", "Segundo punto"], ordered: false };
+      return { id, type, items: ["Primer punto", "Segundo punto"], ordered: false, align: "left" };
     case "quote":
-      return { id, type, content: "Cita de ejemplo.", cite: "" };
+      return { id, type, content: "Cita de ejemplo.", cite: "", align: "left" };
     case "divider":
       return { id, type };
     case "button":
-      return { id, type, label: "Escríbeme haciendo clic aquí", href: "", color: "green" };
+      return {
+        id,
+        type,
+        label: "Escríbeme haciendo clic aquí",
+        phone: "",
+        message: "Hola, quiero más información",
+        color: "green",
+        align: "center",
+      };
   }
 }

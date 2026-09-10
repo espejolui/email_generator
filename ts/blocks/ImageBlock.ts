@@ -5,7 +5,8 @@ import {
   sanitizeImageSrc,
   sanitizeText,
 } from "../core/sanitize/sanitize.js";
-import type { ImageBlockData } from "./types.js";
+import type { ImageBlockData, TextAlign } from "./types.js";
+import { isTextAlign } from "./types.js";
 
 @Block({ type: "image", label: "Imagen", icon: "🖼️" })
 export class ImageBlock {
@@ -13,6 +14,7 @@ export class ImageBlock {
   #src = "";
   #alt = "";
   #caption = "";
+  #captionAlign: TextAlign = "left";
 
   constructor(id: string) {
     this.id = id;
@@ -45,7 +47,23 @@ export class ImageBlock {
     return this.#caption;
   }
 
+  @Editable()
+  set captionAlign(value: string) {
+    this.#captionAlign = isTextAlign(value) ? value : "left";
+  }
+
+  get captionAlign(): TextAlign {
+    return this.#captionAlign;
+  }
+
   toData(): ImageBlockData {
-    return { id: this.id, type: "image", src: this.#src, alt: this.#alt, caption: this.#caption };
+    return {
+      id: this.id,
+      type: "image",
+      src: this.#src,
+      alt: this.#alt,
+      caption: this.#caption,
+      captionAlign: this.#captionAlign,
+    };
   }
 }
