@@ -83,11 +83,27 @@
       font: inherit;
     }
 
-    & input:not([type="checkbox"]):not([type="color"]),
-    & select {
+    & input:not([type="checkbox"]):not([type="color"]) {
       border: 1px solid var(--border-color);
       border-radius: 999px;
       padding: 0.45rem 1rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+    }
+
+    & select {
+      appearance: none;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.45rem 2rem 0.45rem 1rem;
+      background-color: #fff;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem center;
+      cursor: pointer;
 
       &:focus {
         outline: none;
@@ -105,6 +121,14 @@
         border-color: var(--accent);
       }
     }
+  }
+
+  & .block__color,
+  & .block__margins {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   & .block__type {
