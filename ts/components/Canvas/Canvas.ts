@@ -1,14 +1,15 @@
 import { createBlockData, createId } from "../../blocks/index.js";
-import type { AnyBlockData } from "../../blocks/types.js";
-import { isButtonColor } from "../../blocks/types.js";
+import type { AnyBlockData, ButtonAlign, TextAlign } from "../../blocks/types.js";
+import { isButtonAlign, isButtonColor, isTextAlign, isTitleLevel } from "../../blocks/types.js";
 import {
   getDragPayload,
   insertionIndexFor,
 } from "../../core/dnd/dragController.js";
 import {
   sanitizeAlt,
-  sanitizeHref,
+  sanitizeColor,
   sanitizeImageSrc,
+  sanitizePhone,
   sanitizeText,
 } from "../../core/sanitize/sanitize.js";
 import type { EditorStore } from "../../core/store/store.js";
@@ -37,6 +38,76 @@ function labelFor(text: string, control: HTMLElement, id: string): HTMLLabelElem
   label.htmlFor = id;
   control.id = id;
   return label;
+}
+
+const TEXT_ALIGN_OPTIONS: ReadonlyArray<readonly [TextAlign, string]> = [
+  ["left", "Izquierda"],
+  ["center", "Centrado"],
+  ["justify", "Justificado"],
+];
+
+const BUTTON_ALIGN_OPTIONS: ReadonlyArray<readonly [ButtonAlign, string]> = [
+  ["left", "Izquierda"],
+  ["center", "Centrado"],
+  ["right", "Derecha"],
+];
+
+function textAlignSelect(current: TextAlign, id: string): HTMLSelectElement {
+  const select = document.createElement("select");
+  select.setAttribute("aria-label", "Alineación del texto");
+  for (const [value, text] of TEXT_ALIGN_OPTIONS) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = text;
+    if (current === value) opt.selected = true;
+    select.appendChild(opt);
+  }
+  select.id = id;
+  return select;
+}
+
+function buttonAlignSelect(current: ButtonAlign, id: string): HTMLSelectElement {
+  const select = document.createElement("select");
+  select.setAttribute("aria-label", "Alineación del botón");
+  for (const [value, text] of BUTTON_ALIGN_OPTIONS) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = text;
+    if (current === value) opt.selected = true;
+    select.appendChild(opt);
+  }
+  select.id = id;
+  return select;
+}
+
+function bgControls(
+  blockId: string,
+  currentBg: string,
+  onBg: (bg: string) => void,
+): HTMLElement {
+  const wrap = el("div", "block__bg");
+  const picker = document.createElement("input");
+  picker.type = "color";
+  picker.value = currentBg === "" ? "#41b6e6" : currentBg;
+  picker.setAttribute("aria-label", "Color de fondo");
+  const none = document.createElement("input");
+  none.type = "checkbox";
+  none.checked = currentBg === "";
+  const apply = (): void => {
+    onBg(none.checked ? "" : sanitizeColor(picker.value));
+  };
+  picker.addEventListener("input", () => {
+    none.checked = false;
+    apply();
+  });
+  none.addEventListener("change", apply);
+  wrap.append(
+    labelFor("Fondo", picker, `${blockId}-bg`),
+    picker,
+    labelFor("Sin fondo", none, `${blockId}-bgnone`),
+    none,
+  );
+  return wrap;
 }
 
 export function initCanvas(
@@ -200,7 +271,7 @@ export function initCanvas(
         });
         const level = document.createElement("select");
         level.setAttribute("aria-label", "Nivel del título");
-        for (const n of [1, 2, 3] as const) {
+        for (const n of [1, 2, 3, 4, 5, 6] as const) {
           const opt = document.createElement("option");
           opt.value = String(n);
           opt.textContent = `H${String(n)}`;
@@ -209,13 +280,23 @@ export function initCanvas(
         }
         level.addEventListener("change", () => {
           const v = Number(level.value);
-          store.update(block.id, { level: v === 1 ? 1 : v === 3 ? 3 : 2 });
+          store.update(block.id, { level: isTitleLevel(v) ? v : 2 });
+        });
+        const align = textAlignSelect(block.align, `${block.id}-align`);
+        align.addEventListener("change", () => {
+          store.update(block.id, { align: isTextAlign(align.value) ? align.value : "left" });
+        });
+        const bg = bgControls(block.id, block.bg, (next) => {
+          store.update(block.id, { bg: next });
         });
         wrap.append(
           labelFor("Título", input, `${block.id}-title`),
           input,
           labelFor("Nivel", level, `${block.id}-level`),
           level,
+          labelFor("Alineación", align, `${block.id}-align`),
+          align,
+          bg,
         );
         break;
       }
@@ -228,7 +309,20 @@ export function initCanvas(
         area.addEventListener("input", () => {
           store.update(block.id, { content: sanitizeText(area.value).slice(0, 2000) });
         });
-        wrap.append(labelFor("Texto", area, `${block.id}-text`), area);
+        const textAlign = textAlignSelect(block.align, `${block.id}-align`);
+        textAlign.addEventListener("change", () => {
+          store.update(block.id, { align: isTextAlign(textAlign.value) ? textAlign.value : "left" });
+        });
+        const textBg = bgControls(block.id, block.bg, (next) => {
+          store.update(block.id, { bg: next });
+        });
+        wrap.append(
+          labelFor("Texto", area, `${block.id}-text`),
+          area,
+          labelFor("Alineación", textAlign, `${block.id}-align`),
+          textAlign,
+          textBg,
+        );
         break;
       }
       case "image": {
@@ -254,6 +348,12 @@ export function initCanvas(
         cap.addEventListener("input", () => {
           store.update(block.id, { caption: sanitizeText(cap.value).slice(0, 300) });
         });
+        const capAlign = textAlignSelect(block.captionAlign, `${block.id}-capalign`);
+        capAlign.addEventListener("change", () => {
+          store.update(block.id, {
+            captionAlign: isTextAlign(capAlign.value) ? capAlign.value : "left",
+          });
+        });
         wrap.append(
           labelFor("URL", src, `${block.id}-src`),
           src,
@@ -261,6 +361,8 @@ export function initCanvas(
           alt,
           labelFor("Pie", cap, `${block.id}-cap`),
           cap,
+          labelFor("Alineación del pie", capAlign, `${block.id}-capalign`),
+          capAlign,
         );
         break;
       }
@@ -283,11 +385,17 @@ export function initCanvas(
         ordered.addEventListener("change", () => {
           store.update(block.id, { ordered: ordered.checked });
         });
+        const listAlign = textAlignSelect(block.align, `${block.id}-align`);
+        listAlign.addEventListener("change", () => {
+          store.update(block.id, { align: isTextAlign(listAlign.value) ? listAlign.value : "left" });
+        });
         wrap.append(
           labelFor("Puntos", area, `${block.id}-items`),
           area,
           labelFor("Ordenada", ordered, `${block.id}-ordered`),
           ordered,
+          labelFor("Alineación", listAlign, `${block.id}-align`),
+          listAlign,
         );
         break;
       }
@@ -306,11 +414,17 @@ export function initCanvas(
         cite.addEventListener("input", () => {
           store.update(block.id, { cite: sanitizeText(cite.value).slice(0, 200) });
         });
+        const quoteAlign = textAlignSelect(block.align, `${block.id}-align`);
+        quoteAlign.addEventListener("change", () => {
+          store.update(block.id, { align: isTextAlign(quoteAlign.value) ? quoteAlign.value : "left" });
+        });
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
           area,
           labelFor("Autor", cite, `${block.id}-cite`),
           cite,
+          labelFor("Alineación", quoteAlign, `${block.id}-align`),
+          quoteAlign,
         );
         break;
       }
@@ -329,13 +443,22 @@ export function initCanvas(
         label.addEventListener("input", () => {
           store.update(block.id, { label: sanitizeText(label.value).slice(0, 80) });
         });
-        const href = document.createElement("input");
-        href.type = "url";
-        href.value = block.href;
-        href.placeholder = "https://…";
-        href.setAttribute("aria-label", "Enlace del botón (https)");
-        href.addEventListener("input", () => {
-          store.update(block.id, { href: sanitizeHref(href.value) });
+        const phone = document.createElement("input");
+        phone.type = "tel";
+        phone.value = block.phone;
+        phone.placeholder = "573224418087";
+        phone.setAttribute("aria-label", "Celular con código país, solo dígitos");
+        phone.addEventListener("input", () => {
+          store.update(block.id, { phone: sanitizePhone(phone.value) });
+        });
+        const message = document.createElement("input");
+        message.type = "text";
+        message.value = block.message;
+        message.placeholder = "Mensaje predeterminado";
+        message.setAttribute("aria-label", "Mensaje predeterminado de WhatsApp");
+        message.addEventListener("input", () => {
+          // En crudo (recorte + tope): se codifica para URL al renderizar, nunca toca HTML.
+          store.update(block.id, { message: message.value.trim().slice(0, 300) });
         });
         const color = document.createElement("select");
         color.setAttribute("aria-label", "Color del botón");
@@ -349,13 +472,21 @@ export function initCanvas(
         color.addEventListener("change", () => {
           store.update(block.id, { color: isButtonColor(color.value) ? color.value : "green" });
         });
+        const btnAlign = buttonAlignSelect(block.align, `${block.id}-align`);
+        btnAlign.addEventListener("change", () => {
+          store.update(block.id, { align: isButtonAlign(btnAlign.value) ? btnAlign.value : "center" });
+        });
         wrap.append(
           labelFor("Texto", label, `${block.id}-label`),
           label,
-          labelFor("Enlace", href, `${block.id}-href`),
-          href,
+          labelFor("Celular", phone, `${block.id}-phone`),
+          phone,
+          labelFor("Mensaje", message, `${block.id}-message`),
+          message,
           labelFor("Color", color, `${block.id}-color`),
           color,
+          labelFor("Alineación", btnAlign, `${block.id}-align`),
+          btnAlign,
         );
         break;
       }
