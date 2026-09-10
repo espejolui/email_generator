@@ -54,33 +54,163 @@ const BUTTON_ALIGN_OPTIONS: ReadonlyArray<readonly [ButtonAlign, string]> = [
   ["right", "Derecha"],
 ];
 
-function textAlignSelect(current: TextAlign, id: string): HTMLSelectElement {
-  const select = document.createElement("select");
-  select.setAttribute("aria-label", "Alineación del texto");
-  for (const [value, text] of TEXT_ALIGN_OPTIONS) {
-    const opt = document.createElement("option");
-    opt.value = value;
-    opt.textContent = text;
-    if (current === value) opt.selected = true;
-    select.appendChild(opt);
-  }
-  select.id = id;
-  return select;
+function lucideIcon(name: string, label: string): HTMLElement {
+  const icon = el("i", "icon");
+  icon.setAttribute("data-lucide", name);
+  icon.setAttribute("aria-hidden", "true");
+  if (label !== "") icon.setAttribute("aria-label", label);
+  return icon;
 }
 
-function buttonAlignSelect(current: ButtonAlign, id: string): HTMLSelectElement {
-  const select = document.createElement("select");
-  select.setAttribute("aria-label", "Alineación del botón");
-  for (const [value, text] of BUTTON_ALIGN_OPTIONS) {
-    const opt = document.createElement("option");
-    opt.value = value;
-    opt.textContent = text;
-    if (current === value) opt.selected = true;
-    select.appendChild(opt);
+let openSelectList: HTMLElement | null = null;
+let openSelectButton: HTMLButtonElement | null = null;
+let selectDocClick: ((event: MouseEvent) => void) | null = null;
+let selectDocKey: ((event: KeyboardEvent) => void) | null = null;
+
+function closeSelect(): void {
+  openSelectList?.remove();
+  openSelectList = null;
+  openSelectButton?.setAttribute("aria-expanded", "false");
+  openSelectButton?.removeAttribute("data-select-open");
+  openSelectButton = null;
+  if (selectDocClick !== null) {
+    document.removeEventListener("click", selectDocClick);
+    selectDocClick = null;
   }
-  select.id = id;
-  return select;
+  if (selectDocKey !== null) {
+    document.removeEventListener("keydown", selectDocKey);
+    selectDocKey = null;
+  }
 }
+
+/**
+ * Desplegable propio (el popup nativo del <select> lo pinta el SO y no
+ * admite border-radius). Botón pill + lista con el diseño del editor.
+ */
+function selectField(
+  current: string,
+  options: ReadonlyArray<readonly [string, string]>,
+  ariaLabel: string,
+  idBase: string,
+  labelText: string,
+  onPick: (value: string) => void,
+): HTMLElement {
+  const wrap = el("div", "block__select");
+  let selected = current;
+
+  const labelEl = document.createElement("label");
+  labelEl.textContent = labelText;
+  labelEl.htmlFor = idBase;
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "select-field";
+  button.id = idBase;
+  button.setAttribute("aria-haspopup", "listbox");
+  button.setAttribute("aria-expanded", "false");
+  button.setAttribute("aria-label", ariaLabel);
+
+  const text = el("span", "select-field__text");
+  const paint = (): void => {
+    const found = options.find(([value]) => value === selected);
+    text.textContent = found === undefined ? selected : found[1];
+  };
+  paint();
+  button.append(text, lucideIcon("chevron-down", ""));
+
+  const pick = (value: string): void => {
+    selected = value;
+    paint();
+    onPick(value);
+    closeSelect();
+    button.focus();
+  };
+
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (button.getAttribute("data-select-open") === "true") {
+      closeSelect();
+      return;
+    }
+    closeSelect();
+    closeColorPopover();
+    button.setAttribute("data-select-open", "true");
+    button.setAttribute("aria-expanded", "true");
+
+    const list = el("ul", "select-pop");
+    list.setAttribute("role", "listbox");
+    list.setAttribute("aria-label", ariaLabel);
+    const items: HTMLLIElement[] = [];
+    for (const [value, labelText] of options) {
+      const item = el("li", "select-pop__option");
+      item.setAttribute("role", "option");
+      item.tabIndex = -1;
+      item.dataset["value"] = value;
+      item.textContent = labelText;
+      if (value === selected) item.setAttribute("aria-selected", "true");
+      item.addEventListener("click", () => {
+        pick(value);
+      });
+      list.appendChild(item);
+      items.push(item);
+    }
+    list.addEventListener("keydown", (ev) => {
+      const active = document.activeElement;
+      const index = active instanceof HTMLLIElement ? items.indexOf(active) : -1;
+      if (ev.key === "ArrowDown") {
+        ev.preventDefault();
+        items[(index + 1) % items.length]?.focus();
+      } else if (ev.key === "ArrowUp") {
+        ev.preventDefault();
+        items[(index - 1 + items.length) % items.length]?.focus();
+      } else if (ev.key === "Enter") {
+        ev.preventDefault();
+        const value = items[index]?.dataset["value"] ?? "";
+        if (value !== "") pick(value);
+      } else if (ev.key === "Escape") {
+        closeSelect();
+        button.focus();
+      }
+    });
+
+    wrap.appendChild(list);
+    openSelectList = list;
+    openSelectButton = button;
+
+    selectDocClick = (ev: MouseEvent): void => {
+      const target = ev.target;
+      if (target instanceof Node && !list.contains(target)) closeSelect();
+    };
+    selectDocKey = (ev: KeyboardEvent): void => {
+      if (ev.key === "Escape") {
+        closeSelect();
+        button.focus();
+      }
+    };
+    document.addEventListener("click", selectDocClick);
+    document.addEventListener("keydown", selectDocKey);
+
+    const currentItem = items.find((item) => item.getAttribute("aria-selected") === "true");
+    (currentItem ?? items[0])?.focus();
+  });
+
+  wrap.append(labelEl, button);
+  return wrap;
+}
+
+const LEVEL_OPTIONS: ReadonlyArray<readonly [string, string]> = [
+  ["1", "H1"],
+  ["2", "H2"],
+  ["3", "H3"],
+  ["4", "H4"],
+  ["5", "H5"],
+  ["6", "H6"],
+];
+
+const BUTTON_COLOR_OPTIONS: ReadonlyArray<readonly [string, string]> = [
+  ["green", "Verde WhatsApp"],
+  ["blue", "Azul Comfacundi"],
+];
 
 const PRESET_COLORS: ReadonlyArray<string> = [
   "#41b6e6",
@@ -370,14 +500,6 @@ export function initCanvas(
     refreshIcons();
   }
 
-  function lucideIcon(name: string, label: string): HTMLElement {
-    const icon = el("i", "icon");
-    icon.setAttribute("data-lucide", name);
-    icon.setAttribute("aria-hidden", "true");
-    if (label !== "") icon.setAttribute("aria-label", label);
-    return icon;
-  }
-
   function renderItem(block: AnyBlockData, index: number, total: number): HTMLLIElement {
     const item = el("li", "block");
     item.dataset["blockId"] = block.id;
@@ -457,22 +579,12 @@ export function initCanvas(
         input.addEventListener("input", () => {
           store.update(block.id, { content: sanitizeText(input.value).slice(0, 300) });
         });
-        const level = document.createElement("select");
-        level.setAttribute("aria-label", "Nivel del título");
-        for (const n of [1, 2, 3, 4, 5, 6] as const) {
-          const opt = document.createElement("option");
-          opt.value = String(n);
-          opt.textContent = `H${String(n)}`;
-          if (block.level === n) opt.selected = true;
-          level.appendChild(opt);
-        }
-        level.addEventListener("change", () => {
-          const v = Number(level.value);
-          store.update(block.id, { level: isTitleLevel(v) ? v : 2 });
+        const level = selectField(String(block.level), LEVEL_OPTIONS, "Nivel del título", `${block.id}-level`, "Nivel", (value) => {
+          const levelNumber = Number(value);
+          store.update(block.id, { level: isTitleLevel(levelNumber) ? levelNumber : 2 });
         });
-        const align = textAlignSelect(block.align, `${block.id}-align`);
-        align.addEventListener("change", () => {
-          store.update(block.id, { align: isTextAlign(align.value) ? align.value : "left" });
+        const align = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
         const bg = bgControls(block.id, block.bg, (next) => {
           store.update(block.id, { bg: next });
@@ -496,9 +608,7 @@ export function initCanvas(
         wrap.append(
           labelFor("Título", input, `${block.id}-title`),
           input,
-          labelFor("Nivel", level, `${block.id}-level`),
           level,
-          labelFor("Alineación", align, `${block.id}-align`),
           align,
           titleColors,
           titleMargins,
@@ -514,9 +624,8 @@ export function initCanvas(
         area.addEventListener("input", () => {
           store.update(block.id, { content: sanitizeText(area.value).slice(0, 2000) });
         });
-        const textAlign = textAlignSelect(block.align, `${block.id}-align`);
-        textAlign.addEventListener("change", () => {
-          store.update(block.id, { align: isTextAlign(textAlign.value) ? textAlign.value : "left" });
+        const textAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
         const textBg = bgControls(block.id, block.bg, (next) => {
           store.update(block.id, { bg: next });
@@ -540,7 +649,6 @@ export function initCanvas(
         wrap.append(
           labelFor("Texto", area, `${block.id}-text`),
           area,
-          labelFor("Alineación", textAlign, `${block.id}-align`),
           textAlign,
           textColors,
           textMargins,
@@ -590,16 +698,18 @@ export function initCanvas(
         ordered.addEventListener("change", () => {
           store.update(block.id, { ordered: ordered.checked });
         });
-        const listAlign = textAlignSelect(block.align, `${block.id}-align`);
-        listAlign.addEventListener("change", () => {
-          store.update(block.id, { align: isTextAlign(listAlign.value) ? listAlign.value : "left" });
+        const listAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
+        const orderedRow = el("div", "block__inline");
+        orderedRow.append(
+          labelFor("Ordenada", ordered, `${block.id}-ordered`),
+          ordered,
+        );
         wrap.append(
           labelFor("Puntos", area, `${block.id}-items`),
           area,
-          labelFor("Ordenada", ordered, `${block.id}-ordered`),
-          ordered,
-          labelFor("Alineación", listAlign, `${block.id}-align`),
+          orderedRow,
           listAlign,
         );
         break;
@@ -619,16 +729,14 @@ export function initCanvas(
         cite.addEventListener("input", () => {
           store.update(block.id, { cite: sanitizeText(cite.value).slice(0, 200) });
         });
-        const quoteAlign = textAlignSelect(block.align, `${block.id}-align`);
-        quoteAlign.addEventListener("change", () => {
-          store.update(block.id, { align: isTextAlign(quoteAlign.value) ? quoteAlign.value : "left" });
+        const quoteAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
           area,
           labelFor("Autor", cite, `${block.id}-cite`),
           cite,
-          labelFor("Alineación", quoteAlign, `${block.id}-align`),
           quoteAlign,
         );
         break;
@@ -685,21 +793,11 @@ export function initCanvas(
           // En crudo (recorte + tope): se codifica para URL al renderizar, nunca toca HTML.
           store.update(block.id, { message: message.value.trim().slice(0, 300) });
         });
-        const color = document.createElement("select");
-        color.setAttribute("aria-label", "Color del botón");
-        for (const c of ["green", "blue"] as const) {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c === "green" ? "Verde WhatsApp" : "Azul Comfacundi";
-          if (block.color === c) opt.selected = true;
-          color.appendChild(opt);
-        }
-        color.addEventListener("change", () => {
-          store.update(block.id, { color: isButtonColor(color.value) ? color.value : "green" });
+        const color = selectField(block.color, BUTTON_COLOR_OPTIONS, "Color del botón", `${block.id}-color`, "Color", (value) => {
+          store.update(block.id, { color: isButtonColor(value) ? value : "green" });
         });
-        const btnAlign = buttonAlignSelect(block.align, `${block.id}-align`);
-        btnAlign.addEventListener("change", () => {
-          store.update(block.id, { align: isButtonAlign(btnAlign.value) ? btnAlign.value : "center" });
+        const btnAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
         });
         wrap.append(
           labelFor("Texto", label, `${block.id}-label`),
@@ -708,9 +806,7 @@ export function initCanvas(
           phone,
           labelFor("Mensaje", message, `${block.id}-message`),
           message,
-          labelFor("Color", color, `${block.id}-color`),
           color,
-          labelFor("Alineación", btnAlign, `${block.id}-align`),
           btnAlign,
         );
         break;

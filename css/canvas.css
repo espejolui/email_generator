@@ -94,20 +94,72 @@
       }
     }
 
-    & select {
-      appearance: none;
+    & .block__select {
+      position: relative;
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    & .select-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      font: inherit;
       border: 1px solid var(--border-color);
       border-radius: 999px;
-      padding: 0.45rem 2rem 0.45rem 1rem;
-      background-color: #fff;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.7rem center;
+      padding: 0.45rem 1rem;
+      background: #fff;
       cursor: pointer;
+
+      &:focus-visible {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      & svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+    }
+
+    & .select-pop {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 20;
+      list-style: none;
+      margin: 0;
+      padding: 0.35rem;
+      display: grid;
+      gap: 0.15rem;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px #2456d647;
+    }
+
+    & .select-pop__option {
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      cursor: pointer;
+
+      &:hover {
+        background: var(--hover-bg);
+      }
 
       &:focus {
         outline: none;
-        border-color: var(--accent);
+        background: var(--hover-bg);
+      }
+
+      &[aria-selected="true"] {
+        background: var(--hover-bg);
+        font-weight: 700;
       }
     }
 
@@ -124,7 +176,8 @@
   }
 
   & .block__color,
-  & .block__margins {
+  & .block__margins,
+  & .block__inline {
     display: flex;
     align-items: center;
     gap: 0.5rem;
