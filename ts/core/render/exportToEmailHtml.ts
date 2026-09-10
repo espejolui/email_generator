@@ -125,7 +125,7 @@ export function renderList(data: ListBlockData): RenderedRow {
 export function renderQuote(data: QuoteBlockData): RenderedRow {
   const color = data.color === "" ? "#555555" : data.color;
   return row(
-    `<blockquote style="margin:0; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; text-align:${data.align}; color:${color};">` +
+    `<blockquote style="margin:0; padding-left:12px; border-left:3px solid ${PRIMARY}; border-radius:${String(data.borderRadius)}px; font-style:italic; text-align:${data.align}; color:${color};">` +
       `<p style="margin:0; font-size:16px; line-height:1.75;${formatStyle(data, false)}">${data.content}</p>` +
       (data.cite === "" ? "" : `<cite style="font-size:12px; color:${MUTED};">— ${data.cite}</cite>`) +
       `</blockquote>`,

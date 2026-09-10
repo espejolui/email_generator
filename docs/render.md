@@ -13,8 +13,8 @@ funciones para no desincronizarse.
   márgenes y formato (negrita/cursiva/subrayado/tachado).
 - `renderImage(data)` — imagen con radio 12 px o aviso si la URL no es válida.
 - `renderList(data)` — `ul`/`ol` con alineación.
-- `renderQuote(data)` — cita con borde de marca, alineación, fondo, color
-  y formato.
+- `renderQuote(data)` — cita con borde de marca, radio configurable,
+  alineación, fondo, color y formato.
 - `renderDivider(data, corners?)` — barra con grosor configurable (color
   propio o degradado de marca) y márgenes superior/inferior configurables.
 - `renderButton(data)` — pill con enlace `wa.me` oficial y márgenes

@@ -32,7 +32,7 @@ con `@Editable()` y convierte a datos con `toData()`:
 - `ImageBlock` — `src` (solo https/data), `alt` (sin pie de foto).
 - `ListBlock` — `items` (máx. 20), `ordered`, `align`.
 - `QuoteBlock` — `content`, `cite`, `align`, `bg`, `color`, `bold`, `italic`,
-  `underline`, `strike`.
+  `underline`, `strike`, `borderRadius` (0 = cuadrado).
 - `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom`,
   `thickness` (0–80).
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,

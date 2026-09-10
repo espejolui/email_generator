@@ -829,6 +829,15 @@ export function initCanvas(
         const quoteFg = optionalColor("Texto", "Automático", block.color, "#555555", (next) => {
           store.update(block.id, { color: next });
         });
+        const quoteRadius = document.createElement("input");
+        quoteRadius.type = "number";
+        quoteRadius.min = "0";
+        quoteRadius.max = "80";
+        quoteRadius.value = String(block.borderRadius);
+        quoteRadius.setAttribute("aria-label", "Radio de bordes en píxeles");
+        quoteRadius.addEventListener("input", () => {
+          store.update(block.id, { borderRadius: sanitizeMargin(quoteRadius.value) });
+        });
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
           area,
@@ -836,6 +845,8 @@ export function initCanvas(
           cite,
           quoteAlign,
           colorRow(quoteBg, quoteFg),
+          labelFor("Radio (px)", quoteRadius, `${block.id}-radius`),
+          quoteRadius,
           formatRow(block.id, block, store),
         );
         break;
