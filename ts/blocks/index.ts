@@ -71,6 +71,8 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         italic: false,
         underline: false,
         strike: false,
+        marginTop: 0,
+        marginBottom: 0,
       };
     case "divider":
       return { id, type, color: "", marginTop: 8, marginBottom: 8, thickness: 2, borderRadius: 2 };

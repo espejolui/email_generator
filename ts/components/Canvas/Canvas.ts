@@ -831,6 +831,17 @@ export function initCanvas(
         const quoteFg = optionalColor("Texto", "Automático", block.color, "#555555", (next) => {
           store.update(block.id, { color: next });
         });
+        const quoteMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
           area,
@@ -839,6 +850,7 @@ export function initCanvas(
           quoteAlign,
           colorRow(quoteBg, quoteFg),
           formatRow(block.id, block, store),
+          quoteMargins,
         );
         break;
       }

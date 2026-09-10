@@ -16,6 +16,8 @@ export class QuoteBlock {
   #italic = false;
   #underline = false;
   #strike = false;
+  #marginTop = 0;
+  #marginBottom = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -102,6 +104,24 @@ export class QuoteBlock {
     return this.#strike;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
   toData(): QuoteBlockData {
     return {
       id: this.id,
@@ -115,6 +135,8 @@ export class QuoteBlock {
       italic: this.#italic,
       underline: this.#underline,
       strike: this.#strike,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
     };
   }
 }

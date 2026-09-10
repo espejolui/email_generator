@@ -66,6 +66,8 @@ export interface QuoteBlockData extends BaseBlockData {
   italic: boolean;
   underline: boolean;
   strike: boolean;
+  marginTop: number;
+  marginBottom: number;
 }
 
 export interface DividerBlockData extends BaseBlockData {
