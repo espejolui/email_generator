@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Editor visual de plantillas de correo con arrastrar y soltar">
+  <title>Generador de Plantillas</title>
+  <link rel="stylesheet" href="./css/main.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>Generador de Plantillas</h1>
+    <p>Arrastra bloques al lienzo, edítalos y descarga el HTML para tu correo.</p>
+  </header>
+  <div class="editor">
+    <aside class="palette" aria-label="Bloques disponibles">
+      <h2>Bloques</h2>
+      <ul id="palette-list"></ul>
+    </aside>
+    <main class="canvas" id="canvas" aria-label="Área de edición">
+      <h2>Lienzo</h2>
+      <p class="canvas__hint" id="canvas-hint">Arrastra aquí los bloques desde la paleta.</p>
+      <ol class="canvas__list" id="canvas-list" aria-live="polite"></ol>
+    </main>
+    <section class="preview" aria-label="Previsualización">
+      <header class="preview__toolbar">
+        <h2>Vista previa</h2>
+        <button type="button" data-action="download-template">Descargar plantilla</button>
+      </header>
+      <div class="preview__frame" id="preview-frame" aria-live="polite"></div>
+    </section>
+  </div>
+  <div class="sr-live" id="sr-live" aria-live="polite" role="status"></div>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
