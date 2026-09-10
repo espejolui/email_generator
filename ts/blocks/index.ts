@@ -28,7 +28,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         id,
         type,
         content: "Título de ejemplo",
-        level: 2,
+        level: 1,
         align: "left",
         bg: "",
         color: "",

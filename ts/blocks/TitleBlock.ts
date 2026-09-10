@@ -8,7 +8,7 @@ import { isTextAlign, isTitleLevel } from "./types.js";
 export class TitleBlock {
   readonly id: string;
   #content = "";
-  #level: TitleLevel = 2;
+  #level: TitleLevel = 1;
   #align: TextAlign = "left";
   #bg = "";
   #color = "";
@@ -34,7 +34,7 @@ export class TitleBlock {
 
   @Editable()
   set level(value: unknown) {
-    this.#level = isTitleLevel(value) ? value : 2;
+    this.#level = isTitleLevel(value) ? value : 1;
   }
 
   get level(): TitleLevel {
