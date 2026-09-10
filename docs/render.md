@@ -7,8 +7,9 @@ funciones para no desincronizarse.
 
 - `RenderedRow` — `{ html: "<tr>…</tr>" }`.
 - `renderTitle(data, corners?)` — `h1`–`h6` con tamaño, color (o el del
-  nivel), alineación y banda de fondo.
-- `renderText(data, corners?)` — párrafo 16 px/1.75 con alineación y fondo.
+  nivel), alineación, banda de fondo y márgenes superior/inferior.
+- `renderText(data, corners?)` — párrafo 16 px/1.75 con alineación, fondo
+  y márgenes superior/inferior.
 - `renderImage(data)` — imagen con radio 12 px o aviso si la URL no es válida.
 - `renderList(data)` — `ul`/`ol` con alineación.
 - `renderQuote(data)` — cita con borde de marca y alineación.

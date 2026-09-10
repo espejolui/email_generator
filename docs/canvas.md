@@ -10,7 +10,10 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
   - `signature` — firma tipo:id para detectar cambios estructurales.
   - `el` / `labelFor` — creación de nodos sin `innerHTML`.
   - `textAlignSelect` / `buttonAlignSelect` — selects de alineación.
-  - `optionalColor` / `bgControls` — picker + casilla de valor automático.
+  - `optionalColor` / `bgControls` — picker + casilla de valor automático;
+    en título/párrafo fondo y texto comparten una fila horizontal.
+  - `marginControls` — números de margen superior/inferior (0–80 px)
+    usados en título, párrafo y divisor.
   - `lucideIcon` / `refreshIcons` — iconos Lucide tras cada render.
   - `ensurePlaceholder` / `clearPlaceholder` / `movePlaceholder` —
     indicador visual de inserción.

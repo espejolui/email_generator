@@ -8,7 +8,7 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
 
 - `BlockType` — unión: `"title" | "text" | "image" | "list" | "quote" | "divider" | "button"`.
 - `TitleLevel` — `1 | 2 | 3 | 4 | 5 | 6`.
-- `TextAlign` — `"left" | "center" | "right"`.
+- `TextAlign` — `"left" | "center" | "right"` (sin justificado).
 - `ButtonAlign` — `"left" | "center" | "right"`.
 - `ButtonColor` — `"green" | "blue"`.
 - `TitleBlockData`, `TextBlockData`, `ImageBlockData`, `ListBlockData`,
@@ -25,13 +25,15 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
 Cada una recibe `id` en el constructor, sanitiza en sus setters decorados
 con `@Editable()` y convierte a datos con `toData()`:
 
-- `TitleBlock` — `content`, `level` (h1–h6), `align`, `bg`, `color`.
-- `TextBlock` — `content`, `align`, `bg`, `color`.
-- `ImageBlock` — `src` (solo https/data), `alt`.
+- `TitleBlock` — `content`, `level` (h1–h6), `align`, `bg`, `color`,
+  `marginTop`, `marginBottom`.
+- `TextBlock` — `content`, `align`, `bg`, `color`, `marginTop`, `marginBottom`.
+- `ImageBlock` — `src` (solo https/data), `alt` (sin pie de foto).
 - `ListBlock` — `items` (máx. 20), `ordered`, `align`.
 - `QuoteBlock` — `content`, `cite`, `align`.
 - `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom` (0–80).
-- `ButtonBlock` — `label`, `phone` (dígitos), `message`, `color`, `align`.
+- `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,
+  `color`, `align`.
 
 ## `index.ts`
 
