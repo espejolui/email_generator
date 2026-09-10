@@ -10,6 +10,7 @@ export class DividerBlock {
   #marginTop = 8;
   #marginBottom = 8;
   #thickness = 2;
+  #borderRadius = 2;
 
   constructor(id: string) {
     this.id = id;
@@ -51,6 +52,15 @@ export class DividerBlock {
     return this.#thickness;
   }
 
+  @Editable()
+  set borderRadius(value: string) {
+    this.#borderRadius = sanitizeMargin(value);
+  }
+
+  get borderRadius(): number {
+    return this.#borderRadius;
+  }
+
   toData(): DividerBlockData {
     return {
       id: this.id,
@@ -59,6 +69,7 @@ export class DividerBlock {
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
       thickness: this.#thickness,
+      borderRadius: this.#borderRadius,
     };
   }
 }

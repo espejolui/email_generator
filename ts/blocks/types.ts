@@ -75,6 +75,7 @@ export interface DividerBlockData extends BaseBlockData {
   marginTop: number;
   marginBottom: number;
   thickness: number;
+  borderRadius: number;
 }
 
 export interface ButtonBlockData extends BaseBlockData {

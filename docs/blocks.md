@@ -34,7 +34,7 @@ con `@Editable()` y convierte a datos con `toData()`:
 - `QuoteBlock` — `content`, `cite`, `align`, `bg`, `color`, `bold`, `italic`,
   `underline`, `strike`, `borderRadius` (0 = cuadrado).
 - `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom`,
-  `thickness` (0–80).
+  `thickness`, `borderRadius` (0 = cuadrado).
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,
   `color`, `align`, `marginTop`, `marginBottom`.
 

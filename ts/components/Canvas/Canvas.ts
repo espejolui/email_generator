@@ -885,12 +885,23 @@ export function initCanvas(
         thickness.addEventListener("input", () => {
           store.update(block.id, { thickness: sanitizeMargin(thickness.value) });
         });
+        const radius = document.createElement("input");
+        radius.type = "number";
+        radius.min = "0";
+        radius.max = "80";
+        radius.value = String(block.borderRadius);
+        radius.setAttribute("aria-label", "Radio de bordes en píxeles");
+        radius.addEventListener("input", () => {
+          store.update(block.id, { borderRadius: sanitizeMargin(radius.value) });
+        });
         wrap.append(
           note,
           divColor,
           divMargins,
           labelFor("Grosor (px)", thickness, `${block.id}-thickness`),
           thickness,
+          labelFor("Radio (px)", radius, `${block.id}-radius`),
+          radius,
         );
         break;
       }

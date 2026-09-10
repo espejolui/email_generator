@@ -15,8 +15,8 @@ funciones para no desincronizarse.
 - `renderList(data)` — `ul`/`ol` con alineación.
 - `renderQuote(data)` — cita con borde de marca, radio configurable,
   alineación, fondo, color y formato.
-- `renderDivider(data, corners?)` — barra con grosor configurable (color
-  propio o degradado de marca) y márgenes superior/inferior configurables.
+- `renderDivider(data, corners?)` — barra con grosor y radio configurables
+  (color propio o degradado de marca) y márgenes superior/inferior.
 - `renderButton(data)` — pill con enlace `wa.me` oficial y márgenes
   superior/inferior; sin teléfono, pill sin enlace.
 - `renderBlockToRow(data, index?, total?)` — despacha por `type` y calcula
