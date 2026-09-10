@@ -14,10 +14,11 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
     y cierre al hacer clic fuera; lo usan nivel, alineaciones y colores.
   - `closeSelect` — cierra la lista abierta y suelta sus oyentes.
   - `optionalColor` / `bgControls` — botón de muestra que abre un panel
-    estilo Excel: primero la casilla de valor automático
-    (Sin fondo/Automático/Degradado), luego presets de marca y color
-    personalizado; se ancla al contenedor vivo, cierra con Escape o clic
-    fuera. En título/párrafo fondo y texto comparten una fila horizontal.
+    estilo Excel: primero la casilla de valor automático en una línea
+    (Sin fondo/Automático/Degradado), luego presets de marca y campo de
+    texto hexadecimal (siempre HEX, sin popup nativo); se ancla al
+    contenedor vivo, cierra con Escape o clic fuera y su cierre es
+    re-entrante. En título/párrafo fondo y texto comparten una fila.
   - `marginControls` — números de margen superior/inferior (0–80 px)
     usados en título, párrafo y divisor.
   - `lucideIcon` / `refreshIcons` — iconos Lucide tras cada render.
