@@ -42,15 +42,23 @@ export function sanitizeAlt(input: string): string {
   return sanitizeText(input).slice(0, 200);
 }
 
-/** Lista blanca para enlaces de botón: solo https:. Cualquier otra cosa -> "". */
-export function sanitizeHref(input: string): string {
+/** Solo dígitos (E.164, con código país, sin "+", espacios ni guiones). */
+export function sanitizePhone(input: string): string {
+  return input.replace(/\D/g, "").slice(0, 15);
+}
+
+/** Arma el enlace oficial de WhatsApp Click-to-Chat: https://wa.me/<tel>?text=<msg>. */
+export function buildWhatsAppUrl(phone: string, message: string): string {
+  const digits = sanitizePhone(phone);
+  if (digits === "") return "";
+  const text = message.trim().slice(0, 300);
+  return text === ""
+    ? `https://wa.me/${digits}`
+    : `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+/** Solo hexadecimal #rrggbb. Cualquier otra cosa -> "" (sin fondo). */
+export function sanitizeColor(input: string): string {
   const value = input.trim();
-  if (value === "") return "";
-  try {
-    const url = new URL(value);
-    if (url.protocol === "https:") return url.toString();
-  } catch {
-    return "";
-  }
-  return "";
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value : "";
 }
