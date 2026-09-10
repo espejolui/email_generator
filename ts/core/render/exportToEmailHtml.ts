@@ -34,28 +34,39 @@ function spacer(height: number): string {
   return `<tr><td style="padding:0 48px; font-family:${FONT};"><div style="height:${String(height)}px; line-height:${String(height)}px;">&nbsp;</div></td></tr>`;
 }
 
-const TITLE_STYLE: Record<TitleLevel, string> = {
-  1: "font-size:26px; font-weight:900; color:#111111;",
-  2: "font-size:22px; font-weight:700; color:#444444;",
-  3: "font-size:17px; font-weight:900; color:#41b6e6;",
-  4: "font-size:16px; font-weight:700; color:#444444;",
-  5: "font-size:14px; font-weight:700; color:#555555;",
-  6: "font-size:12px; font-weight:700; color:#888888; letter-spacing:1px; text-transform:uppercase;",
+const TITLE_SIZE: Record<TitleLevel, string> = {
+  1: "font-size:26px; font-weight:900;",
+  2: "font-size:22px; font-weight:700;",
+  3: "font-size:17px; font-weight:900;",
+  4: "font-size:16px; font-weight:700;",
+  5: "font-size:14px; font-weight:700;",
+  6: "font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase;",
+};
+
+const TITLE_COLOR: Record<TitleLevel, string> = {
+  1: "#111111",
+  2: "#444444",
+  3: "#41b6e6",
+  4: "#444444",
+  5: "#555555",
+  6: "#888888",
 };
 
 export function renderTitle(data: TitleBlockData): RenderedRow {
   // Contrato: el contenido llega ya escapado desde el store (Canvas sanitiza
   // al guardar, AGENTS §7). No re-escapar aquí para evitar doble escape.
   const tag = `h${String(data.level)}`;
+  const color = data.color === "" ? TITLE_COLOR[data.level] : data.color;
   return row(
-    `<${tag} style="margin:0 0 12px; font-family:${FONT}; text-align:${data.align}; ${TITLE_STYLE[data.level]}">${data.content}</${tag}>`,
+    `<${tag} style="margin:0 0 12px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}">${data.content}</${tag}>`,
     data.bg,
   );
 }
 
 export function renderText(data: TextBlockData): RenderedRow {
+  const color = data.color === "" ? BODY_TEXT : data.color;
   return row(
-    `<p style="margin:0; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${BODY_TEXT};">${data.content}</p>`,
+    `<p style="margin:0; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};">${data.content}</p>`,
     data.bg,
   );
 }
@@ -65,10 +76,7 @@ export function renderImage(data: ImageBlockData): RenderedRow {
   const img = src === ""
     ? `<p style="margin:0; font-size:13px; color:${MUTED};">[Imagen sin URL válida]</p>`
     : `<img src="${src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
-  const cap = data.caption === ""
-    ? ""
-    : `<p style="margin:8px 0 0; font-size:12px; text-align:${data.captionAlign}; color:${MUTED};">${data.caption}</p>`;
-  return row(`${img}${cap}`);
+  return row(img);
 }
 
 export function renderList(data: ListBlockData): RenderedRow {
@@ -90,10 +98,13 @@ export function renderQuote(data: QuoteBlockData): RenderedRow {
   );
 }
 
-export function renderDivider(_data: DividerBlockData): RenderedRow {
+export function renderDivider(data: DividerBlockData): RenderedRow {
+  const bg = data.color === ""
+    ? `linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%)`
+    : data.color;
   return {
-    html: `<tr><td style="padding:0 48px 8px; font-family:${FONT};">` +
-      `<div style="height:2px; margin:4px 0; background:linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%); border-radius:2px;"></div>` +
+    html: `<tr><td style="padding:0 48px; font-family:${FONT};">` +
+      `<div style="height:2px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:2px;"></div>` +
       `</td></tr>`,
   };
 }
@@ -132,9 +143,10 @@ export function renderBlockToRow(data: AnyBlockData): RenderedRow {
 }
 
 function cardTable(body: string): string {
+  // Sin espaciador superior: el primer bloque arranca en el punto cero de la tarjeta.
   return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center" ` +
     `style="width:600px; max-width:600px; margin:0 auto; border-collapse:collapse; background-color:${CARD}; border-radius:16px;">` +
-    `${spacer(36)}\n${body}\n${spacer(12)}` +
+    `${body}\n${spacer(12)}` +
     `</table>`;
 }
 
