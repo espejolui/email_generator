@@ -3,7 +3,11 @@
   border-radius: 8px;
   padding: 0.75rem;
   background: #fff;
-  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 
   & h2 {
     margin: 0 0 0.5rem;
@@ -27,6 +31,7 @@
     gap: 0.6rem;
     min-height: 140px;
     border-radius: 6px;
+    overflow-y: auto;
 
     &:empty {
       border: 2px dashed var(--border-color);

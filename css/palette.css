@@ -3,6 +3,11 @@
   border-radius: 8px;
   padding: 0.75rem;
   background: #fff;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 
   & h2 {
     margin: 0 0 0.5rem;
@@ -15,6 +20,8 @@
     padding: 0;
     display: grid;
     gap: 0.4rem;
+    overflow-y: auto;
+    min-height: 0;
   }
 
   & li {

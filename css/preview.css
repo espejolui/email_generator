@@ -3,6 +3,10 @@
   border-radius: 8px;
   background: #fff;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
 
   & .preview__toolbar {
     display: flex;
@@ -11,6 +15,7 @@
     gap: 0.5rem;
     padding: 0.75rem;
     border-bottom: 1px solid var(--border-color);
+    flex: none;
 
     & h2 {
       margin: 0;
@@ -27,5 +32,7 @@
     padding: 1rem;
     background: #f0faff;
     overflow-x: auto;
+    overflow-y: auto;
+    min-height: 0;
   }
 }
