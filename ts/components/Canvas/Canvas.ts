@@ -82,9 +82,37 @@ function buttonAlignSelect(current: ButtonAlign, id: string): HTMLSelectElement 
   return select;
 }
 
+const PRESET_COLORS: ReadonlyArray<string> = [
+  "#41b6e6",
+  "#8DE1F7",
+  "#25d366",
+  "#444444",
+  "#111111",
+  "#ffffff",
+];
+
+let openColorPopover: HTMLElement | null = null;
+let openColorField: HTMLButtonElement | null = null;
+let colorDocClick: ((event: MouseEvent) => void) | null = null;
+let colorDocKey: ((event: KeyboardEvent) => void) | null = null;
+
+function closeColorPopover(): void {
+  openColorPopover?.remove();
+  openColorPopover = null;
+  openColorField?.setAttribute("aria-expanded", "false");
+  openColorField?.removeAttribute("data-color-open");
+  openColorField = null;
+  if (colorDocClick !== null) {
+    document.removeEventListener("click", colorDocClick);
+    colorDocClick = null;
+  }
+  if (colorDocKey !== null) {
+    document.removeEventListener("keydown", colorDocKey);
+    colorDocKey = null;
+  }
+}
+
 function optionalColor(
-  blockId: string,
-  key: string,
   pickerLabel: string,
   noneLabel: string,
   current: string,
@@ -92,27 +120,118 @@ function optionalColor(
   onChange: (value: string) => void,
 ): HTMLElement {
   const wrap = el("div", "block__color");
-  const picker = document.createElement("input");
-  picker.type = "color";
-  picker.value = current === "" ? fallback : current;
-  picker.setAttribute("aria-label", `Color de ${pickerLabel.toLowerCase()}`);
-  const none = document.createElement("input");
-  none.type = "checkbox";
-  none.checked = current === "";
-  const apply = (): void => {
-    onChange(none.checked ? "" : sanitizeColor(picker.value));
+  const name = el("span", "block__color-name");
+  name.textContent = pickerLabel;
+
+  const field = document.createElement("button");
+  field.type = "button";
+  field.className = "color-field";
+  field.setAttribute("aria-label", `Elegir color de ${pickerLabel.toLowerCase()}`);
+  field.setAttribute("aria-haspopup", "dialog");
+  field.setAttribute("aria-expanded", "false");
+
+  const preview = el("span", "color-swatch");
+  const paint = (value: string): void => {
+    if (value === "") {
+      preview.classList.add("is-none");
+      preview.style.backgroundColor = "";
+    } else {
+      preview.classList.remove("is-none");
+      preview.style.backgroundColor = value;
+    }
   };
-  picker.addEventListener("input", () => {
-    none.checked = false;
-    apply();
+  paint(current);
+  field.appendChild(preview);
+
+  field.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (field.getAttribute("data-color-open") === "true") {
+      closeColorPopover();
+      return;
+    }
+    closeColorPopover();
+    field.setAttribute("data-color-open", "true");
+    field.setAttribute("aria-expanded", "true");
+
+    const pop = el("div", "color-pop");
+    pop.setAttribute("role", "dialog");
+    pop.setAttribute("aria-label", `Colores de ${pickerLabel.toLowerCase()}`);
+
+    const custom = document.createElement("input");
+    custom.type = "color";
+    custom.value = current === "" ? fallback : current;
+    custom.setAttribute("aria-label", "Color personalizado");
+
+    const noneRow = el("label", "color-pop__none");
+    const none = document.createElement("input");
+    none.type = "checkbox";
+    none.checked = current === "";
+    const noneText = document.createElement("span");
+    noneText.textContent = noneLabel;
+    noneRow.append(none, noneText);
+    none.addEventListener("change", () => {
+      const value = none.checked ? "" : sanitizeColor(custom.value);
+      paint(value);
+      onChange(value);
+      closeColorPopover();
+    });
+
+    const grid = el("div", "color-pop__grid");
+    for (const hex of PRESET_COLORS) {
+      const swatch = document.createElement("button");
+      swatch.type = "button";
+      swatch.className = "color-swatch";
+      swatch.dataset["color"] = hex;
+      swatch.style.backgroundColor = hex;
+      swatch.setAttribute("aria-label", `Color ${hex}`);
+      swatch.addEventListener("click", () => {
+        none.checked = false;
+        custom.value = hex;
+        paint(hex);
+        onChange(hex);
+        closeColorPopover();
+      });
+      grid.appendChild(swatch);
+    }
+
+    const customRow = el("label", "color-pop__custom");
+    const customText = document.createElement("span");
+    customText.textContent = "Personalizado";
+    customRow.append(custom, customText);
+    custom.addEventListener("input", () => {
+      none.checked = false;
+      const value = sanitizeColor(custom.value);
+      paint(value);
+      onChange(value);
+    });
+    custom.addEventListener("change", () => {
+      closeColorPopover();
+    });
+
+    pop.append(noneRow, grid, customRow);
+    // El wrap original puede estar fuera del DOM (los hijos se reubican en
+    // una fila compartida): anclar el panel al contenedor vivo del botón.
+    const host = field.parentElement;
+    if (host === null) return;
+    host.appendChild(pop);
+    openColorPopover = pop;
+    openColorField = field;
+
+    colorDocClick = (ev: MouseEvent): void => {
+      const target = ev.target;
+      if (target instanceof Node && !pop.contains(target)) closeColorPopover();
+    };
+    colorDocKey = (ev: KeyboardEvent): void => {
+      if (ev.key === "Escape") {
+        closeColorPopover();
+        field.focus();
+      }
+    };
+    document.addEventListener("click", colorDocClick);
+    document.addEventListener("keydown", colorDocKey);
   });
-  none.addEventListener("change", apply);
-  wrap.append(
-    labelFor(pickerLabel, picker, `${blockId}-${key}`),
-    picker,
-    labelFor(noneLabel, none, `${blockId}-${key}none`),
-    none,
-  );
+
+  wrap.append(name, field);
   return wrap;
 }
 
@@ -121,7 +240,7 @@ function bgControls(
   currentBg: string,
   onBg: (bg: string) => void,
 ): HTMLElement {
-  return optionalColor(blockId, "bg", "Fondo", "Sin fondo", currentBg, "#41b6e6", onBg);
+  return optionalColor("Fondo", "Sin fondo", currentBg, "#41b6e6", onBg);
 }
 
 function marginControls(
@@ -358,7 +477,7 @@ export function initCanvas(
         const bg = bgControls(block.id, block.bg, (next) => {
           store.update(block.id, { bg: next });
         });
-        const fg = optionalColor(block.id, "fg", "Texto", "Automático", block.color, "#111111", (next) => {
+        const fg = optionalColor("Texto", "Automático", block.color, "#111111", (next) => {
           store.update(block.id, { color: next });
         });
         const titleColors = el("div", "block__color");
@@ -402,7 +521,7 @@ export function initCanvas(
         const textBg = bgControls(block.id, block.bg, (next) => {
           store.update(block.id, { bg: next });
         });
-        const textFg = optionalColor(block.id, "fg", "Texto", "Automático", block.color, "#444444", (next) => {
+        const textFg = optionalColor("Texto", "Automático", block.color, "#444444", (next) => {
           store.update(block.id, { color: next });
         });
         const textColors = el("div", "block__color");
@@ -518,8 +637,6 @@ export function initCanvas(
         const note = el("p", "block__note");
         note.textContent = "Separador horizontal";
         const divColor = optionalColor(
-          block.id,
-          "divcolor",
           "Línea",
           "Degradado",
           block.color,
