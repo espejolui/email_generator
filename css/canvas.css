@@ -42,15 +42,22 @@
     border-radius: 6px;
     padding: 0.5rem;
     background: #fff;
+    opacity: 0.55;
+    transition: opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 
     &[data-dragging="true"] {
-      opacity: 0.6;
-      box-shadow: 0 12px 28px rgba(36, 86, 214, 0.28);
+      opacity: 1;
+      box-shadow: 0 12px 28px #2456d647;
+    }
+
+    &:focus-within,
+    &:hover {
+      opacity: 1;
     }
 
     &:focus-within {
       border-color: var(--accent);
-      box-shadow: 0 6px 18px rgba(36, 86, 214, 0.18);
+      box-shadow: 0 6px 18px #2456d62e;
     }
   }
 
@@ -79,7 +86,7 @@
     & input:not([type="checkbox"]):not([type="color"]),
     & select {
       border: 1px solid var(--border-color);
-      border-radius: 50%;
+      border-radius: 999px;
       padding: 0.45rem 1rem;
 
       &:focus {
@@ -117,6 +124,62 @@
   & .block__actions {
     display: grid;
     gap: 0.25rem;
+  }
+
+  & .block__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    & svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+
+  & input[type="color"] {
+    appearance: none;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    cursor: pointer;
+
+    &::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    &::-webkit-color-swatch {
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+    }
+
+    &::-moz-color-swatch {
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+    }
   }
 
   & .canvas__placeholder {
