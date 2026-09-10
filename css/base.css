@@ -48,3 +48,14 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.icon {
+  display: inline-flex;
+  vertical-align: -3px;
+}
+
+button svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+}

@@ -22,6 +22,9 @@
     border: 1px dashed var(--border-color);
     border-radius: 6px;
     padding: 0.5rem 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
     &:hover {
       background: var(--hover-bg);
@@ -29,6 +32,17 @@
 
     &:active {
       cursor: grabbing;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    & svg {
+      width: 18px;
+      height: 18px;
+      flex: none;
     }
   }
 }
