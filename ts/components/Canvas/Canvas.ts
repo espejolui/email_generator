@@ -283,7 +283,11 @@ function optionalColor(
       preview.style.backgroundColor = value;
     }
   };
-  paint(current);
+  // Espejo local del valor vigente: el lienzo no se re-renderiza ante
+  // cambios de contenido, así que el panel debe leer esto al abrir
+  // (no el `current` capturado al construir).
+  let currentValue = current;
+  paint(currentValue);
   field.appendChild(preview);
 
   field.addEventListener("click", (event) => {
@@ -300,11 +304,11 @@ function optionalColor(
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", `Colores de ${pickerLabel.toLowerCase()}`);
 
-    // HEX primero (texto) + selector nativo: ambos precargados con el mismo
-    // valor (MDN: value precarga el campo y el selector) y sincronizados.
+    // HEX primero (texto) + selector nativo: ambos precargados con el valor
+    // vigente (MDN: value precarga el campo y el selector) y sincronizados.
     const hex = document.createElement("input");
     hex.type = "text";
-    hex.value = current === "" ? fallback : current;
+    hex.value = currentValue === "" ? fallback : currentValue;
     hex.placeholder = "#41b6e6";
     hex.maxLength = 7;
     hex.spellcheck = false;
@@ -312,28 +316,26 @@ function optionalColor(
 
     const native = document.createElement("input");
     native.type = "color";
-    native.value = current === "" ? fallback : current;
+    native.value = currentValue === "" ? fallback : currentValue;
     native.setAttribute("aria-label", "Selector de color");
-
-    let lastValid = hex.value;
 
     const noneRow = el("label", "color-pop__none");
     const none = document.createElement("input");
     none.type = "checkbox";
-    none.checked = current === "";
+    none.checked = currentValue === "";
     const noneText = document.createElement("span");
     noneText.textContent = noneLabel;
     noneRow.append(noneText, none);
     none.addEventListener("change", () => {
       if (none.checked) {
-        paint("");
-        onChange("");
+        currentValue = "";
       } else {
-        hex.value = lastValid;
-        native.value = lastValid;
-        paint(lastValid);
-        onChange(lastValid);
+        currentValue = currentValue === "" ? fallback : currentValue;
+        hex.value = currentValue;
+        native.value = currentValue;
       }
+      paint(currentValue);
+      onChange(currentValue);
       closeColorPopover();
     });
 
@@ -349,7 +351,7 @@ function optionalColor(
         none.checked = false;
         hex.value = preset;
         native.value = preset;
-        lastValid = preset;
+        currentValue = preset;
         paint(preset);
         onChange(preset);
         closeColorPopover();
@@ -365,7 +367,7 @@ function optionalColor(
     hex.addEventListener("input", () => {
       const value = sanitizeColor(hex.value);
       if (value === "") return;
-      lastValid = value;
+      currentValue = value;
       native.value = value;
       none.checked = false;
       paint(value);
@@ -376,7 +378,7 @@ function optionalColor(
     });
     native.addEventListener("input", () => {
       const value = sanitizeColor(native.value);
-      lastValid = value;
+      currentValue = value;
       hex.value = value;
       none.checked = false;
       paint(value);
