@@ -1,4 +1,5 @@
 import { buildWhatsAppUrl, sanitizeImageSrc } from "../sanitize/sanitize.js";
+import { lightenHex } from "../color/color.js";
 import type {
   AnyBlockData,
   ButtonBlockData,
@@ -134,9 +135,11 @@ export function renderQuote(data: QuoteBlockData): RenderedRow {
 }
 
 export function renderDivider(data: DividerBlockData, corners: Corner = ""): RenderedRow {
+  // Sin color: degradado de marca original. Con color: degradado que nace
+  // del color elegido hacia su versión aclarada.
   const bg = data.color === ""
     ? `linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%)`
-    : data.color;
+    : `linear-gradient(90deg,${data.color} 0%,${lightenHex(data.color, 0.45)} 100%)`;
   return {
     html: `<tr><td style="padding:0 48px; font-family:${FONT};${cornerStyle(corners)}">` +
       `<div style="height:${String(data.thickness)}px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:${String(data.borderRadius)}px;"></div>` +

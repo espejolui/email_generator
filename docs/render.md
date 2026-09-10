@@ -16,7 +16,8 @@ funciones para no desincronizarse.
 - `renderQuote(data)` — cita con borde de marca, radio configurable,
   alineación, fondo, color y formato.
 - `renderDivider(data, corners?)` — barra con grosor y radio configurables
-  (color propio o degradado de marca) y márgenes superior/inferior.
+  y márgenes superior/inferior; siempre en degradado: el de marca por
+  defecto o uno que nace del color elegido (`lightenHex`).
 - `renderButton(data)` — pill con enlace `wa.me` oficial y márgenes
   superior/inferior; sin teléfono, pill sin enlace.
 - `renderBlockToRow(data, index?, total?)` — despacha por `type` y calcula

@@ -858,7 +858,7 @@ export function initCanvas(
         note.textContent = "Separador horizontal";
         const divColor = optionalColor(
           "Línea",
-          "Degradado",
+          "Por defecto",
           block.color,
           "#41b6e6",
           (next) => {
