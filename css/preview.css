@@ -25,7 +25,7 @@
 
   & .preview__frame {
     padding: 1rem;
-    background: #f4f4f4;
+    background: #f0faff;
     overflow-x: auto;
   }
 }
