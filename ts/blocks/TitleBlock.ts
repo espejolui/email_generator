@@ -4,13 +4,14 @@ import { sanitizeColor, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TitleBlockData, TitleLevel } from "./types.js";
 import { isTextAlign, isTitleLevel } from "./types.js";
 
-@Block({ type: "title", label: "Título", icon: "🔠" })
+@Block({ type: "title", label: "Título", icon: "heading" })
 export class TitleBlock {
   readonly id: string;
   #content = "";
   #level: TitleLevel = 2;
   #align: TextAlign = "left";
   #bg = "";
+  #color = "";
 
   constructor(id: string) {
     this.id = id;
@@ -52,6 +53,15 @@ export class TitleBlock {
     return this.#bg;
   }
 
+  @Editable()
+  set color(value: string) {
+    this.#color = sanitizeColor(value);
+  }
+
+  get color(): string {
+    return this.#color;
+  }
+
   toData(): TitleBlockData {
     return {
       id: this.id,
@@ -60,6 +70,7 @@ export class TitleBlock {
       level: this.#level,
       align: this.#align,
       bg: this.#bg,
+      color: this.#color,
     };
   }
 }

@@ -4,12 +4,13 @@ import { sanitizeColor, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TextBlockData } from "./types.js";
 import { isTextAlign } from "./types.js";
 
-@Block({ type: "text", label: "Caja de texto", icon: "📝" })
+@Block({ type: "text", label: "Caja de texto", icon: "text" })
 export class TextBlock {
   readonly id: string;
   #content = "";
   #align: TextAlign = "left";
   #bg = "";
+  #color = "";
 
   constructor(id: string) {
     this.id = id;
@@ -42,7 +43,23 @@ export class TextBlock {
     return this.#bg;
   }
 
+  @Editable()
+  set color(value: string) {
+    this.#color = sanitizeColor(value);
+  }
+
+  get color(): string {
+    return this.#color;
+  }
+
   toData(): TextBlockData {
-    return { id: this.id, type: "text", content: this.#content, align: this.#align, bg: this.#bg };
+    return {
+      id: this.id,
+      type: "text",
+      content: this.#content,
+      align: this.#align,
+      bg: this.#bg,
+      color: this.#color,
+    };
   }
 }

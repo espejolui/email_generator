@@ -4,7 +4,7 @@ import { sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ButtonAlign, ButtonBlockData, ButtonColor } from "./types.js";
 import { isButtonAlign, isButtonColor } from "./types.js";
 
-@Block({ type: "button", label: "Botón WhatsApp", icon: "💬" })
+@Block({ type: "button", label: "Botón WhatsApp", icon: "message-circle" })
 export class ButtonBlock {
   readonly id: string;
   #label = "";

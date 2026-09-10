@@ -4,7 +4,7 @@ import { sanitizeText } from "../core/sanitize/sanitize.js";
 import type { QuoteBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
-@Block({ type: "quote", label: "Cita", icon: "💬" })
+@Block({ type: "quote", label: "Cita", icon: "quote" })
 export class QuoteBlock {
   readonly id: string;
   #content = "";

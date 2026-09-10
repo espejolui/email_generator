@@ -4,7 +4,7 @@ import { sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ListBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
-@Block({ type: "list", label: "Lista", icon: "📋" })
+@Block({ type: "list", label: "Lista", icon: "list" })
 export class ListBlock {
   readonly id: string;
   #items: string[] = [""];

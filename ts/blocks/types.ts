@@ -4,7 +4,7 @@ export type ButtonColor = "green" | "blue";
 
 export type TitleLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
-export type TextAlign = "left" | "center" | "justify";
+export type TextAlign = "left" | "center" | "right";
 
 export type ButtonAlign = "left" | "center" | "right";
 
@@ -19,6 +19,7 @@ export interface TitleBlockData extends BaseBlockData {
   level: TitleLevel;
   align: TextAlign;
   bg: string;
+  color: string;
 }
 
 export interface TextBlockData extends BaseBlockData {
@@ -26,14 +27,13 @@ export interface TextBlockData extends BaseBlockData {
   content: string;
   align: TextAlign;
   bg: string;
+  color: string;
 }
 
 export interface ImageBlockData extends BaseBlockData {
   readonly type: "image";
   src: string;
   alt: string;
-  caption: string;
-  captionAlign: TextAlign;
 }
 
 export interface ListBlockData extends BaseBlockData {
@@ -52,6 +52,9 @@ export interface QuoteBlockData extends BaseBlockData {
 
 export interface DividerBlockData extends BaseBlockData {
   readonly type: "divider";
+  color: string;
+  marginTop: number;
+  marginBottom: number;
 }
 
 export interface ButtonBlockData extends BaseBlockData {
@@ -93,7 +96,7 @@ export function isTitleLevel(value: unknown): value is TitleLevel {
 }
 
 export function isTextAlign(value: string): value is TextAlign {
-  return value === "left" || value === "center" || value === "justify";
+  return value === "left" || value === "center" || value === "right";
 }
 
 export function isButtonAlign(value: string): value is ButtonAlign {
