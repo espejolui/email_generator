@@ -25,9 +25,18 @@ const BODY_TEXT = "#444444";
 const MUTED = "#888888";
 const GREEN = "#25d366";
 
-function row(inner: string, bg = ""): RenderedRow {
+type Corner = "" | "top" | "bottom" | "both";
+
+function cornerStyle(corners: Corner): string {
+  if (corners === "both") return " border-radius:16px;";
+  if (corners === "top") return " border-radius:16px 16px 0 0;";
+  if (corners === "bottom") return " border-radius:0 0 16px 16px;";
+  return "";
+}
+
+function row(inner: string, bg = "", corners: Corner = ""): RenderedRow {
   const bgStyle = bg === "" ? "" : ` background-color:${bg};`;
-  return { html: `<tr><td style="padding:0 48px 20px; font-family:${FONT};${bgStyle}">${inner}</td></tr>` };
+  return { html: `<tr><td style="padding:0 48px 20px; font-family:${FONT};${bgStyle}${cornerStyle(corners)}">${inner}</td></tr>` };
 }
 
 function spacer(height: number): string {
@@ -52,7 +61,7 @@ const TITLE_COLOR: Record<TitleLevel, string> = {
   6: "#888888",
 };
 
-export function renderTitle(data: TitleBlockData): RenderedRow {
+export function renderTitle(data: TitleBlockData, corners: Corner = ""): RenderedRow {
   // Contrato: el contenido llega ya escapado desde el store (Canvas sanitiza
   // al guardar, AGENTS §7). No re-escapar aquí para evitar doble escape.
   const tag = `h${String(data.level)}`;
@@ -60,14 +69,16 @@ export function renderTitle(data: TitleBlockData): RenderedRow {
   return row(
     `<${tag} style="margin:0 0 12px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}">${data.content}</${tag}>`,
     data.bg,
+    corners,
   );
 }
 
-export function renderText(data: TextBlockData): RenderedRow {
+export function renderText(data: TextBlockData, corners: Corner = ""): RenderedRow {
   const color = data.color === "" ? BODY_TEXT : data.color;
   return row(
     `<p style="margin:0; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};">${data.content}</p>`,
     data.bg,
+    corners,
   );
 }
 
@@ -98,12 +109,12 @@ export function renderQuote(data: QuoteBlockData): RenderedRow {
   );
 }
 
-export function renderDivider(data: DividerBlockData): RenderedRow {
+export function renderDivider(data: DividerBlockData, corners: Corner = ""): RenderedRow {
   const bg = data.color === ""
     ? `linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%)`
     : data.color;
   return {
-    html: `<tr><td style="padding:0 48px; font-family:${FONT};">` +
+    html: `<tr><td style="padding:0 48px; font-family:${FONT};${cornerStyle(corners)}">` +
       `<div style="height:2px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:2px;"></div>` +
       `</td></tr>`,
   };
@@ -123,12 +134,13 @@ export function renderButton(data: ButtonBlockData): RenderedRow {
   );
 }
 
-export function renderBlockToRow(data: AnyBlockData): RenderedRow {
+export function renderBlockToRow(data: AnyBlockData, index = 0, total = 1): RenderedRow {
+  const corners: Corner = total <= 1 ? "both" : index === 0 ? "top" : index === total - 1 ? "bottom" : "";
   switch (data.type) {
     case "title":
-      return renderTitle(data);
+      return renderTitle(data, corners);
     case "text":
-      return renderText(data);
+      return renderText(data, corners);
     case "image":
       return renderImage(data);
     case "list":
@@ -136,7 +148,7 @@ export function renderBlockToRow(data: AnyBlockData): RenderedRow {
     case "quote":
       return renderQuote(data);
     case "divider":
-      return renderDivider(data);
+      return renderDivider(data, corners);
     case "button":
       return renderButton(data);
   }
@@ -152,7 +164,7 @@ function cardTable(body: string): string {
 
 /** Misma salida para Preview y descarga: evita desincronización. */
 export function buildEmailDocument(blocks: readonly AnyBlockData[]): string {
-  const body = blocks.map(renderBlockToRow).map((r) => r.html).join("\n");
+  const body = blocks.map((b, i) => renderBlockToRow(b, i, blocks.length).html).join("\n");
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -178,7 +190,7 @@ ${cardTable(body)}
 
 /** Solo la tarjeta, para incrustar en el panel de vista previa del editor. */
 export function buildPreviewTable(blocks: readonly AnyBlockData[]): string {
-  const body = blocks.map(renderBlockToRow).map((r) => r.html).join("\n");
+  const body = blocks.map((b, i) => renderBlockToRow(b, i, blocks.length).html).join("\n");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BG}; padding:24px 8px;">` +
     `<tr><td align="center">${cardTable(body)}</td></tr></table>`;
 }
