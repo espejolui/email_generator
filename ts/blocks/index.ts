@@ -4,6 +4,7 @@ import "./ImageBlock.js";
 import "./ListBlock.js";
 import "./QuoteBlock.js";
 import "./DividerBlock.js";
+import "./ButtonBlock.js";
 import { getRegisteredBlocks } from "../core/decorators/Block.js";
 import type { AnyBlockData, BlockType } from "./types.js";
 
@@ -34,5 +35,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
       return { id, type, content: "Cita de ejemplo.", cite: "" };
     case "divider":
       return { id, type };
+    case "button":
+      return { id, type, label: "Escríbeme haciendo clic aquí", href: "", color: "green" };
   }
 }

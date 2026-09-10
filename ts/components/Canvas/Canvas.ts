@@ -1,11 +1,13 @@
 import { createBlockData, createId } from "../../blocks/index.js";
 import type { AnyBlockData } from "../../blocks/types.js";
+import { isButtonColor } from "../../blocks/types.js";
 import {
   getDragPayload,
   insertionIndexFor,
 } from "../../core/dnd/dragController.js";
 import {
   sanitizeAlt,
+  sanitizeHref,
   sanitizeImageSrc,
   sanitizeText,
 } from "../../core/sanitize/sanitize.js";
@@ -316,6 +318,45 @@ export function initCanvas(
         const note = el("p", "block__note");
         note.textContent = "Separador horizontal";
         wrap.appendChild(note);
+        break;
+      }
+      case "button": {
+        const label = document.createElement("input");
+        label.type = "text";
+        label.value = block.label;
+        label.placeholder = "Texto del botón";
+        label.setAttribute("aria-label", "Texto del botón");
+        label.addEventListener("input", () => {
+          store.update(block.id, { label: sanitizeText(label.value).slice(0, 80) });
+        });
+        const href = document.createElement("input");
+        href.type = "url";
+        href.value = block.href;
+        href.placeholder = "https://…";
+        href.setAttribute("aria-label", "Enlace del botón (https)");
+        href.addEventListener("input", () => {
+          store.update(block.id, { href: sanitizeHref(href.value) });
+        });
+        const color = document.createElement("select");
+        color.setAttribute("aria-label", "Color del botón");
+        for (const c of ["green", "blue"] as const) {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c === "green" ? "Verde WhatsApp" : "Azul Comfacundi";
+          if (block.color === c) opt.selected = true;
+          color.appendChild(opt);
+        }
+        color.addEventListener("change", () => {
+          store.update(block.id, { color: isButtonColor(color.value) ? color.value : "green" });
+        });
+        wrap.append(
+          labelFor("Texto", label, `${block.id}-label`),
+          label,
+          labelFor("Enlace", href, `${block.id}-href`),
+          href,
+          labelFor("Color", color, `${block.id}-color`),
+          color,
+        );
         break;
       }
     }

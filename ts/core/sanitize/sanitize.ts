@@ -41,3 +41,16 @@ export function sanitizeImageSrc(input: string): string {
 export function sanitizeAlt(input: string): string {
   return sanitizeText(input).slice(0, 200);
 }
+
+/** Lista blanca para enlaces de botón: solo https:. Cualquier otra cosa -> "". */
+export function sanitizeHref(input: string): string {
+  const value = input.trim();
+  if (value === "") return "";
+  try {
+    const url = new URL(value);
+    if (url.protocol === "https:") return url.toString();
+  } catch {
+    return "";
+  }
+  return "";
+}

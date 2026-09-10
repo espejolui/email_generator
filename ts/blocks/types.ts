@@ -1,4 +1,6 @@
-export type BlockType = "title" | "text" | "image" | "list" | "quote" | "divider";
+export type BlockType = "title" | "text" | "image" | "list" | "quote" | "divider" | "button";
+
+export type ButtonColor = "green" | "blue";
 
 export interface BaseBlockData {
   readonly id: string;
@@ -39,13 +41,21 @@ export interface DividerBlockData extends BaseBlockData {
   readonly type: "divider";
 }
 
+export interface ButtonBlockData extends BaseBlockData {
+  readonly type: "button";
+  label: string;
+  href: string;
+  color: ButtonColor;
+}
+
 export type AnyBlockData =
   | TitleBlockData
   | TextBlockData
   | ImageBlockData
   | ListBlockData
   | QuoteBlockData
-  | DividerBlockData;
+  | DividerBlockData
+  | ButtonBlockData;
 
 export function isBlockType(value: string): value is BlockType {
   return (
@@ -54,6 +64,11 @@ export function isBlockType(value: string): value is BlockType {
     value === "image" ||
     value === "list" ||
     value === "quote" ||
-    value === "divider"
+    value === "divider" ||
+    value === "button"
   );
+}
+
+export function isButtonColor(value: string): value is ButtonColor {
+  return value === "green" || value === "blue";
 }
