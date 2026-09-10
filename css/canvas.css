@@ -83,7 +83,7 @@
       font: inherit;
     }
 
-    & input:not([type="checkbox"]):not([type="color"]) {
+    & input:not([type="checkbox"]) {
       border: 1px solid var(--border-color);
       border-radius: 999px;
       padding: 0.45rem 1rem;
@@ -240,6 +240,7 @@
     align-items: center;
     gap: 0.45rem;
     width: fit-content;
+    white-space: nowrap;
     font-size: 0.85rem;
     cursor: pointer;
   }
@@ -310,31 +311,6 @@
     & svg {
       width: 15px;
       height: 15px;
-    }
-  }
-
-  & input[type="color"] {
-    appearance: none;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border: none;
-    border-radius: 999px;
-    background: none;
-    cursor: pointer;
-
-    &::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    &::-webkit-color-swatch {
-      border: 1px solid var(--border-color);
-      border-radius: 999px;
-    }
-
-    &::-moz-color-swatch {
-      border: 1px solid var(--border-color);
-      border-radius: 999px;
     }
   }
 

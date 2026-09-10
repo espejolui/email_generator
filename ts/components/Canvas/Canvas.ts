@@ -68,19 +68,25 @@ let selectDocClick: ((event: MouseEvent) => void) | null = null;
 let selectDocKey: ((event: KeyboardEvent) => void) | null = null;
 
 function closeSelect(): void {
-  openSelectList?.remove();
+  // Igual que closeColorPopover: cierre re-entrante (Escape en la lista y a
+  // nivel de documento), se limpia el estado antes de tocar el DOM.
+  const list = openSelectList;
   openSelectList = null;
-  openSelectButton?.setAttribute("aria-expanded", "false");
-  openSelectButton?.removeAttribute("data-select-open");
+  const button = openSelectButton;
   openSelectButton = null;
-  if (selectDocClick !== null) {
-    document.removeEventListener("click", selectDocClick);
-    selectDocClick = null;
+  const onClick = selectDocClick;
+  selectDocClick = null;
+  const onKey = selectDocKey;
+  selectDocKey = null;
+  try {
+    list?.remove();
+  } catch {
+    // Ya separado por la llamada re-entrante: nada que hacer.
   }
-  if (selectDocKey !== null) {
-    document.removeEventListener("keydown", selectDocKey);
-    selectDocKey = null;
-  }
+  button?.setAttribute("aria-expanded", "false");
+  button?.removeAttribute("data-select-open");
+  if (onClick !== null) document.removeEventListener("click", onClick);
+  if (onKey !== null) document.removeEventListener("keydown", onKey);
 }
 
 /**
@@ -227,19 +233,26 @@ let colorDocClick: ((event: MouseEvent) => void) | null = null;
 let colorDocKey: ((event: KeyboardEvent) => void) | null = null;
 
 function closeColorPopover(): void {
-  openColorPopover?.remove();
+  // Se limpia el estado ANTES de tocar el DOM: el cierre es re-entrante
+  // (Escape -> field.focus() -> blur/change -> cerrar otra vez) y el nodo
+  // puede ya estar separado cuando llega la segunda llamada.
+  const pop = openColorPopover;
   openColorPopover = null;
-  openColorField?.setAttribute("aria-expanded", "false");
-  openColorField?.removeAttribute("data-color-open");
+  const field = openColorField;
   openColorField = null;
-  if (colorDocClick !== null) {
-    document.removeEventListener("click", colorDocClick);
-    colorDocClick = null;
+  const onClick = colorDocClick;
+  colorDocClick = null;
+  const onKey = colorDocKey;
+  colorDocKey = null;
+  try {
+    pop?.remove();
+  } catch {
+    // Ya separado por la llamada re-entrante: nada que hacer.
   }
-  if (colorDocKey !== null) {
-    document.removeEventListener("keydown", colorDocKey);
-    colorDocKey = null;
-  }
+  field?.setAttribute("aria-expanded", "false");
+  field?.removeAttribute("data-color-open");
+  if (onClick !== null) document.removeEventListener("click", onClick);
+  if (onKey !== null) document.removeEventListener("keydown", onKey);
 }
 
 function optionalColor(
@@ -288,9 +301,13 @@ function optionalColor(
     pop.setAttribute("aria-label", `Colores de ${pickerLabel.toLowerCase()}`);
 
     const custom = document.createElement("input");
-    custom.type = "color";
+    custom.type = "text";
     custom.value = current === "" ? fallback : current;
-    custom.setAttribute("aria-label", "Color personalizado");
+    custom.placeholder = "#41b6e6";
+    custom.maxLength = 7;
+    custom.spellcheck = false;
+    custom.setAttribute("aria-label", "Color personalizado en hexadecimal");
+    let lastValid = custom.value;
 
     const noneRow = el("label", "color-pop__none");
     const none = document.createElement("input");
@@ -300,9 +317,14 @@ function optionalColor(
     noneText.textContent = noneLabel;
     noneRow.append(noneText, none);
     none.addEventListener("change", () => {
-      const value = none.checked ? "" : sanitizeColor(custom.value);
-      paint(value);
-      onChange(value);
+      if (none.checked) {
+        paint("");
+        onChange("");
+      } else {
+        custom.value = lastValid;
+        paint(lastValid);
+        onChange(lastValid);
+      }
       closeColorPopover();
     });
 
@@ -317,6 +339,7 @@ function optionalColor(
       swatch.addEventListener("click", () => {
         none.checked = false;
         custom.value = hex;
+        lastValid = hex;
         paint(hex);
         onChange(hex);
         closeColorPopover();
@@ -331,6 +354,8 @@ function optionalColor(
     custom.addEventListener("input", () => {
       none.checked = false;
       const value = sanitizeColor(custom.value);
+      if (value === "") return;
+      lastValid = value;
       paint(value);
       onChange(value);
     });
