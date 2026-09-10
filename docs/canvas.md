@@ -18,8 +18,10 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
     (Sin fondo/Automático/Degradado), luego presets de marca y fila
     Personalizado con campo HEX primero + selector nativo `<input
     type="color">` precargado (MDN) y sincronizados en ambos sentidos;
-    se ancla al contenedor vivo, cierra con Escape o clic fuera y su
-    cierre es re-entrante. En título/párrafo fondo y texto comparten fila.
+    el panel lee el valor vigente al abrir (espejo local) para que
+    Sin fondo/Automático/Degradado nunca quede desfasado; se ancla al
+    contenedor vivo, cierra con Escape o clic fuera y su cierre es
+    re-entrante. En título/párrafo fondo y texto comparten fila.
   - `marginControls` — números de margen superior/inferior (0–80 px)
     usados en título, párrafo, botón y divisor.
   - `colorRow` — junta dos controles de color en una fila horizontal.
