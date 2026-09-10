@@ -41,9 +41,16 @@
     border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 0.5rem;
+    background: #fff;
 
     &[data-dragging="true"] {
-      opacity: 0.5;
+      opacity: 0.6;
+      box-shadow: 0 12px 28px rgba(36, 86, 214, 0.28);
+    }
+
+    &:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 6px 18px rgba(36, 86, 214, 0.18);
     }
   }
 
@@ -67,6 +74,43 @@
     & select {
       width: 100%;
       font: inherit;
+    }
+
+    & input:not([type="checkbox"]):not([type="color"]),
+    & select {
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      padding: 0.45rem 1rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+    }
+
+    & textarea {
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 0.6rem 1rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+    }
+  }
+
+  & .block__type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--accent);
+    font-size: 0.8rem;
+    margin-bottom: 0.35rem;
+
+    & svg {
+      width: 16px;
+      height: 16px;
     }
   }
 
