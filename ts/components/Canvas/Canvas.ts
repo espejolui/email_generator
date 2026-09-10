@@ -1,6 +1,7 @@
 import { createBlockData, createId } from "../../blocks/index.js";
 import type { AnyBlockData, ButtonAlign, TextAlign } from "../../blocks/types.js";
 import { isButtonAlign, isButtonColor, isTextAlign, isTitleLevel } from "../../blocks/types.js";
+import { getBlockMetadata } from "../../core/decorators/Block.js";
 import {
   getDragPayload,
   insertionIndexFor,
@@ -248,7 +249,14 @@ export function initCanvas(
     });
 
     const body = el("div", "block__body");
-    body.appendChild(renderFields(block));
+    const meta = getBlockMetadata(block.type);
+    const badge = el("span", "block__type");
+    badge.title = meta?.label ?? block.type;
+    badge.appendChild(lucideIcon(meta?.icon ?? "box", ""));
+    const badgeLabel = el("span", "block__type-label");
+    badgeLabel.textContent = meta?.label ?? block.type;
+    badge.appendChild(badgeLabel);
+    body.append(badge, renderFields(block));
 
     const actions = el("div", "block__actions");
     const up = el("button", "block__btn");
