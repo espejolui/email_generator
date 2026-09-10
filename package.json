@@ -7,6 +7,7 @@
   "scripts": {
     "preinstall": "node -e \"if(String(process.env.npm_config_user_agent||'').startsWith('npm/')){console.error('npm está prohibido por AGENTS.md: usa pnpm');process.exit(1)}\"",
     "build": "tsc",
+    "build:pages": "node scripts/copy-static.mjs && tsc -p tsconfig.pages.json",
     "start": "pnpm run build && node server.js",
     "check": "tsc --noEmit"
   },
