@@ -9,7 +9,10 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
   - `announce` — mensajes al `aria-live`.
   - `signature` — firma tipo:id para detectar cambios estructurales.
   - `el` / `labelFor` — creación de nodos sin `innerHTML`.
-  - `textAlignSelect` / `buttonAlignSelect` — selects de alineación.
+  - `selectField` — desplegable propio estilo pill (el popup nativo lo
+    pinta el SO): botón + lista `listbox` con teclado (flechas/Enter/Escape)
+    y cierre al hacer clic fuera; lo usan nivel, alineaciones y colores.
+  - `closeSelect` — cierra la lista abierta y suelta sus oyentes.
   - `optionalColor` / `bgControls` — botón de muestra que abre un panel
     estilo Excel: primero la casilla de valor automático
     (Sin fondo/Automático/Degradado), luego presets de marca y color
