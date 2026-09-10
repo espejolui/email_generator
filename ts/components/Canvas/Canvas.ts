@@ -428,6 +428,13 @@ function colorRow(first: HTMLElement, second: HTMLElement): HTMLElement {
   return row;
 }
 
+/** Pareja etiqueta+control inseparable (nunca se parte en dos líneas). */
+function inlinePair(labelText: string, control: HTMLElement, id: string): HTMLElement {
+  const pair = el("span", "block__inline-option");
+  pair.append(labelFor(labelText, control, id), control);
+  return pair;
+}
+
 interface FormatFlags {
   readonly bold: boolean;
   readonly italic: boolean;
@@ -455,7 +462,7 @@ function formatRow(blockId: string, flags: FormatFlags, store: EditorStore): HTM
       else if (key === "underline") store.update(blockId, { underline: value });
       else store.update(blockId, { strike: value });
     });
-    row.append(labelFor(labelText, box, `${blockId}-fmt-${key}`), box);
+    row.appendChild(inlinePair(labelText, box, `${blockId}-fmt-${key}`));
   }
   return row;
 }
@@ -789,10 +796,7 @@ export function initCanvas(
           store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
         const orderedRow = el("div", "block__inline");
-        orderedRow.append(
-          labelFor("Ordenada", ordered, `${block.id}-ordered`),
-          ordered,
-        );
+        orderedRow.appendChild(inlinePair("Ordenada", ordered, `${block.id}-ordered`));
         wrap.append(
           labelFor("Puntos", area, `${block.id}-items`),
           area,

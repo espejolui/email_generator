@@ -184,6 +184,14 @@
     flex-wrap: wrap;
   }
 
+  & .block__inline-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+
   & .block__color {
     position: relative;
   }
