@@ -13,8 +13,8 @@ funciones para no desincronizarse.
   márgenes y formato (negrita/cursiva/subrayado/tachado).
 - `renderImage(data)` — imagen con radio 12 px o aviso si la URL no es válida.
 - `renderList(data)` — `ul`/`ol` con alineación.
-- `renderQuote(data)` — cita con borde de marca, radio configurable,
-  alineación, fondo, color y formato.
+- `renderQuote(data)` — cita con borde de marca, alineación, fondo, color
+  y formato.
 - `renderDivider(data, corners?)` — barra con grosor y radio configurables
   y márgenes superior/inferior; siempre en degradado: el de marca por
   defecto o uno que nace del color elegido (`lightenHex`).

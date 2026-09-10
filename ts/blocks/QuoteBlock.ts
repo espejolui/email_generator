@@ -16,7 +16,6 @@ export class QuoteBlock {
   #italic = false;
   #underline = false;
   #strike = false;
-  #borderRadius = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -103,15 +102,6 @@ export class QuoteBlock {
     return this.#strike;
   }
 
-  @Editable()
-  set borderRadius(value: string) {
-    this.#borderRadius = sanitizeMargin(value);
-  }
-
-  get borderRadius(): number {
-    return this.#borderRadius;
-  }
-
   toData(): QuoteBlockData {
     return {
       id: this.id,
@@ -125,7 +115,6 @@ export class QuoteBlock {
       italic: this.#italic,
       underline: this.#underline,
       strike: this.#strike,
-      borderRadius: this.#borderRadius,
     };
   }
 }
