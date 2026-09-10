@@ -61,13 +61,35 @@ const TITLE_COLOR: Record<TitleLevel, string> = {
   6: "#888888",
 };
 
+interface TextStyle {
+  readonly bold: boolean;
+  readonly italic: boolean;
+  readonly underline: boolean;
+  readonly strike: boolean;
+}
+
+/**
+ * Formato inline (negrita/cursiva/subrayado/tachado). La negrita solo se
+ * emite si aporta peso: los títulos ya son bold por diseño de cada nivel.
+ */
+function formatStyle(style: TextStyle, baseBold: boolean): string {
+  const parts: string[] = [];
+  if (style.bold && !baseBold) parts.push("font-weight:700;");
+  if (style.italic) parts.push("font-style:italic;");
+  const decoration: string[] = [];
+  if (style.underline) decoration.push("underline");
+  if (style.strike) decoration.push("line-through");
+  if (decoration.length > 0) parts.push(`text-decoration:${decoration.join(" ")};`);
+  return parts.join(" ");
+}
+
 export function renderTitle(data: TitleBlockData, corners: Corner = ""): RenderedRow {
   // Contrato: el contenido llega ya escapado desde el store (Canvas sanitiza
   // al guardar, AGENTS §7). No re-escapar aquí para evitar doble escape.
   const tag = `h${String(data.level)}`;
   const color = data.color === "" ? TITLE_COLOR[data.level] : data.color;
   return row(
-    `<${tag} style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}">${data.content}</${tag}>`,
+    `<${tag} style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}${formatStyle(data, true)}">${data.content}</${tag}>`,
     data.bg,
     corners,
   );
@@ -76,7 +98,7 @@ export function renderTitle(data: TitleBlockData, corners: Corner = ""): Rendere
 export function renderText(data: TextBlockData, corners: Corner = ""): RenderedRow {
   const color = data.color === "" ? BODY_TEXT : data.color;
   return row(
-    `<p style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};">${data.content}</p>`,
+    `<p style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};${formatStyle(data, false)}">${data.content}</p>`,
     data.bg,
     corners,
   );
@@ -101,11 +123,13 @@ export function renderList(data: ListBlockData): RenderedRow {
 }
 
 export function renderQuote(data: QuoteBlockData): RenderedRow {
+  const color = data.color === "" ? "#555555" : data.color;
   return row(
-    `<blockquote style="margin:0; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; text-align:${data.align}; color:#555555;">` +
-      `<p style="margin:0; font-size:16px; line-height:1.75;">${data.content}</p>` +
+    `<blockquote style="margin:0; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; text-align:${data.align}; color:${color};">` +
+      `<p style="margin:0; font-size:16px; line-height:1.75;${formatStyle(data, false)}">${data.content}</p>` +
       (data.cite === "" ? "" : `<cite style="font-size:12px; color:${MUTED};">— ${data.cite}</cite>`) +
       `</blockquote>`,
+    data.bg,
   );
 }
 
@@ -128,7 +152,7 @@ export function renderButton(data: ButtonBlockData): RenderedRow {
     ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${data.label}</span>`
     : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${data.label}</a>`;
   return row(
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${data.align}" style="margin:0 auto;">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${data.align}" style="margin:${String(data.marginTop)}px auto ${String(data.marginBottom)}px;">` +
       `<tr><td align="center" style="background-color:${bg}; border-radius:50px;">${text}</td></tr>` +
       `</table>`,
   );

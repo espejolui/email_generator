@@ -398,6 +398,45 @@ function bgControls(
   return optionalColor("Fondo", "Sin fondo", currentBg, "#41b6e6", onBg);
 }
 
+/** Junta dos controles de color en una sola fila horizontal. */
+function colorRow(first: HTMLElement, second: HTMLElement): HTMLElement {
+  const row = el("div", "block__color");
+  row.append(...Array.from(first.childNodes), ...Array.from(second.childNodes));
+  return row;
+}
+
+interface FormatFlags {
+  readonly bold: boolean;
+  readonly italic: boolean;
+  readonly underline: boolean;
+  readonly strike: boolean;
+}
+
+/** Casillas Negrita/Cursiva/Subrayado/Tachado en una fila horizontal. */
+function formatRow(blockId: string, flags: FormatFlags, store: EditorStore): HTMLElement {
+  const row = el("div", "block__inline");
+  const defs = [
+    ["bold", "Negrita"],
+    ["italic", "Cursiva"],
+    ["underline", "Subrayado"],
+    ["strike", "Tachado"],
+  ] as const;
+  for (const [key, labelText] of defs) {
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = flags[key];
+    box.addEventListener("change", () => {
+      const value = box.checked;
+      if (key === "bold") store.update(blockId, { bold: value });
+      else if (key === "italic") store.update(blockId, { italic: value });
+      else if (key === "underline") store.update(blockId, { underline: value });
+      else store.update(blockId, { strike: value });
+    });
+    row.append(labelFor(labelText, box, `${blockId}-fmt-${key}`), box);
+  }
+  return row;
+}
+
 function marginControls(
   blockId: string,
   top: number,
@@ -617,8 +656,7 @@ export function initCanvas(
         const fg = optionalColor("Texto", "Automático", block.color, "#111111", (next) => {
           store.update(block.id, { color: next });
         });
-        const titleColors = el("div", "block__color");
-        titleColors.append(...Array.from(bg.childNodes), ...Array.from(fg.childNodes));
+        const titleColors = colorRow(bg, fg);
         const titleMargins = marginControls(
           block.id,
           block.marginTop,
@@ -636,6 +674,7 @@ export function initCanvas(
           level,
           align,
           titleColors,
+          formatRow(block.id, block, store),
           titleMargins,
         );
         break;
@@ -658,8 +697,7 @@ export function initCanvas(
         const textFg = optionalColor("Texto", "Automático", block.color, "#444444", (next) => {
           store.update(block.id, { color: next });
         });
-        const textColors = el("div", "block__color");
-        textColors.append(...Array.from(textBg.childNodes), ...Array.from(textFg.childNodes));
+        const textColors = colorRow(textBg, textFg);
         const textMargins = marginControls(
           block.id,
           block.marginTop,
@@ -676,6 +714,7 @@ export function initCanvas(
           area,
           textAlign,
           textColors,
+          formatRow(block.id, block, store),
           textMargins,
         );
         break;
@@ -757,12 +796,20 @@ export function initCanvas(
         const quoteAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
+        const quoteBg = bgControls(block.id, block.bg, (next) => {
+          store.update(block.id, { bg: next });
+        });
+        const quoteFg = optionalColor("Texto", "Automático", block.color, "#555555", (next) => {
+          store.update(block.id, { color: next });
+        });
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
           area,
           labelFor("Autor", cite, `${block.id}-cite`),
           cite,
           quoteAlign,
+          colorRow(quoteBg, quoteFg),
+          formatRow(block.id, block, store),
         );
         break;
       }
@@ -824,6 +871,17 @@ export function initCanvas(
         const btnAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
         });
+        const btnMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Texto", label, `${block.id}-label`),
           label,
@@ -833,6 +891,7 @@ export function initCanvas(
           message,
           color,
           btnAlign,
+          btnMargins,
         );
         break;
       }
