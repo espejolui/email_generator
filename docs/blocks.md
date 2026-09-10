@@ -33,7 +33,8 @@ con `@Editable()` y convierte a datos con `toData()`:
 - `ListBlock` — `items` (máx. 20), `ordered`, `align`.
 - `QuoteBlock` — `content`, `cite`, `align`, `bg`, `color`, `bold`, `italic`,
   `underline`, `strike`.
-- `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom` (0–80).
+- `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom`,
+  `thickness` (0–80).
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,
   `color`, `align`, `marginTop`, `marginBottom`.
 

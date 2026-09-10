@@ -73,7 +73,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         strike: false,
       };
     case "divider":
-      return { id, type, color: "", marginTop: 8, marginBottom: 8 };
+      return { id, type, color: "", marginTop: 8, marginBottom: 8, thickness: 2 };
     case "button":
       return {
         id,

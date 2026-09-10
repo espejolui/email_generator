@@ -9,6 +9,7 @@ export class DividerBlock {
   #color = "";
   #marginTop = 8;
   #marginBottom = 8;
+  #thickness = 2;
 
   constructor(id: string) {
     this.id = id;
@@ -41,6 +42,15 @@ export class DividerBlock {
     return this.#marginBottom;
   }
 
+  @Editable()
+  set thickness(value: string) {
+    this.#thickness = sanitizeMargin(value);
+  }
+
+  get thickness(): number {
+    return this.#thickness;
+  }
+
   toData(): DividerBlockData {
     return {
       id: this.id,
@@ -48,6 +58,7 @@ export class DividerBlock {
       color: this.#color,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
+      thickness: this.#thickness,
     };
   }
 }

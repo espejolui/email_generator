@@ -139,7 +139,7 @@ export function renderDivider(data: DividerBlockData, corners: Corner = ""): Ren
     : data.color;
   return {
     html: `<tr><td style="padding:0 48px; font-family:${FONT};${cornerStyle(corners)}">` +
-      `<div style="height:2px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:2px;"></div>` +
+      `<div style="height:${String(data.thickness)}px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:2px;"></div>` +
       `</td></tr>`,
   };
 }

@@ -859,7 +859,22 @@ export function initCanvas(
             store.update(block.id, { marginBottom: n });
           },
         );
-        wrap.append(note, divColor, divMargins);
+        const thickness = document.createElement("input");
+        thickness.type = "number";
+        thickness.min = "0";
+        thickness.max = "80";
+        thickness.value = String(block.thickness);
+        thickness.setAttribute("aria-label", "Grosor en píxeles");
+        thickness.addEventListener("input", () => {
+          store.update(block.id, { thickness: sanitizeMargin(thickness.value) });
+        });
+        wrap.append(
+          note,
+          divColor,
+          divMargins,
+          labelFor("Grosor (px)", thickness, `${block.id}-thickness`),
+          thickness,
+        );
         break;
       }
       case "button": {
