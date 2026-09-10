@@ -262,7 +262,7 @@ export function initCanvas(
     const up = el("button", "block__btn");
     up.type = "button";
     up.setAttribute("aria-label", "Subir bloque");
-    up.appendChild(lucideIcon("arrow-up", ""));
+    up.appendChild(lucideIcon("chevron-up", ""));
     up.disabled = index === 0;
     up.addEventListener("click", () => {
       store.move(block.id, index - 1);
@@ -271,7 +271,7 @@ export function initCanvas(
     const down = el("button", "block__btn");
     down.type = "button";
     down.setAttribute("aria-label", "Bajar bloque");
-    down.appendChild(lucideIcon("arrow-down", ""));
+    down.appendChild(lucideIcon("chevron-down", ""));
     down.disabled = index === total - 1;
     down.addEventListener("click", () => {
       store.move(block.id, index + 1);
@@ -280,7 +280,7 @@ export function initCanvas(
     const del = el("button", "block__btn");
     del.type = "button";
     del.setAttribute("aria-label", "Eliminar bloque");
-    del.appendChild(lucideIcon("x", ""));
+    del.appendChild(lucideIcon("trash-2", ""));
     del.addEventListener("click", () => {
       store.remove(block.id);
       announce(liveEl, "Bloque eliminado.");
