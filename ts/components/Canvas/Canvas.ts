@@ -9,6 +9,7 @@ import {
   sanitizeAlt,
   sanitizeColor,
   sanitizeImageSrc,
+  sanitizeMargin,
   sanitizePhone,
   sanitizeText,
 } from "../../core/sanitize/sanitize.js";
@@ -43,7 +44,7 @@ function labelFor(text: string, control: HTMLElement, id: string): HTMLLabelElem
 const TEXT_ALIGN_OPTIONS: ReadonlyArray<readonly [TextAlign, string]> = [
   ["left", "Izquierda"],
   ["center", "Centrado"],
-  ["justify", "Justificado"],
+  ["right", "Derecha"],
 ];
 
 const BUTTON_ALIGN_OPTIONS: ReadonlyArray<readonly [ButtonAlign, string]> = [
@@ -80,21 +81,25 @@ function buttonAlignSelect(current: ButtonAlign, id: string): HTMLSelectElement 
   return select;
 }
 
-function bgControls(
+function optionalColor(
   blockId: string,
-  currentBg: string,
-  onBg: (bg: string) => void,
+  key: string,
+  pickerLabel: string,
+  noneLabel: string,
+  current: string,
+  fallback: string,
+  onChange: (value: string) => void,
 ): HTMLElement {
-  const wrap = el("div", "block__bg");
+  const wrap = el("div", "block__color");
   const picker = document.createElement("input");
   picker.type = "color";
-  picker.value = currentBg === "" ? "#41b6e6" : currentBg;
-  picker.setAttribute("aria-label", "Color de fondo");
+  picker.value = current === "" ? fallback : current;
+  picker.setAttribute("aria-label", `Color de ${pickerLabel.toLowerCase()}`);
   const none = document.createElement("input");
   none.type = "checkbox";
-  none.checked = currentBg === "";
+  none.checked = current === "";
   const apply = (): void => {
-    onBg(none.checked ? "" : sanitizeColor(picker.value));
+    onChange(none.checked ? "" : sanitizeColor(picker.value));
   };
   picker.addEventListener("input", () => {
     none.checked = false;
@@ -102,12 +107,24 @@ function bgControls(
   });
   none.addEventListener("change", apply);
   wrap.append(
-    labelFor("Fondo", picker, `${blockId}-bg`),
+    labelFor(pickerLabel, picker, `${blockId}-${key}`),
     picker,
-    labelFor("Sin fondo", none, `${blockId}-bgnone`),
+    labelFor(noneLabel, none, `${blockId}-${key}none`),
     none,
   );
   return wrap;
+}
+
+function bgControls(
+  blockId: string,
+  currentBg: string,
+  onBg: (bg: string) => void,
+): HTMLElement {
+  return optionalColor(blockId, "bg", "Fondo", "Sin fondo", currentBg, "#41b6e6", onBg);
+}
+
+function refreshIcons(): void {
+  window.lucide?.createIcons();
 }
 
 export function initCanvas(
@@ -195,6 +212,15 @@ export function initCanvas(
     blocks.forEach((block, index) => {
       listEl.appendChild(renderItem(block, index, blocks.length));
     });
+    refreshIcons();
+  }
+
+  function lucideIcon(name: string, label: string): HTMLElement {
+    const icon = el("i", "icon");
+    icon.setAttribute("data-lucide", name);
+    icon.setAttribute("aria-hidden", "true");
+    if (label !== "") icon.setAttribute("aria-label", label);
+    return icon;
   }
 
   function renderItem(block: AnyBlockData, index: number, total: number): HTMLLIElement {
@@ -202,10 +228,10 @@ export function initCanvas(
     item.dataset["blockId"] = block.id;
 
     const handle = el("span", "block__handle");
-    handle.textContent = "⠿";
     handle.title = "Arrastra para reordenar";
     handle.draggable = true;
     handle.setAttribute("aria-label", "Arrastra para reordenar");
+    handle.appendChild(lucideIcon("grip-vertical", ""));
     handle.addEventListener("dragstart", (event) => {
       item.dataset["dragging"] = "true";
       if (event.dataTransfer !== null) {
@@ -227,8 +253,8 @@ export function initCanvas(
     const actions = el("div", "block__actions");
     const up = el("button", "block__btn");
     up.type = "button";
-    up.textContent = "↑";
     up.setAttribute("aria-label", "Subir bloque");
+    up.appendChild(lucideIcon("arrow-up", ""));
     up.disabled = index === 0;
     up.addEventListener("click", () => {
       store.move(block.id, index - 1);
@@ -236,8 +262,8 @@ export function initCanvas(
     });
     const down = el("button", "block__btn");
     down.type = "button";
-    down.textContent = "↓";
     down.setAttribute("aria-label", "Bajar bloque");
+    down.appendChild(lucideIcon("arrow-down", ""));
     down.disabled = index === total - 1;
     down.addEventListener("click", () => {
       store.move(block.id, index + 1);
@@ -245,8 +271,8 @@ export function initCanvas(
     });
     const del = el("button", "block__btn");
     del.type = "button";
-    del.textContent = "✕";
     del.setAttribute("aria-label", "Eliminar bloque");
+    del.appendChild(lucideIcon("x", ""));
     del.addEventListener("click", () => {
       store.remove(block.id);
       announce(liveEl, "Bloque eliminado.");
@@ -289,6 +315,9 @@ export function initCanvas(
         const bg = bgControls(block.id, block.bg, (next) => {
           store.update(block.id, { bg: next });
         });
+        const fg = optionalColor(block.id, "fg", "Texto", "Automático", block.color, "#111111", (next) => {
+          store.update(block.id, { color: next });
+        });
         wrap.append(
           labelFor("Título", input, `${block.id}-title`),
           input,
@@ -297,6 +326,7 @@ export function initCanvas(
           labelFor("Alineación", align, `${block.id}-align`),
           align,
           bg,
+          fg,
         );
         break;
       }
@@ -316,12 +346,16 @@ export function initCanvas(
         const textBg = bgControls(block.id, block.bg, (next) => {
           store.update(block.id, { bg: next });
         });
+        const textFg = optionalColor(block.id, "fg", "Texto", "Automático", block.color, "#444444", (next) => {
+          store.update(block.id, { color: next });
+        });
         wrap.append(
           labelFor("Texto", area, `${block.id}-text`),
           area,
           labelFor("Alineación", textAlign, `${block.id}-align`),
           textAlign,
           textBg,
+          textFg,
         );
         break;
       }
@@ -341,28 +375,11 @@ export function initCanvas(
         alt.addEventListener("input", () => {
           store.update(block.id, { alt: sanitizeAlt(alt.value) });
         });
-        const cap = document.createElement("input");
-        cap.type = "text";
-        cap.value = block.caption;
-        cap.placeholder = "Pie de foto (opcional)";
-        cap.addEventListener("input", () => {
-          store.update(block.id, { caption: sanitizeText(cap.value).slice(0, 300) });
-        });
-        const capAlign = textAlignSelect(block.captionAlign, `${block.id}-capalign`);
-        capAlign.addEventListener("change", () => {
-          store.update(block.id, {
-            captionAlign: isTextAlign(capAlign.value) ? capAlign.value : "left",
-          });
-        });
         wrap.append(
           labelFor("URL", src, `${block.id}-src`),
           src,
           labelFor("Alt", alt, `${block.id}-alt`),
           alt,
-          labelFor("Pie", cap, `${block.id}-cap`),
-          cap,
-          labelFor("Alineación del pie", capAlign, `${block.id}-capalign`),
-          capAlign,
         );
         break;
       }
@@ -431,7 +448,43 @@ export function initCanvas(
       case "divider": {
         const note = el("p", "block__note");
         note.textContent = "Separador horizontal";
-        wrap.appendChild(note);
+        const divColor = optionalColor(
+          block.id,
+          "divcolor",
+          "Línea",
+          "Degradado",
+          block.color,
+          "#41b6e6",
+          (next) => {
+            store.update(block.id, { color: next });
+          },
+        );
+        const top = document.createElement("input");
+        top.type = "number";
+        top.min = "0";
+        top.max = "80";
+        top.value = String(block.marginTop);
+        top.setAttribute("aria-label", "Margen superior en píxeles");
+        top.addEventListener("input", () => {
+          store.update(block.id, { marginTop: sanitizeMargin(top.value) });
+        });
+        const bottom = document.createElement("input");
+        bottom.type = "number";
+        bottom.min = "0";
+        bottom.max = "80";
+        bottom.value = String(block.marginBottom);
+        bottom.setAttribute("aria-label", "Margen inferior en píxeles");
+        bottom.addEventListener("input", () => {
+          store.update(block.id, { marginBottom: sanitizeMargin(bottom.value) });
+        });
+        wrap.append(
+          note,
+          divColor,
+          labelFor("Arriba (px)", top, `${block.id}-margintop`),
+          top,
+          labelFor("Abajo (px)", bottom, `${block.id}-marginbottom`),
+          bottom,
+        );
         break;
       }
       case "button": {
@@ -446,8 +499,8 @@ export function initCanvas(
         const phone = document.createElement("input");
         phone.type = "tel";
         phone.value = block.phone;
-        phone.placeholder = "573224418087";
-        phone.setAttribute("aria-label", "Celular con código país, solo dígitos");
+        phone.placeholder = "317 515 0821";
+        phone.setAttribute("aria-label", "Celular sin indicativo, solo dígitos");
         phone.addEventListener("input", () => {
           store.update(block.id, { phone: sanitizePhone(phone.value) });
         });

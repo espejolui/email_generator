@@ -33,3 +33,4 @@ function addBlockToEnd(type: BlockType): void {
 initPalette(paletteList, addBlockToEnd);
 initCanvas(canvasRoot, canvasList, canvasHint, live, store);
 initPreview(previewFrame, downloadBtn, store);
+window.lucide?.createIcons();

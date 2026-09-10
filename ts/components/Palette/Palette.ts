@@ -15,8 +15,9 @@ export function initPalette(listEl: HTMLElement, onAdd: (type: BlockType) => voi
     item.setAttribute("aria-grabbed", "false");
     item.title = "Arrastra al lienzo o pulsa Enter para añadir";
 
-    const icon = document.createElement("span");
-    icon.textContent = meta.icon;
+    const icon = document.createElement("i");
+    icon.className = "icon";
+    icon.setAttribute("data-lucide", meta.icon);
     icon.setAttribute("aria-hidden", "true");
 
     const label = document.createElement("span");
@@ -43,4 +44,5 @@ export function initPalette(listEl: HTMLElement, onAdd: (type: BlockType) => voi
     });
     listEl.appendChild(item);
   }
+  window.lucide?.createIcons();
 }
