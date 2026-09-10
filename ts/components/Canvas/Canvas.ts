@@ -124,6 +124,41 @@ function bgControls(
   return optionalColor(blockId, "bg", "Fondo", "Sin fondo", currentBg, "#41b6e6", onBg);
 }
 
+function marginControls(
+  blockId: string,
+  top: number,
+  bottom: number,
+  onTop: (value: number) => void,
+  onBottom: (value: number) => void,
+): HTMLElement {
+  const wrap = el("div", "block__margins");
+  const topInput = document.createElement("input");
+  topInput.type = "number";
+  topInput.min = "0";
+  topInput.max = "80";
+  topInput.value = String(top);
+  topInput.setAttribute("aria-label", "Margen superior en píxeles");
+  topInput.addEventListener("input", () => {
+    onTop(sanitizeMargin(topInput.value));
+  });
+  const bottomInput = document.createElement("input");
+  bottomInput.type = "number";
+  bottomInput.min = "0";
+  bottomInput.max = "80";
+  bottomInput.value = String(bottom);
+  bottomInput.setAttribute("aria-label", "Margen inferior en píxeles");
+  bottomInput.addEventListener("input", () => {
+    onBottom(sanitizeMargin(bottomInput.value));
+  });
+  wrap.append(
+    labelFor("Arriba (px)", topInput, `${blockId}-margintop`),
+    topInput,
+    labelFor("Abajo (px)", bottomInput, `${blockId}-marginbottom`),
+    bottomInput,
+  );
+  return wrap;
+}
+
 function refreshIcons(): void {
   window.lucide?.createIcons();
 }
@@ -326,6 +361,19 @@ export function initCanvas(
         const fg = optionalColor(block.id, "fg", "Texto", "Automático", block.color, "#111111", (next) => {
           store.update(block.id, { color: next });
         });
+        const titleColors = el("div", "block__color");
+        titleColors.append(...Array.from(bg.childNodes), ...Array.from(fg.childNodes));
+        const titleMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Título", input, `${block.id}-title`),
           input,
@@ -333,8 +381,8 @@ export function initCanvas(
           level,
           labelFor("Alineación", align, `${block.id}-align`),
           align,
-          bg,
-          fg,
+          titleColors,
+          titleMargins,
         );
         break;
       }
@@ -357,13 +405,26 @@ export function initCanvas(
         const textFg = optionalColor(block.id, "fg", "Texto", "Automático", block.color, "#444444", (next) => {
           store.update(block.id, { color: next });
         });
+        const textColors = el("div", "block__color");
+        textColors.append(...Array.from(textBg.childNodes), ...Array.from(textFg.childNodes));
+        const textMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Texto", area, `${block.id}-text`),
           area,
           labelFor("Alineación", textAlign, `${block.id}-align`),
           textAlign,
-          textBg,
-          textFg,
+          textColors,
+          textMargins,
         );
         break;
       }
@@ -467,32 +528,18 @@ export function initCanvas(
             store.update(block.id, { color: next });
           },
         );
-        const top = document.createElement("input");
-        top.type = "number";
-        top.min = "0";
-        top.max = "80";
-        top.value = String(block.marginTop);
-        top.setAttribute("aria-label", "Margen superior en píxeles");
-        top.addEventListener("input", () => {
-          store.update(block.id, { marginTop: sanitizeMargin(top.value) });
-        });
-        const bottom = document.createElement("input");
-        bottom.type = "number";
-        bottom.min = "0";
-        bottom.max = "80";
-        bottom.value = String(block.marginBottom);
-        bottom.setAttribute("aria-label", "Margen inferior en píxeles");
-        bottom.addEventListener("input", () => {
-          store.update(block.id, { marginBottom: sanitizeMargin(bottom.value) });
-        });
-        wrap.append(
-          note,
-          divColor,
-          labelFor("Arriba (px)", top, `${block.id}-margintop`),
-          top,
-          labelFor("Abajo (px)", bottom, `${block.id}-marginbottom`),
-          bottom,
+        const divMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
         );
+        wrap.append(note, divColor, divMargins);
         break;
       }
       case "button": {

@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeColor, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TextBlockData } from "./types.js";
 import { isTextAlign } from "./types.js";
 
@@ -11,6 +11,8 @@ export class TextBlock {
   #align: TextAlign = "left";
   #bg = "";
   #color = "";
+  #marginTop = 0;
+  #marginBottom = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -52,6 +54,24 @@ export class TextBlock {
     return this.#color;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
   toData(): TextBlockData {
     return {
       id: this.id,
@@ -60,6 +80,8 @@ export class TextBlock {
       align: this.#align,
       bg: this.#bg,
       color: this.#color,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
     };
   }
 }

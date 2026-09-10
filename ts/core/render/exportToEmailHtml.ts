@@ -67,7 +67,7 @@ export function renderTitle(data: TitleBlockData, corners: Corner = ""): Rendere
   const tag = `h${String(data.level)}`;
   const color = data.color === "" ? TITLE_COLOR[data.level] : data.color;
   return row(
-    `<${tag} style="margin:0 0 12px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}">${data.content}</${tag}>`,
+    `<${tag} style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}">${data.content}</${tag}>`,
     data.bg,
     corners,
   );
@@ -76,7 +76,7 @@ export function renderTitle(data: TitleBlockData, corners: Corner = ""): Rendere
 export function renderText(data: TextBlockData, corners: Corner = ""): RenderedRow {
   const color = data.color === "" ? BODY_TEXT : data.color;
   return row(
-    `<p style="margin:0; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};">${data.content}</p>`,
+    `<p style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};">${data.content}</p>`,
     data.bg,
     corners,
   );

@@ -24,7 +24,17 @@ export function createId(): string {
 export function createBlockData(type: BlockType, id: string): AnyBlockData {
   switch (type) {
     case "title":
-      return { id, type, content: "Título de ejemplo", level: 2, align: "left", bg: "", color: "" };
+      return {
+        id,
+        type,
+        content: "Título de ejemplo",
+        level: 2,
+        align: "left",
+        bg: "",
+        color: "",
+        marginTop: 0,
+        marginBottom: 12,
+      };
     case "text":
       return {
         id,
@@ -33,6 +43,8 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         align: "left",
         bg: "",
         color: "",
+        marginTop: 0,
+        marginBottom: 0,
       };
     case "image":
       return { id, type, src: "", alt: "" };

@@ -20,6 +20,8 @@ export interface TitleBlockData extends BaseBlockData {
   align: TextAlign;
   bg: string;
   color: string;
+  marginTop: number;
+  marginBottom: number;
 }
 
 export interface TextBlockData extends BaseBlockData {
@@ -28,6 +30,8 @@ export interface TextBlockData extends BaseBlockData {
   align: TextAlign;
   bg: string;
   color: string;
+  marginTop: number;
+  marginBottom: number;
 }
 
 export interface ImageBlockData extends BaseBlockData {

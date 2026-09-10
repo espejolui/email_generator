@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeColor, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TitleBlockData, TitleLevel } from "./types.js";
 import { isTextAlign, isTitleLevel } from "./types.js";
 
@@ -12,6 +12,8 @@ export class TitleBlock {
   #align: TextAlign = "left";
   #bg = "";
   #color = "";
+  #marginTop = 0;
+  #marginBottom = 12;
 
   constructor(id: string) {
     this.id = id;
@@ -62,6 +64,24 @@ export class TitleBlock {
     return this.#color;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
   toData(): TitleBlockData {
     return {
       id: this.id,
@@ -71,6 +91,8 @@ export class TitleBlock {
       align: this.#align,
       bg: this.#bg,
       color: this.#color,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
     };
   }
 }
