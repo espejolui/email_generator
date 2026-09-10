@@ -38,6 +38,7 @@ function labelFor(text: string, control: HTMLElement, id: string): HTMLLabelElem
 }
 
 export function initCanvas(
+  rootEl: HTMLElement,
   listEl: HTMLElement,
   hintEl: HTMLElement,
   liveEl: HTMLElement,
@@ -90,15 +91,22 @@ export function initCanvas(
     }
   }
 
-  listEl.addEventListener("dragover", (event) => {
+  rootEl.addEventListener("dragover", (event) => {
     event.preventDefault();
     if (event.dataTransfer !== null) event.dataTransfer.dropEffect = "move";
+    rootEl.classList.add("canvas--dragover");
     movePlaceholder(event.clientY);
   });
-  listEl.addEventListener("dragleave", (event) => {
-    if (event.target === listEl) clearPlaceholder();
+  rootEl.addEventListener("dragleave", (event) => {
+    const to = event.relatedTarget;
+    if (to instanceof Node && rootEl.contains(to)) return;
+    rootEl.classList.remove("canvas--dragover");
+    clearPlaceholder();
   });
-  listEl.addEventListener("drop", handleDrop);
+  rootEl.addEventListener("drop", (event) => {
+    rootEl.classList.remove("canvas--dragover");
+    handleDrop(event);
+  });
 
   store.subscribe((blocks) => {
     hintEl.hidden = blocks.length > 0;

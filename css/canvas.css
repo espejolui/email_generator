@@ -10,16 +10,27 @@
     font-size: 1.05rem;
   }
 
+  &.canvas--dragover {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   & .canvas__hint {
     color: #666;
   }
 
   & .canvas__list {
     list-style: none;
-    margin: 0;
-    padding: 0;
+    margin: 0.5rem 0 0;
+    padding: 0.5rem;
     display: grid;
     gap: 0.6rem;
+    min-height: 140px;
+    border-radius: 6px;
+
+    &:empty {
+      border: 2px dashed var(--border-color);
+    }
   }
 
   & .block {
