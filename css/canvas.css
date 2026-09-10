@@ -83,7 +83,7 @@
       font: inherit;
     }
 
-    & input:not([type="checkbox"]) {
+    & input:not([type="checkbox"]):not([type="color"]) {
       border: 1px solid var(--border-color);
       border-radius: 999px;
       padding: 0.45rem 1rem;
@@ -251,6 +251,37 @@
     gap: 0.45rem;
     font-size: 0.85rem;
     cursor: pointer;
+
+    & input[type="text"] {
+      width: 7rem;
+      flex: none;
+    }
+
+    & input[type="color"] {
+      appearance: none;
+      width: 30px;
+      height: 30px;
+      flex: none;
+      padding: 0;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+
+      &::-webkit-color-swatch-wrapper {
+        padding: 2px;
+      }
+
+      &::-webkit-color-swatch {
+        border: none;
+        border-radius: 999px;
+      }
+
+      &::-moz-color-swatch {
+        border: none;
+        border-radius: 999px;
+      }
+    }
   }
 
   & .color-pop__grid {

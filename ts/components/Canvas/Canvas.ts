@@ -300,14 +300,22 @@ function optionalColor(
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", `Colores de ${pickerLabel.toLowerCase()}`);
 
-    const custom = document.createElement("input");
-    custom.type = "text";
-    custom.value = current === "" ? fallback : current;
-    custom.placeholder = "#41b6e6";
-    custom.maxLength = 7;
-    custom.spellcheck = false;
-    custom.setAttribute("aria-label", "Color personalizado en hexadecimal");
-    let lastValid = custom.value;
+    // HEX primero (texto) + selector nativo: ambos precargados con el mismo
+    // valor (MDN: value precarga el campo y el selector) y sincronizados.
+    const hex = document.createElement("input");
+    hex.type = "text";
+    hex.value = current === "" ? fallback : current;
+    hex.placeholder = "#41b6e6";
+    hex.maxLength = 7;
+    hex.spellcheck = false;
+    hex.setAttribute("aria-label", "Color personalizado en hexadecimal");
+
+    const native = document.createElement("input");
+    native.type = "color";
+    native.value = current === "" ? fallback : current;
+    native.setAttribute("aria-label", "Selector de color");
+
+    let lastValid = hex.value;
 
     const noneRow = el("label", "color-pop__none");
     const none = document.createElement("input");
@@ -321,7 +329,8 @@ function optionalColor(
         paint("");
         onChange("");
       } else {
-        custom.value = lastValid;
+        hex.value = lastValid;
+        native.value = lastValid;
         paint(lastValid);
         onChange(lastValid);
       }
@@ -329,19 +338,20 @@ function optionalColor(
     });
 
     const grid = el("div", "color-pop__grid");
-    for (const hex of PRESET_COLORS) {
+    for (const preset of PRESET_COLORS) {
       const swatch = document.createElement("button");
       swatch.type = "button";
       swatch.className = "color-swatch";
-      swatch.dataset["color"] = hex;
-      swatch.style.backgroundColor = hex;
-      swatch.setAttribute("aria-label", `Color ${hex}`);
+      swatch.dataset["color"] = preset;
+      swatch.style.backgroundColor = preset;
+      swatch.setAttribute("aria-label", `Color ${preset}`);
       swatch.addEventListener("click", () => {
         none.checked = false;
-        custom.value = hex;
-        lastValid = hex;
-        paint(hex);
-        onChange(hex);
+        hex.value = preset;
+        native.value = preset;
+        lastValid = preset;
+        paint(preset);
+        onChange(preset);
         closeColorPopover();
       });
       grid.appendChild(swatch);
@@ -350,16 +360,29 @@ function optionalColor(
     const customRow = el("label", "color-pop__custom");
     const customText = document.createElement("span");
     customText.textContent = "Personalizado";
-    customRow.append(custom, customText);
-    custom.addEventListener("input", () => {
-      none.checked = false;
-      const value = sanitizeColor(custom.value);
+    customRow.append(hex, native, customText);
+
+    hex.addEventListener("input", () => {
+      const value = sanitizeColor(hex.value);
       if (value === "") return;
       lastValid = value;
+      native.value = value;
+      none.checked = false;
       paint(value);
       onChange(value);
     });
-    custom.addEventListener("change", () => {
+    hex.addEventListener("change", () => {
+      closeColorPopover();
+    });
+    native.addEventListener("input", () => {
+      const value = sanitizeColor(native.value);
+      lastValid = value;
+      hex.value = value;
+      none.checked = false;
+      paint(value);
+      onChange(value);
+    });
+    native.addEventListener("change", () => {
       closeColorPopover();
     });
 
