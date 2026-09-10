@@ -168,7 +168,7 @@ function optionalColor(
     none.checked = current === "";
     const noneText = document.createElement("span");
     noneText.textContent = noneLabel;
-    noneRow.append(none, noneText);
+    noneRow.append(noneText, none);
     none.addEventListener("change", () => {
       const value = none.checked ? "" : sanitizeColor(custom.value);
       paint(value);

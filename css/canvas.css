@@ -182,7 +182,15 @@
     box-shadow: 0 12px 28px #2456d647;
   }
 
-  & .color-pop__none,
+  & .color-pop__none {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: fit-content;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
   & .color-pop__custom {
     display: flex;
     align-items: center;
