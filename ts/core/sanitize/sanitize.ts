@@ -42,23 +42,34 @@ export function sanitizeAlt(input: string): string {
   return sanitizeText(input).slice(0, 200);
 }
 
-/** Solo dígitos (E.164, con código país, sin "+", espacios ni guiones). */
+/** Solo dígitos (sin "+", espacios ni guiones). */
 export function sanitizePhone(input: string): string {
   return input.replace(/\D/g, "").slice(0, 15);
 }
 
+/** Indicativo por defecto cuando el usuario escribe el celular sin él. */
+const DEFAULT_COUNTRY_CODE = "57";
+
 /** Arma el enlace oficial de WhatsApp Click-to-Chat: https://wa.me/<tel>?text=<msg>. */
 export function buildWhatsAppUrl(phone: string, message: string): string {
-  const digits = sanitizePhone(phone);
+  let digits = sanitizePhone(phone);
   if (digits === "") return "";
+  if (!digits.startsWith(DEFAULT_COUNTRY_CODE)) digits = `${DEFAULT_COUNTRY_CODE}${digits}`;
   const text = message.trim().slice(0, 300);
   return text === ""
     ? `https://wa.me/${digits}`
     : `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-/** Solo hexadecimal #rrggbb. Cualquier otra cosa -> "" (sin fondo). */
+/** Solo hexadecimal #rrggbb. Cualquier otra cosa -> "" (automático/degradado). */
 export function sanitizeColor(input: string): string {
   const value = input.trim();
   return /^#[0-9a-fA-F]{6}$/.test(value) ? value : "";
+}
+
+/** Entero 0-80 para márgenes en px. Inválido -> 8. */
+export function sanitizeMargin(input: string): number {
+  const parsed = Number.parseInt(input, 10);
+  if (Number.isNaN(parsed)) return 8;
+  return Math.min(80, Math.max(0, parsed));
 }
