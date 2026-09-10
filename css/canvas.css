@@ -1,0 +1,69 @@
+.canvas {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff;
+  min-height: 320px;
+
+  & h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+  }
+
+  & .canvas__hint {
+    color: #666;
+  }
+
+  & .canvas__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  & .block {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+    align-items: start;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.5rem;
+
+    &[data-dragging="true"] {
+      opacity: 0.5;
+    }
+  }
+
+  & .block__handle {
+    cursor: grab;
+    padding: 0.25rem;
+  }
+
+  & .block__fields {
+    display: grid;
+    gap: 0.35rem;
+
+    & input,
+    & textarea,
+    & select {
+      width: 100%;
+      font: inherit;
+    }
+  }
+
+  & .block__actions {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  & .canvas__placeholder {
+    border: 2px dashed var(--accent);
+    border-radius: 6px;
+    padding: 0.8rem;
+    text-align: center;
+    color: var(--accent);
+    list-style: none;
+  }
+}
