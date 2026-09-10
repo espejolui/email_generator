@@ -34,6 +34,10 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         color: "",
         marginTop: 0,
         marginBottom: 12,
+        bold: false,
+        italic: false,
+        underline: false,
+        strike: false,
       };
     case "text":
       return {
@@ -45,13 +49,29 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         color: "",
         marginTop: 0,
         marginBottom: 0,
+        bold: false,
+        italic: false,
+        underline: false,
+        strike: false,
       };
     case "image":
       return { id, type, src: "", alt: "" };
     case "list":
       return { id, type, items: ["Primer punto", "Segundo punto"], ordered: false, align: "left" };
     case "quote":
-      return { id, type, content: "Cita de ejemplo.", cite: "", align: "left" };
+      return {
+        id,
+        type,
+        content: "Cita de ejemplo.",
+        cite: "",
+        align: "left",
+        bg: "",
+        color: "",
+        bold: false,
+        italic: false,
+        underline: false,
+        strike: false,
+      };
     case "divider":
       return { id, type, color: "", marginTop: 8, marginBottom: 8 };
     case "button":
@@ -63,6 +83,8 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         message: "Hola, quiero más información",
         color: "green",
         align: "center",
+        marginTop: 0,
+        marginBottom: 0,
       };
   }
 }

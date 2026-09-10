@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeMargin, sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ButtonAlign, ButtonBlockData, ButtonColor } from "./types.js";
 import { isButtonAlign, isButtonColor } from "./types.js";
 
@@ -12,6 +12,8 @@ export class ButtonBlock {
   #message = "";
   #color: ButtonColor = "green";
   #align: ButtonAlign = "center";
+  #marginTop = 0;
+  #marginBottom = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -63,6 +65,24 @@ export class ButtonBlock {
     return this.#align;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
   toData(): ButtonBlockData {
     return {
       id: this.id,
@@ -72,6 +92,8 @@ export class ButtonBlock {
       message: this.#message,
       color: this.#color,
       align: this.#align,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
     };
   }
 }

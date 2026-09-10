@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeColor, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { QuoteBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
@@ -10,6 +10,12 @@ export class QuoteBlock {
   #content = "";
   #cite = "";
   #align: TextAlign = "left";
+  #bg = "";
+  #color = "";
+  #bold = false;
+  #italic = false;
+  #underline = false;
+  #strike = false;
 
   constructor(id: string) {
     this.id = id;
@@ -42,7 +48,73 @@ export class QuoteBlock {
     return this.#align;
   }
 
+  @Editable()
+  set bg(value: string) {
+    this.#bg = sanitizeColor(value);
+  }
+
+  get bg(): string {
+    return this.#bg;
+  }
+
+  @Editable()
+  set color(value: string) {
+    this.#color = sanitizeColor(value);
+  }
+
+  get color(): string {
+    return this.#color;
+  }
+
+  @Editable()
+  set bold(value: boolean) {
+    this.#bold = value;
+  }
+
+  get bold(): boolean {
+    return this.#bold;
+  }
+
+  @Editable()
+  set italic(value: boolean) {
+    this.#italic = value;
+  }
+
+  get italic(): boolean {
+    return this.#italic;
+  }
+
+  @Editable()
+  set underline(value: boolean) {
+    this.#underline = value;
+  }
+
+  get underline(): boolean {
+    return this.#underline;
+  }
+
+  @Editable()
+  set strike(value: boolean) {
+    this.#strike = value;
+  }
+
+  get strike(): boolean {
+    return this.#strike;
+  }
+
   toData(): QuoteBlockData {
-    return { id: this.id, type: "quote", content: this.#content, cite: this.#cite, align: this.#align };
+    return {
+      id: this.id,
+      type: "quote",
+      content: this.#content,
+      cite: this.#cite,
+      align: this.#align,
+      bg: this.#bg,
+      color: this.#color,
+      bold: this.#bold,
+      italic: this.#italic,
+      underline: this.#underline,
+      strike: this.#strike,
+    };
   }
 }

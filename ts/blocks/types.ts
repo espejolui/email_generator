@@ -22,6 +22,10 @@ export interface TitleBlockData extends BaseBlockData {
   color: string;
   marginTop: number;
   marginBottom: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strike: boolean;
 }
 
 export interface TextBlockData extends BaseBlockData {
@@ -32,6 +36,10 @@ export interface TextBlockData extends BaseBlockData {
   color: string;
   marginTop: number;
   marginBottom: number;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strike: boolean;
 }
 
 export interface ImageBlockData extends BaseBlockData {
@@ -52,6 +60,12 @@ export interface QuoteBlockData extends BaseBlockData {
   content: string;
   cite: string;
   align: TextAlign;
+  bg: string;
+  color: string;
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  strike: boolean;
 }
 
 export interface DividerBlockData extends BaseBlockData {
@@ -68,6 +82,8 @@ export interface ButtonBlockData extends BaseBlockData {
   message: string;
   color: ButtonColor;
   align: ButtonAlign;
+  marginTop: number;
+  marginBottom: number;
 }
 
 export type AnyBlockData =
