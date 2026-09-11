@@ -9,7 +9,8 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
   cuántos bloques eliminó y se deshabilita cuando no hay bloques.
 - Internas:
   - `announce` — mensajes al `aria-live`.
-  - `signature` — firma tipo:id para detectar cambios estructurales.
+  - `signature` / `innerSignature` — firma tipo:id (recursiva en `columns`,
+    con conteo interno) para detectar cambios estructurales sin perder foco.
   - `el` / `labelFor` — creación de nodos sin `innerHTML`.
   - `selectField` — desplegable propio estilo pill (el popup nativo lo
     pinta el SO): botón + lista `listbox` con teclado (flechas/Enter/Escape)
@@ -32,6 +33,17 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
   - `lucideIcon` / `refreshIcons` — iconos Lucide tras cada render.
   - `ensurePlaceholder` / `clearPlaceholder` / `movePlaceholder` —
     indicador visual de inserción.
-  - `handleDrop` — `drop` → `insertAt` (nuevo) o `move` (reorden).
+  - `handleDrop` — `drop` → `insertAt` (nuevo) o `move` (reorden);
+    ignora payloads con `fromColumn` (los gestiona su columna).
+  - `liveColumns` / `writeColumns` / `cloneColumns` — lectura y edición
+    mayorista de columnas (el store no cambia).
+  - `handleColumnDrop` — drop en una columna: clona, acoge del nivel
+    superior o reordena/mueve internos.
+  - `moveNested` / `removeNested` — subir/bajar/quitar bloque interno.
+  - `renderNestedItem` — fila compacta anidada (reutiliza `renderFields`,
+    admite columnas dentro de columnas).
+  - `moveColPlaceholder` — indicador de inserción dentro de cada columna.
+  - `appendSocialFields` — 4 URLs de redes para `footer` y `social` (lee el
+    valor vigente en cada evento).
   - `render` / `renderItem` / `renderFields` — lista semántica con asa de
     arrastre, campos editables y botones subir/bajar/eliminar por bloque.

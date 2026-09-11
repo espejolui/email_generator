@@ -3,7 +3,9 @@
 HTML5 Drag and Drop API. La paleta clona al soltar; el asa del bloque
 reordena dentro del lienzo.
 
-- `DragPayload` — `{ blockType, sourceId? }` (`sourceId` solo en reorden).
+- `DragPayload` — `{ blockType, sourceId?, fromColumn? }` (`sourceId` solo en
+  reorden; `fromColumn: ColumnRef` solo en arrastres nacidos en una columna).
+- `ColumnRef` — `{ columnsId, colIndex }` (origen anidado; ausente = nivel superior).
 - `setDragPayload(event, payload)` — guarda el JSON en `dataTransfer`
   (`application/json`) con `effectAllowed` compatible con el `dropEffect`
   del lienzo (`copyMove` para nuevos, `move` para reordenar).

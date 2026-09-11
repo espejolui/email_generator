@@ -20,10 +20,12 @@ Helpers compartidos (no duplicar código):
 - `sanitizeHttpsUrl()` en `sanitize.ts`: solo `https:` absoluto, resto `""`.
   Difiere de `sanitizeImageSrc` (que admite `data:`) a propósito.
 - `pillRow()` en `exportToEmailHtml.ts`: fila de botón pill; la usan `button` y `cta`.
+- `pillTable()` (Fase 3): tabla pill interior; la incrusta `product`.
 - `socialLinksInner()` en `exportToEmailHtml.ts`: fila de enlaces de texto;
   la usan `social` y `footer`.
-- `columnsTable()` (Fase 2): tabla anidada de N columnas; la usan `columns`,
-  `product` y `signature`.
+- Nota: no se creó un helper `columnsTable()` genérico; `columns`, `product`
+  y `signature` usan cada uno su tabla anidada mínima (menos indirección
+  para layouts distintos).
 
 ## Fase 1 — base + cumplimiento (✅ hecha)
 

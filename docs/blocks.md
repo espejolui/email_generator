@@ -24,7 +24,7 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
 - `isTextAlign(value)` — guarda de tipo para `TextAlign`.
 - `isButtonAlign(value)` — guarda de tipo para `ButtonAlign`.
 
-## Clases (`TitleBlock`, `TextBlock`, `ImageBlock`, `ListBlock`, `QuoteBlock`, `DividerBlock`, `ButtonBlock`)
+## Clases (`TitleBlock`, `TextBlock`, `ImageBlock`, `ListBlock`, `QuoteBlock`, `DividerBlock`, `ButtonBlock`, `SpacerBlock`, `HeaderBlock`, `FooterBlock`, `CtaBlock`, `ColumnsBlock`, `TableBlock`, `SocialBlock`, `BannerBlock`, `ProductBlock`, `CouponBlock`, `SignatureBlock`)
 
 Cada una recibe `id` en el constructor, sanitiza en sus setters decorados
 con `@Editable()` y convierte a datos con `toData()`:
