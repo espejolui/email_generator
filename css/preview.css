@@ -22,6 +22,41 @@
       font-size: 1.05rem;
     }
 
+    & .preview__bg {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-left: auto;
+
+      & input[type="color"] {
+        appearance: none;
+        width: 30px;
+        height: 30px;
+        padding: 2px;
+        border: 1px solid var(--border-color);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+
+        &::-webkit-color-swatch-wrapper {
+          padding: 2px;
+        }
+
+        &::-webkit-color-swatch {
+          border: none;
+          border-radius: 999px;
+        }
+
+        &::-moz-color-swatch {
+          border: none;
+          border-radius: 999px;
+        }
+      }
+    }
+
     & button {
       display: inline-flex;
       align-items: center;
