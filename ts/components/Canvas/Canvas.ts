@@ -1,14 +1,29 @@
-import { createBlockData, createId } from "../../blocks/index.js";
-import type { AnyBlockData, ButtonAlign, TextAlign } from "../../blocks/types.js";
-import { isButtonAlign, isButtonColor, isTextAlign, isTitleLevel } from "../../blocks/types.js";
+import { createBlockData, createId, getRegisteredBlocks } from "../../blocks/index.js";
+import type {
+  AnyBlockData,
+  BlockType,
+  ButtonAlign,
+  ColumnData,
+  SocialUrls,
+  TextAlign,
+} from "../../blocks/types.js";
+import {
+  isBlockType,
+  isButtonAlign,
+  isButtonColor,
+  isTextAlign,
+  isTitleLevel,
+} from "../../blocks/types.js";
 import { getBlockMetadata } from "../../core/decorators/Block.js";
 import {
   getDragPayload,
   insertionIndexFor,
+  setDragPayload,
 } from "../../core/dnd/dragController.js";
 import {
   sanitizeAlt,
   sanitizeColor,
+  sanitizeHttpsUrl,
   sanitizeImageSrc,
   sanitizeMargin,
   sanitizePhone,
@@ -21,8 +36,15 @@ function announce(liveEl: HTMLElement, message: string): void {
   liveEl.textContent = message;
 }
 
+function innerSignature(block: AnyBlockData): string {
+  if (block.type !== "columns") return `${block.type}:${block.id}`;
+  return `columns:${block.id}(${block.columns
+    .map((col) => col.blocks.map(innerSignature).join(","))
+    .join(";")})`;
+}
+
 function signature(blocks: readonly AnyBlockData[]): string {
-  return blocks.map((b) => `${b.type}:${b.id}`).join("|");
+  return blocks.map(innerSignature).join("|");
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -52,6 +74,13 @@ const BUTTON_ALIGN_OPTIONS: ReadonlyArray<readonly [ButtonAlign, string]> = [
   ["left", "Izquierda"],
   ["center", "Centrado"],
   ["right", "Derecha"],
+];
+
+const SOCIAL_NETWORKS: ReadonlyArray<readonly [keyof SocialUrls, string]> = [
+  ["instagram", "Instagram"],
+  ["facebook", "Facebook"],
+  ["x", "X"],
+  ["linkedin", "LinkedIn"],
 ];
 
 function lucideIcon(name: string, label: string): HTMLElement {
@@ -517,6 +546,7 @@ export function initCanvas(
 ): void {
   let renderedSig = "";
   let placeholder: HTMLLIElement | null = null;
+  let latestBlocks: readonly AnyBlockData[] = [];
 
   function ensurePlaceholder(): HTMLLIElement {
     if (placeholder === null) {
@@ -551,6 +581,9 @@ export function initCanvas(
     clearPlaceholder();
     const payload = getDragPayload(event);
     if (payload === undefined) return;
+    // Los arrastres nacidos en una columna se gestionan en su propia lista;
+    // aquí se ignoran para no mover un id interno en el nivel superior.
+    if (payload.fromColumn !== undefined) return;
     const index = insertionIndexFor(listEl, event.clientY);
     if (payload.sourceId !== undefined) {
       store.move(payload.sourceId, index);
@@ -560,6 +593,109 @@ export function initCanvas(
       store.insertAt(index, createBlockData(payload.blockType, id));
       announce(liveEl, "Bloque añadido al lienzo.");
     }
+  }
+
+  /** Lee el bloque `columns` vigente por id (o undefined si ya no existe). */
+  function liveColumns(columnsId: string): AnyBlockData | undefined {
+    return latestBlocks.find((b) => b.id === columnsId);
+  }
+
+  function writeColumns(columnsId: string, columns: readonly ColumnData[]): void {
+    store.update(columnsId, { columns });
+  }
+
+  function cloneColumns(columns: readonly ColumnData[]): { blocks: AnyBlockData[] }[] {
+    return columns.map((col) => ({ blocks: [...col.blocks] }));
+  }
+
+  /**
+   * Drop en la lista de una columna: clona desde la paleta, acoge un bloque
+   * del nivel superior o reordena/mueve bloques internos. Todo vía
+   * `update` mayorista: el store no cambia.
+   */
+  function handleColumnDrop(
+    event: DragEvent,
+    list: HTMLElement,
+    columnsId: string,
+    colIndex: number,
+  ): void {
+    event.preventDefault();
+    event.stopPropagation();
+    clearPlaceholder();
+    const payload = getDragPayload(event);
+    if (payload === undefined) return;
+    const host = liveColumns(columnsId);
+    if (host === undefined || host.type !== "columns") return;
+    const items = Array.from(list.querySelectorAll<HTMLElement>("[data-nested-id]"));
+    let target = items.length;
+    for (let i = 0; i < items.length; i += 1) {
+      const rect = items[i]?.getBoundingClientRect();
+      if (rect === undefined) continue;
+      if (event.clientY < rect.top + rect.height / 2) {
+        target = i;
+        break;
+      }
+    }
+    const next = cloneColumns(host.columns);
+    const dest = next[colIndex];
+    if (dest === undefined) return;
+
+    if (payload.sourceId === undefined) {
+      dest.blocks = [
+        ...dest.blocks.slice(0, target),
+        createBlockData(payload.blockType, createId()),
+        ...dest.blocks.slice(target),
+      ];
+      writeColumns(columnsId, next);
+      announce(liveEl, "Bloque añadido a la columna.");
+      return;
+    }
+
+    const from = payload.fromColumn;
+    if (from !== undefined && from.columnsId === columnsId) {
+      const origin = next[from.colIndex];
+      if (origin === undefined) return;
+      const at = origin.blocks.findIndex((b) => b.id === payload.sourceId);
+      if (at === -1) return;
+      const [moving] = origin.blocks.splice(at, 1);
+      if (moving === undefined) return;
+      const into = next[colIndex];
+      if (into === undefined) return;
+      let at2 = target;
+      if (from.colIndex === colIndex && at < target) at2 = target - 1;
+      into.blocks = [...into.blocks.slice(0, at2), moving, ...into.blocks.slice(at2)];
+      writeColumns(columnsId, next);
+      announce(liveEl, "Bloque reordenado en la columna.");
+      return;
+    }
+
+    if (from !== undefined) {
+      const other = liveColumns(from.columnsId);
+      if (other === undefined || other.type !== "columns") return;
+      const foreign = cloneColumns(other.columns);
+      const origin = foreign[from.colIndex];
+      if (origin === undefined) return;
+      const at = origin.blocks.findIndex((b) => b.id === payload.sourceId);
+      if (at === -1) return;
+      const [moving] = origin.blocks.splice(at, 1);
+      if (moving === undefined) return;
+      dest.blocks = [
+        ...dest.blocks.slice(0, target),
+        moving,
+        ...dest.blocks.slice(target),
+      ];
+      writeColumns(from.columnsId, foreign);
+      writeColumns(columnsId, next);
+      announce(liveEl, "Bloque movido de columna.");
+      return;
+    }
+
+    const top = latestBlocks.find((b) => b.id === payload.sourceId);
+    if (top === undefined) return;
+    store.remove(top.id);
+    dest.blocks = [...dest.blocks.slice(0, target), top, ...dest.blocks.slice(target)];
+    writeColumns(columnsId, next);
+    announce(liveEl, "Bloque movido a la columna.");
   }
 
   rootEl.addEventListener("dragover", (event) => {
@@ -580,6 +716,7 @@ export function initCanvas(
   });
 
   store.subscribe((blocks) => {
+    latestBlocks = blocks;
     hintEl.hidden = blocks.length > 0;
     const sig = signature(blocks);
     if (sig === renderedSig) return; // solo cambió contenido: no re-render (conserva foco)
@@ -661,6 +798,152 @@ export function initCanvas(
 
     item.append(handle, body, actions);
     return item;
+  }
+
+  /** Mueve un bloque interno dentro de su columna (pasos +/-1). */
+  function moveNested(columnsId: string, innerId: string, delta: number): void {
+    const host = liveColumns(columnsId);
+    if (host === undefined || host.type !== "columns") return;
+    const next = cloneColumns(host.columns);
+    for (const col of next) {
+      const at = col.blocks.findIndex((b) => b.id === innerId);
+      if (at === -1) continue;
+      const to = at + delta;
+      if (to < 0 || to >= col.blocks.length) return;
+      const copy = [...col.blocks];
+      const [moving] = copy.splice(at, 1);
+      if (moving === undefined) return;
+      copy.splice(to, 0, moving);
+      col.blocks = copy;
+      writeColumns(columnsId, next);
+      announce(liveEl, delta < 0 ? "Bloque subido." : "Bloque bajado.");
+      return;
+    }
+  }
+
+  /** Quita un bloque interno de su columna. */
+  function removeNested(columnsId: string, innerId: string): void {
+    const host = liveColumns(columnsId);
+    if (host === undefined || host.type !== "columns") return;
+    const next = cloneColumns(host.columns).map((col) => ({
+      blocks: col.blocks.filter((b) => b.id !== innerId),
+    }));
+    writeColumns(columnsId, next);
+    announce(liveEl, "Bloque eliminado de la columna.");
+  }
+
+  /**
+   * Fila compacta de bloque anidado: asa de arrastre (origen de columna en
+   * el payload), campos reutilizados vía `renderFields` y acciones
+   * mayoristas. Recursivo: admite columnas dentro de columnas.
+   */
+  function renderNestedItem(
+    columnsId: string,
+    colIndex: number,
+    inner: AnyBlockData,
+    innerIndex: number,
+    innerTotal: number,
+  ): HTMLLIElement {
+    const item = el("li", "block block--nested");
+    item.dataset["nestedId"] = inner.id;
+
+    const handle = el("span", "block__handle");
+    handle.title = "Arrastra para reordenar en la columna";
+    handle.draggable = true;
+    handle.setAttribute("aria-label", "Arrastra para reordenar en la columna");
+    handle.appendChild(lucideIcon("grip-vertical", ""));
+    handle.addEventListener("dragstart", (event) => {
+      item.dataset["dragging"] = "true";
+      setDragPayload(event, {
+        blockType: inner.type,
+        sourceId: inner.id,
+        fromColumn: { columnsId, colIndex },
+      });
+    });
+    handle.addEventListener("dragend", () => {
+      delete item.dataset["dragging"];
+      clearPlaceholder();
+    });
+
+    const body = el("div", "block__body");
+    const meta = getBlockMetadata(inner.type);
+    const badge = el("span", "block__type");
+    badge.title = meta?.label ?? inner.type;
+    badge.appendChild(lucideIcon(meta?.icon ?? "box", ""));
+    const badgeLabel = el("span", "block__type-label");
+    badgeLabel.textContent = meta?.label ?? inner.type;
+    badge.appendChild(badgeLabel);
+    body.append(badge, renderFields(inner));
+
+    const actions = el("div", "block__actions");
+    const up = el("button", "block__btn");
+    up.type = "button";
+    up.setAttribute("aria-label", "Subir bloque en la columna");
+    up.appendChild(lucideIcon("chevron-up", ""));
+    up.disabled = innerIndex === 0;
+    up.addEventListener("click", () => {
+      moveNested(columnsId, inner.id, -1);
+    });
+    const down = el("button", "block__btn");
+    down.type = "button";
+    down.setAttribute("aria-label", "Bajar bloque en la columna");
+    down.appendChild(lucideIcon("chevron-down", ""));
+    down.disabled = innerIndex === innerTotal - 1;
+    down.addEventListener("click", () => {
+      moveNested(columnsId, inner.id, 1);
+    });
+    const del = el("button", "block__btn");
+    del.type = "button";
+    del.setAttribute("aria-label", "Quitar bloque de la columna");
+    del.appendChild(lucideIcon("trash-2", ""));
+    del.addEventListener("click", () => {
+      removeNested(columnsId, inner.id);
+    });
+    actions.append(up, down, del);
+
+    item.append(handle, body, actions);
+    return item;
+  }
+
+  /**
+   * Cuatro URLs de redes para `footer` y `social`. Lee el valor vigente en
+   * cada evento (no el capturado al renderizar) para no pisar ediciones.
+   */
+  function appendSocialFields(wrap: HTMLElement, blockId: string): void {
+    const current = (): SocialUrls => {
+      const live = latestBlocks.find((b) => b.id === blockId);
+      if (live !== undefined && (live.type === "footer" || live.type === "social")) {
+        return live.social;
+      }
+      return { instagram: "", facebook: "", x: "", linkedin: "" };
+    };
+    const initial = current();
+    for (const [key, labelText] of SOCIAL_NETWORKS) {
+      const input = document.createElement("input");
+      input.type = "url";
+      input.value = initial[key];
+      input.placeholder = "https://…";
+      input.setAttribute("aria-label", `URL de ${labelText} (https)`);
+      input.addEventListener("input", () => {
+        store.update(blockId, {
+          social: { ...current(), [key]: sanitizeHttpsUrl(input.value) },
+        });
+      });
+      wrap.append(labelFor(labelText, input, `${blockId}-social-${key}`), input);
+    }
+  }
+
+  function moveColPlaceholder(ul: HTMLElement, clientY: number): void {
+    const ph = ensurePlaceholder();
+    const items = Array.from(ul.querySelectorAll<HTMLElement>("[data-nested-id]"));
+    for (const item of items) {
+      const rect = item.getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) {
+        ul.insertBefore(ph, item);
+        return;
+      }
+    }
+    ul.appendChild(ph);
   }
 
   function renderFields(block: AnyBlockData): HTMLElement {
@@ -959,6 +1242,437 @@ export function initCanvas(
           color,
           btnAlign,
           btnMargins,
+        );
+        break;
+      }
+      case "spacer": {
+        const height = document.createElement("input");
+        height.type = "number";
+        height.min = "0";
+        height.max = "80";
+        height.value = String(block.height);
+        height.setAttribute("aria-label", "Altura en píxeles");
+        height.addEventListener("input", () => {
+          store.update(block.id, { height: sanitizeMargin(height.value) });
+        });
+        wrap.append(labelFor("Altura (px)", height, `${block.id}-height`), height);
+        break;
+      }
+      case "header": {
+        const logo = document.createElement("input");
+        logo.type = "url";
+        logo.value = block.logoSrc;
+        logo.placeholder = "https://…";
+        logo.setAttribute("aria-label", "URL del logo (https)");
+        logo.addEventListener("input", () => {
+          store.update(block.id, { logoSrc: sanitizeImageSrc(logo.value) });
+        });
+        const logoAlt = document.createElement("input");
+        logoAlt.type = "text";
+        logoAlt.value = block.logoAlt;
+        logoAlt.placeholder = "Texto alternativo del logo";
+        logoAlt.addEventListener("input", () => {
+          store.update(block.id, { logoAlt: sanitizeAlt(logoAlt.value) });
+        });
+        const tagline = document.createElement("input");
+        tagline.type = "text";
+        tagline.value = block.tagline;
+        tagline.placeholder = "Tagline";
+        tagline.setAttribute("aria-label", "Tagline del encabezado");
+        tagline.addEventListener("input", () => {
+          store.update(block.id, { tagline: sanitizeText(tagline.value).slice(0, 200) });
+        });
+        const headerAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del encabezado", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isTextAlign(value) ? value : "center" });
+        });
+        wrap.append(
+          labelFor("Logo", logo, `${block.id}-logo`),
+          logo,
+          labelFor("Alt logo", logoAlt, `${block.id}-logoalt`),
+          logoAlt,
+          labelFor("Tagline", tagline, `${block.id}-tagline`),
+          tagline,
+          headerAlign,
+        );
+        break;
+      }
+      case "footer": {
+        const address = document.createElement("textarea");
+        address.rows = 2;
+        address.value = block.address;
+        address.placeholder = "Dirección física";
+        address.setAttribute("aria-label", "Dirección física del pie");
+        address.addEventListener("input", () => {
+          store.update(block.id, { address: sanitizeText(address.value).slice(0, 500) });
+        });
+        const unsubscribe = document.createElement("input");
+        unsubscribe.type = "url";
+        unsubscribe.value = block.unsubscribeUrl;
+        unsubscribe.placeholder = "https://…/unsubscribe";
+        unsubscribe.setAttribute("aria-label", "URL de darse de baja (https)");
+        unsubscribe.addEventListener("input", () => {
+          store.update(block.id, { unsubscribeUrl: sanitizeHttpsUrl(unsubscribe.value) });
+        });
+        wrap.append(
+          labelFor("Dirección", address, `${block.id}-address`),
+          address,
+          labelFor("Unsubscribe", unsubscribe, `${block.id}-unsub`),
+          unsubscribe,
+        );
+        appendSocialFields(wrap, block.id);
+        break;
+      }
+      case "social": {
+        appendSocialFields(wrap, block.id);
+        break;
+      }
+      case "banner": {
+        const src = document.createElement("input");
+        src.type = "url";
+        src.value = block.src;
+        src.placeholder = "https://…";
+        src.setAttribute("aria-label", "URL de la imagen (https)");
+        src.addEventListener("input", () => {
+          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+        });
+        const alt = document.createElement("input");
+        alt.type = "text";
+        alt.value = block.alt;
+        alt.placeholder = "Texto alternativo";
+        alt.addEventListener("input", () => {
+          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+        });
+        const href = document.createElement("input");
+        href.type = "url";
+        href.value = block.href;
+        href.placeholder = "https://… (video o destino)";
+        href.setAttribute("aria-label", "URL de destino (https)");
+        href.addEventListener("input", () => {
+          store.update(block.id, { href: sanitizeHttpsUrl(href.value) });
+        });
+        const caption = document.createElement("input");
+        caption.type = "text";
+        caption.value = block.caption;
+        caption.placeholder = "▶ Ver video";
+        caption.setAttribute("aria-label", "Texto del pie (opcional)");
+        caption.addEventListener("input", () => {
+          store.update(block.id, { caption: sanitizeText(caption.value).slice(0, 120) });
+        });
+        wrap.append(
+          labelFor("Imagen", src, `${block.id}-src`),
+          src,
+          labelFor("Alt", alt, `${block.id}-alt`),
+          alt,
+          labelFor("Enlace", href, `${block.id}-href`),
+          href,
+          labelFor("Pie", caption, `${block.id}-caption`),
+          caption,
+        );
+        break;
+      }
+      case "product": {
+        const src = document.createElement("input");
+        src.type = "url";
+        src.value = block.src;
+        src.placeholder = "https://…";
+        src.setAttribute("aria-label", "URL de la imagen del producto (https)");
+        src.addEventListener("input", () => {
+          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+        });
+        const alt = document.createElement("input");
+        alt.type = "text";
+        alt.value = block.alt;
+        alt.placeholder = "Texto alternativo";
+        alt.addEventListener("input", () => {
+          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+        });
+        const name = document.createElement("input");
+        name.type = "text";
+        name.value = block.name;
+        name.placeholder = "Nombre del producto";
+        name.setAttribute("aria-label", "Nombre del producto");
+        name.addEventListener("input", () => {
+          store.update(block.id, { name: sanitizeText(name.value).slice(0, 120) });
+        });
+        const price = document.createElement("input");
+        price.type = "text";
+        price.value = block.price;
+        price.placeholder = "$0";
+        price.setAttribute("aria-label", "Precio del producto");
+        price.addEventListener("input", () => {
+          store.update(block.id, { price: sanitizeText(price.value).slice(0, 40) });
+        });
+        const url = document.createElement("input");
+        url.type = "url";
+        url.value = block.url;
+        url.placeholder = "https://…";
+        url.setAttribute("aria-label", "URL del producto (https)");
+        url.addEventListener("input", () => {
+          store.update(block.id, { url: sanitizeHttpsUrl(url.value) });
+        });
+        const buttonLabel = document.createElement("input");
+        buttonLabel.type = "text";
+        buttonLabel.value = block.buttonLabel;
+        buttonLabel.placeholder = "Comprar";
+        buttonLabel.setAttribute("aria-label", "Texto del botón");
+        buttonLabel.addEventListener("input", () => {
+          store.update(block.id, { buttonLabel: sanitizeText(buttonLabel.value).slice(0, 40) });
+        });
+        const color = selectField(block.color, BUTTON_COLOR_OPTIONS, "Color del botón", `${block.id}-color`, "Color", (value) => {
+          store.update(block.id, { color: isButtonColor(value) ? value : "blue" });
+        });
+        wrap.append(
+          labelFor("Imagen", src, `${block.id}-src`),
+          src,
+          labelFor("Alt", alt, `${block.id}-alt`),
+          alt,
+          labelFor("Nombre", name, `${block.id}-name`),
+          name,
+          labelFor("Precio", price, `${block.id}-price`),
+          price,
+          labelFor("URL", url, `${block.id}-url`),
+          url,
+          labelFor("Botón", buttonLabel, `${block.id}-buttonlabel`),
+          buttonLabel,
+          color,
+        );
+        break;
+      }
+      case "coupon": {
+        const code = document.createElement("input");
+        code.type = "text";
+        code.value = block.code;
+        code.placeholder = "DESCUENTO10";
+        code.setAttribute("aria-label", "Código del cupón");
+        code.addEventListener("input", () => {
+          store.update(block.id, { code: sanitizeText(code.value).slice(0, 40) });
+        });
+        const description = document.createElement("input");
+        description.type = "text";
+        description.value = block.description;
+        description.placeholder = "Descripción del cupón";
+        description.setAttribute("aria-label", "Descripción del cupón");
+        description.addEventListener("input", () => {
+          store.update(block.id, { description: sanitizeText(description.value).slice(0, 200) });
+        });
+        wrap.append(
+          labelFor("Código", code, `${block.id}-code`),
+          code,
+          labelFor("Descripción", description, `${block.id}-description`),
+          description,
+        );
+        break;
+      }
+      case "signature": {
+        const name = document.createElement("input");
+        name.type = "text";
+        name.value = block.name;
+        name.placeholder = "Tu nombre";
+        name.setAttribute("aria-label", "Nombre del remitente");
+        name.addEventListener("input", () => {
+          store.update(block.id, { name: sanitizeText(name.value).slice(0, 120) });
+        });
+        const role = document.createElement("input");
+        role.type = "text";
+        role.value = block.role;
+        role.placeholder = "Tu cargo";
+        role.setAttribute("aria-label", "Cargo del remitente");
+        role.addEventListener("input", () => {
+          store.update(block.id, { role: sanitizeText(role.value).slice(0, 120) });
+        });
+        const photo = document.createElement("input");
+        photo.type = "url";
+        photo.value = block.photoSrc;
+        photo.placeholder = "https://…";
+        photo.setAttribute("aria-label", "URL de la foto (https)");
+        photo.addEventListener("input", () => {
+          store.update(block.id, { photoSrc: sanitizeImageSrc(photo.value) });
+        });
+        const photoAlt = document.createElement("input");
+        photoAlt.type = "text";
+        photoAlt.value = block.photoAlt;
+        photoAlt.placeholder = "Texto alternativo de la foto";
+        photoAlt.addEventListener("input", () => {
+          store.update(block.id, { photoAlt: sanitizeAlt(photoAlt.value) });
+        });
+        wrap.append(
+          labelFor("Nombre", name, `${block.id}-name`),
+          name,
+          labelFor("Cargo", role, `${block.id}-role`),
+          role,
+          labelFor("Foto", photo, `${block.id}-photo`),
+          photo,
+          labelFor("Alt foto", photoAlt, `${block.id}-photoalt`),
+          photoAlt,
+        );
+        break;
+      }
+      case "cta": {
+        const ctaLabel = document.createElement("input");
+        ctaLabel.type = "text";
+        ctaLabel.value = block.label;
+        ctaLabel.placeholder = "Texto del botón";
+        ctaLabel.setAttribute("aria-label", "Texto del botón");
+        ctaLabel.addEventListener("input", () => {
+          store.update(block.id, { label: sanitizeText(ctaLabel.value).slice(0, 80) });
+        });
+        const url = document.createElement("input");
+        url.type = "url";
+        url.value = block.url;
+        url.placeholder = "https://…";
+        url.setAttribute("aria-label", "URL de destino (https)");
+        url.addEventListener("input", () => {
+          store.update(block.id, { url: sanitizeHttpsUrl(url.value) });
+        });
+        const ctaColor = selectField(block.color, BUTTON_COLOR_OPTIONS, "Color del botón", `${block.id}-color`, "Color", (value) => {
+          store.update(block.id, { color: isButtonColor(value) ? value : "blue" });
+        });
+        const ctaAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
+        });
+        const ctaMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
+        );
+        wrap.append(
+          labelFor("Texto", ctaLabel, `${block.id}-label`),
+          ctaLabel,
+          labelFor("URL", url, `${block.id}-url`),
+          url,
+          ctaColor,
+          ctaAlign,
+          ctaMargins,
+        );
+        break;
+      }
+      case "columns": {
+        const colsWrap = el("div", "block__cols");
+        block.columns.forEach((col, colIndex) => {
+          const colBox = el("div", "block__col");
+          const colTitle = el("p", "block__coltitle");
+          colTitle.textContent = `Columna ${String(colIndex + 1)}`;
+          const ul = el("ul", "block__collist");
+          ul.setAttribute("aria-label", `Bloques de la columna ${String(colIndex + 1)}`);
+          col.blocks.forEach((inner, innerIndex) => {
+            ul.appendChild(renderNestedItem(block.id, colIndex, inner, innerIndex, col.blocks.length));
+          });
+          ul.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.dataTransfer !== null) event.dataTransfer.dropEffect = "move";
+            moveColPlaceholder(ul, event.clientY);
+          });
+          ul.addEventListener("dragleave", (event) => {
+            const to = event.relatedTarget;
+            if (to instanceof Node && ul.contains(to)) return;
+            clearPlaceholder();
+          });
+          ul.addEventListener("drop", (event) => {
+            handleColumnDrop(event, ul, block.id, colIndex);
+          });
+          const add = document.createElement("select");
+          add.setAttribute("aria-label", `Añadir bloque a la columna ${String(colIndex + 1)}`);
+          const placeholderOpt = document.createElement("option");
+          placeholderOpt.value = "";
+          placeholderOpt.textContent = "Añadir bloque…";
+          add.appendChild(placeholderOpt);
+          for (const meta of getRegisteredBlocks()) {
+            if (!isBlockType(meta.type)) continue;
+            const type: BlockType = meta.type;
+            const opt = document.createElement("option");
+            opt.value = type;
+            opt.textContent = meta.label;
+            add.appendChild(opt);
+          }
+          add.addEventListener("change", () => {
+            if (!isBlockType(add.value)) return;
+            const type: BlockType = add.value;
+            const host = liveColumns(block.id);
+            if (host === undefined || host.type !== "columns") return;
+            const next = cloneColumns(host.columns);
+            const dest = next[colIndex];
+            if (dest === undefined) return;
+            dest.blocks = [...dest.blocks, createBlockData(type, createId())];
+            writeColumns(block.id, next);
+            announce(liveEl, "Bloque añadido a la columna.");
+          });
+          colBox.append(colTitle, ul, add);
+          colsWrap.appendChild(colBox);
+        });
+        const colsRow = el("div", "block__inline");
+        const addCol = document.createElement("button");
+        addCol.type = "button";
+        addCol.className = "block__btn-text";
+        addCol.textContent = "Añadir columna";
+        addCol.disabled = block.columns.length >= 3;
+        addCol.addEventListener("click", () => {
+          const host = liveColumns(block.id);
+          if (host === undefined || host.type !== "columns") return;
+          if (host.columns.length >= 3) return;
+          writeColumns(block.id, [...cloneColumns(host.columns), { blocks: [] }]);
+          announce(liveEl, "Columna añadida.");
+        });
+        const delCol = document.createElement("button");
+        delCol.type = "button";
+        delCol.className = "block__btn-text";
+        delCol.textContent = "Quitar columna";
+        delCol.disabled = block.columns.length <= 2;
+        delCol.addEventListener("click", () => {
+          const host = liveColumns(block.id);
+          if (host === undefined || host.type !== "columns") return;
+          if (host.columns.length <= 2) return;
+          writeColumns(block.id, cloneColumns(host.columns).slice(0, -1));
+          announce(liveEl, "Columna quitada.");
+        });
+        colsRow.append(addCol, delCol);
+        wrap.append(colsWrap, colsRow);
+        break;
+      }
+      case "table": {
+        const headerBox = document.createElement("input");
+        headerBox.type = "checkbox";
+        headerBox.checked = block.headerRow;
+        headerBox.addEventListener("change", () => {
+          store.update(block.id, { headerRow: headerBox.checked });
+        });
+        const headerRow = el("div", "block__inline");
+        headerRow.appendChild(inlinePair("Fila de cabecera", headerBox, `${block.id}-headerrow`));
+        const headers = document.createElement("input");
+        headers.type = "text";
+        headers.value = block.headers.join(" | ");
+        headers.placeholder = "Nombre | Precio";
+        headers.setAttribute("aria-label", "Cabeceras separadas por |");
+        headers.addEventListener("input", () => {
+          store.update(block.id, {
+            headers: headers.value.split("|").slice(0, 6).map((v) => sanitizeText(v).slice(0, 200)),
+          });
+        });
+        const rows = document.createElement("textarea");
+        rows.rows = 4;
+        rows.value = block.rows.map((r) => r.join(" | ")).join("\n");
+        rows.placeholder = "Una fila por línea, celdas con |";
+        rows.setAttribute("aria-label", "Filas de la tabla, una por línea");
+        rows.addEventListener("input", () => {
+          store.update(block.id, {
+            rows: rows.value
+              .split("\n")
+              .slice(0, 20)
+              .map((line) => line.split("|").slice(0, 6).map((v) => sanitizeText(v).slice(0, 200))),
+          });
+        });
+        wrap.append(
+          headerRow,
+          labelFor("Cabeceras", headers, `${block.id}-headers`),
+          headers,
+          labelFor("Filas", rows, `${block.id}-rows`),
+          rows,
         );
         break;
       }
