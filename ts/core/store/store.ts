@@ -60,6 +60,13 @@ export class EditorStore {
     if (this.#blocks.length !== before) this.#emit();
   }
 
+  /** Vacía el lienzo de un solo golpe; sin bloques no emite. */
+  clear(): void {
+    if (this.#blocks.length === 0) return;
+    this.#blocks = [];
+    this.#emit();
+  }
+
   setBackground(value: string): void {
     const next = sanitizeColor(value);
     const resolved = next === "" ? DEFAULT_TEMPLATE_BG : next;
