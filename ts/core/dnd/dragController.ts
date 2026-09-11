@@ -1,9 +1,16 @@
 import { isBlockType } from "../../blocks/types.js";
 import type { BlockType } from "../../blocks/types.js";
 
+/** Origen dentro de una columna (anidado). Ausente = nivel superior del lienzo. */
+export interface ColumnRef {
+  readonly columnsId: string;
+  readonly colIndex: number;
+}
+
 export interface DragPayload {
   readonly blockType: BlockType;
   readonly sourceId?: string;
+  readonly fromColumn?: ColumnRef;
 }
 
 const MIME = "application/json";
@@ -27,10 +34,22 @@ export function getDragPayload(event: DragEvent): DragPayload | undefined {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!isRecord(parsed)) return undefined;
-    const { blockType, sourceId } = parsed;
+    const { blockType, sourceId, fromColumn } = parsed;
     if (typeof blockType !== "string" || !isBlockType(blockType)) return undefined;
     if (sourceId !== undefined && typeof sourceId !== "string") return undefined;
-    return sourceId === undefined ? { blockType } : { blockType, sourceId };
+    let columnRef: ColumnRef | undefined;
+    if (fromColumn !== undefined) {
+      if (!isRecord(fromColumn)) return undefined;
+      const { columnsId, colIndex } = fromColumn;
+      if (typeof columnsId !== "string" || typeof colIndex !== "number") return undefined;
+      columnRef = { columnsId, colIndex };
+    }
+    if (sourceId !== undefined) {
+      return columnRef === undefined
+        ? { blockType, sourceId }
+        : { blockType, sourceId, fromColumn: columnRef };
+    }
+    return { blockType };
   } catch {
     return undefined;
   }
