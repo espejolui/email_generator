@@ -1,4 +1,4 @@
-import { buildWhatsAppUrl, sanitizeImageSrc } from "../sanitize/sanitize.js";
+import { buildWhatsAppUrl, sanitizeColor, sanitizeImageSrc } from "../sanitize/sanitize.js";
 import { lightenHex } from "../color/color.js";
 import type {
   AnyBlockData,
@@ -18,7 +18,9 @@ export interface RenderedRow {
 
 /** Tema "Bolos Comfacundi": Nunito + azules de marca sobre tarjeta blanca. */
 const FONT = "'Nunito','Trebuchet MS',sans-serif";
-const BG = "#f0faff";
+/** Fondo exterior de la plantilla (configurable desde el Preview, §1 Fix). */
+export const DEFAULT_TEMPLATE_BG = "#f0faff";
+const BG = DEFAULT_TEMPLATE_BG;
 const CARD = "#ffffff";
 const PRIMARY = "#41b6e6";
 const LIGHT = "#8DE1F7";
@@ -36,12 +38,13 @@ function cornerStyle(corners: Corner): string {
 }
 
 function row(inner: string, bg = "", corners: Corner = ""): RenderedRow {
+  // La última fila es la última <tr> de la tarjeta (sin pie/espaciador:
+  // espejo del primer bloque, que arranca en el punto cero superior). Su
+  // aire inferior (20px propios + 12px del antiguo espaciador) vive dentro
+  // de la celda para que la banda de fondo llegue hasta el borde redondeado.
+  const bottomPad = corners === "bottom" || corners === "both" ? 32 : 20;
   const bgStyle = bg === "" ? "" : ` background-color:${bg};`;
-  return { html: `<tr><td style="padding:0 48px 20px; font-family:${FONT};${bgStyle}${cornerStyle(corners)}">${inner}</td></tr>` };
-}
-
-function spacer(height: number): string {
-  return `<tr><td style="padding:0 48px; font-family:${FONT};"><div style="height:${String(height)}px; line-height:${String(height)}px;">&nbsp;</div></td></tr>`;
+  return { html: `<tr><td style="padding:0 48px ${String(bottomPad)}px; font-family:${FONT};${bgStyle}${cornerStyle(corners)}">${inner}</td></tr>` };
 }
 
 const TITLE_SIZE: Record<TitleLevel, string> = {
@@ -105,25 +108,27 @@ export function renderText(data: TextBlockData, corners: Corner = ""): RenderedR
   );
 }
 
-export function renderImage(data: ImageBlockData): RenderedRow {
+export function renderImage(data: ImageBlockData, corners: Corner = ""): RenderedRow {
   const src = sanitizeImageSrc(data.src);
   const img = src === ""
     ? `<p style="margin:0; font-size:13px; color:${MUTED};">[Imagen sin URL válida]</p>`
     : `<img src="${src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
-  return row(img);
+  return row(img, "", corners);
 }
 
-export function renderList(data: ListBlockData): RenderedRow {
+export function renderList(data: ListBlockData, corners: Corner = ""): RenderedRow {
   const tag = data.ordered ? "ol" : "ul";
   const items = data.items
     .map((item) => `<li style="font-size:16px; line-height:1.75; color:${BODY_TEXT};">${item}</li>`)
     .join("");
   return row(
     `<${tag} style="margin:0; padding-left:20px; font-family:${FONT}; text-align:${data.align};">${items}</${tag}>`,
+    "",
+    corners,
   );
 }
 
-export function renderQuote(data: QuoteBlockData): RenderedRow {
+export function renderQuote(data: QuoteBlockData, corners: Corner = ""): RenderedRow {
   const color = data.color === "" ? "#555555" : data.color;
   return row(
     `<blockquote style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; text-align:${data.align}; color:${color};">` +
@@ -131,6 +136,7 @@ export function renderQuote(data: QuoteBlockData): RenderedRow {
       (data.cite === "" ? "" : `<cite style="font-size:12px; color:${MUTED};">— ${data.cite}</cite>`) +
       `</blockquote>`,
     data.bg,
+    corners,
   );
 }
 
@@ -140,14 +146,17 @@ export function renderDivider(data: DividerBlockData, corners: Corner = ""): Ren
   const bg = data.color === ""
     ? `linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%)`
     : `linear-gradient(90deg,${data.color} 0%,${lightenHex(data.color, 0.45)} 100%)`;
+  // Sin pie/espaciador inferior: si es la última fila, el aire (12px del
+  // antiguo espaciador) vive en el padding de la celda (12 + marginBottom).
+  const bottomPad = corners === "bottom" || corners === "both" ? "0 48px 12px" : "0 48px";
   return {
-    html: `<tr><td style="padding:0 48px; font-family:${FONT};${cornerStyle(corners)}">` +
+    html: `<tr><td style="padding:${bottomPad}; font-family:${FONT};${cornerStyle(corners)}">` +
       `<div style="height:${String(data.thickness)}px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:${String(data.borderRadius)}px;"></div>` +
       `</td></tr>`,
   };
 }
 
-export function renderButton(data: ButtonBlockData): RenderedRow {
+export function renderButton(data: ButtonBlockData, corners: Corner = ""): RenderedRow {
   const bg = data.color === "blue" ? PRIMARY : GREEN;
   // message viaja en crudo hasta aquí y se codifica para URL (nunca toca HTML).
   const href = buildWhatsAppUrl(data.phone, data.message);
@@ -158,6 +167,8 @@ export function renderButton(data: ButtonBlockData): RenderedRow {
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${data.align}" style="margin:${String(data.marginTop)}px auto ${String(data.marginBottom)}px;">` +
       `<tr><td align="center" style="background-color:${bg}; border-radius:50px;">${text}</td></tr>` +
       `</table>`,
+    "",
+    corners,
   );
 }
 
@@ -169,28 +180,41 @@ export function renderBlockToRow(data: AnyBlockData, index = 0, total = 1): Rend
     case "text":
       return renderText(data, corners);
     case "image":
-      return renderImage(data);
+      return renderImage(data, corners);
     case "list":
-      return renderList(data);
+      return renderList(data, corners);
     case "quote":
-      return renderQuote(data);
+      return renderQuote(data, corners);
     case "divider":
       return renderDivider(data, corners);
     case "button":
-      return renderButton(data);
+      return renderButton(data, corners);
   }
 }
 
+/** Fondo exterior sanitizado: vacío o inválido -> color por defecto. */
+function templateBg(input: string | undefined): string {
+  if (input === undefined) return BG;
+  const next = sanitizeColor(input);
+  return next === "" ? BG : next;
+}
+
 function cardTable(body: string): string {
-  // Sin espaciador superior: el primer bloque arranca en el punto cero de la tarjeta.
+  // Sin espaciadores: el primer bloque arranca en el punto cero superior y
+  // el último termina en el punto cero inferior, cada uno con su radio.
+  // Lienzo vacío: una fila blanca con el radio completo para no colapsar.
+  const content = body === ""
+    ? `<tr><td style="padding:0 48px; font-family:${FONT};${cornerStyle("both")}"><div style="height:12px; line-height:12px;">&nbsp;</div></td></tr>`
+    : body;
   return `<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center" ` +
     `style="width:600px; max-width:600px; margin:0 auto; border-collapse:collapse; background-color:${CARD}; border-radius:16px;">` +
-    `${body}\n${spacer(12)}` +
+    `${content}` +
     `</table>`;
 }
 
 /** Misma salida para Preview y descarga: evita desincronización. */
-export function buildEmailDocument(blocks: readonly AnyBlockData[]): string {
+export function buildEmailDocument(blocks: readonly AnyBlockData[], background?: string): string {
+  const bg = templateBg(background);
   const body = blocks.map((b, i) => renderBlockToRow(b, i, blocks.length).html).join("\n");
   return `<!DOCTYPE html>
 <html lang="es">
@@ -203,8 +227,8 @@ export function buildEmailDocument(blocks: readonly AnyBlockData[]): string {
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
 </style>
 </head>
-<body style="margin:0; padding:0; background-color:${BG};">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BG}; padding:32px 0;">
+<body style="margin:0; padding:0; background-color:${bg};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${bg}; padding:32px 0;">
 <tr>
 <td align="center">
 ${cardTable(body)}
@@ -216,8 +240,9 @@ ${cardTable(body)}
 }
 
 /** Solo la tarjeta, para incrustar en el panel de vista previa del editor. */
-export function buildPreviewTable(blocks: readonly AnyBlockData[]): string {
+export function buildPreviewTable(blocks: readonly AnyBlockData[], background?: string): string {
+  const bg = templateBg(background);
   const body = blocks.map((b, i) => renderBlockToRow(b, i, blocks.length).html).join("\n");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BG}; padding:24px 8px;">` +
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${bg}; padding:24px 8px;">` +
     `<tr><td align="center">${cardTable(body)}</td></tr></table>`;
 }
