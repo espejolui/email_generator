@@ -1,18 +1,25 @@
 import type { AnyBlockData } from "../../blocks/types.js";
+import { DEFAULT_TEMPLATE_BG } from "../render/exportToEmailHtml.js";
+import { sanitizeColor } from "../sanitize/sanitize.js";
 
-export type StoreListener = (blocks: readonly AnyBlockData[]) => void;
+export type StoreListener = (blocks: readonly AnyBlockData[], background: string) => void;
 
 export class EditorStore {
   #blocks: AnyBlockData[] = [];
+  #background = DEFAULT_TEMPLATE_BG;
   #listeners = new Set<StoreListener>();
 
   get blocks(): readonly AnyBlockData[] {
     return [...this.#blocks];
   }
 
+  get background(): string {
+    return this.#background;
+  }
+
   subscribe(listener: StoreListener): () => void {
     this.#listeners.add(listener);
-    listener(this.blocks);
+    listener(this.blocks, this.#background);
     return () => {
       this.#listeners.delete(listener);
     };
@@ -20,7 +27,7 @@ export class EditorStore {
 
   #emit(): void {
     const snapshot = this.blocks;
-    for (const listener of this.#listeners) listener(snapshot);
+    for (const listener of this.#listeners) listener(snapshot, this.#background);
   }
 
   insertAt(index: number, block: AnyBlockData): void {
@@ -51,5 +58,13 @@ export class EditorStore {
     const before = this.#blocks.length;
     this.#blocks = this.#blocks.filter((b) => b.id !== id);
     if (this.#blocks.length !== before) this.#emit();
+  }
+
+  setBackground(value: string): void {
+    const next = sanitizeColor(value);
+    const resolved = next === "" ? DEFAULT_TEMPLATE_BG : next;
+    if (resolved === this.#background) return;
+    this.#background = resolved;
+    this.#emit();
   }
 }
