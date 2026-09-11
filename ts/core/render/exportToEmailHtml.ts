@@ -143,16 +143,24 @@ export function renderQuote(data: QuoteBlockData, corners: Corner = ""): Rendere
 export function renderDivider(data: DividerBlockData, corners: Corner = ""): RenderedRow {
   // Sin color: degradado de marca original. Con color: degradado que nace
   // del color elegido hacia su versión aclarada.
-  const bg = data.color === ""
-    ? `linear-gradient(90deg,${PRIMARY} 0%,${LIGHT} 100%)`
-    : `linear-gradient(90deg,${data.color} 0%,${lightenHex(data.color, 0.45)} 100%)`;
+  // Tabla anidada (patrón bulletproof, igual que el botón): Outlook desktop
+  // ignora linear-gradient y el height en <div>, pero honra bgcolor+height
+  // en <td>, así que allí muestra la barra sólida del color de marca con su
+  // grosor correcto. El resto de clientes ve el degradado redondeado.
+  const solid = data.color === "" ? PRIMARY : data.color;
+  const light = data.color === "" ? LIGHT : lightenHex(data.color, 0.45);
+  const gradient = `linear-gradient(90deg,${solid} 0%,${light} 100%)`;
   // Sin pie/espaciador inferior: si es la última fila, el aire (12px del
   // antiguo espaciador) vive en el padding de la celda (12 + marginBottom).
   const bottomPad = corners === "bottom" || corners === "both" ? "0 48px 12px" : "0 48px";
+  const thickness = String(data.thickness);
+  const radius = String(data.borderRadius);
+  const margins = `${String(data.marginTop)}px 0 ${String(data.marginBottom)}px`;
   return {
     html: `<tr><td style="padding:${bottomPad}; font-family:${FONT};${cornerStyle(corners)}">` +
-      `<div style="height:${String(data.thickness)}px; margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; background:${bg}; border-radius:${String(data.borderRadius)}px;"></div>` +
-      `</td></tr>`,
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${margins};">` +
+      `<tr><td height="${thickness}" bgcolor="${solid}" style="height:${thickness}px; font-size:0; line-height:0; background-color:${solid}; background:${gradient}; border-radius:${radius}px;">&nbsp;</td></tr>` +
+      `</table></td></tr>`,
   };
 }
 
