@@ -1,4 +1,22 @@
-export type BlockType = "title" | "text" | "image" | "list" | "quote" | "divider" | "button";
+export type BlockType =
+  | "title"
+  | "text"
+  | "image"
+  | "list"
+  | "quote"
+  | "divider"
+  | "button"
+  | "spacer"
+  | "header"
+  | "footer"
+  | "cta"
+  | "columns"
+  | "table"
+  | "social"
+  | "banner"
+  | "product"
+  | "coupon"
+  | "signature";
 
 export type ButtonColor = "green" | "blue";
 
@@ -90,6 +108,97 @@ export interface ButtonBlockData extends BaseBlockData {
   marginBottom: number;
 }
 
+export interface SpacerBlockData extends BaseBlockData {
+  readonly type: "spacer";
+  height: number;
+}
+
+export interface HeaderBlockData extends BaseBlockData {
+  readonly type: "header";
+  logoSrc: string;
+  logoAlt: string;
+  tagline: string;
+  align: TextAlign;
+}
+
+export interface SocialUrls {
+  instagram: string;
+  facebook: string;
+  x: string;
+  linkedin: string;
+}
+
+export interface FooterBlockData extends BaseBlockData {
+  readonly type: "footer";
+  address: string;
+  unsubscribeUrl: string;
+  social: SocialUrls;
+}
+
+export interface CtaBlockData extends BaseBlockData {
+  readonly type: "cta";
+  label: string;
+  url: string;
+  color: ButtonColor;
+  align: ButtonAlign;
+  marginTop: number;
+  marginBottom: number;
+}
+
+export interface ColumnData {
+  blocks: readonly AnyBlockData[];
+}
+
+export interface ColumnsBlockData extends BaseBlockData {
+  readonly type: "columns";
+  columns: readonly ColumnData[];
+}
+
+export interface TableBlockData extends BaseBlockData {
+  readonly type: "table";
+  headers: readonly string[];
+  rows: readonly (readonly string[])[];
+  headerRow: boolean;
+}
+
+export interface SocialBlockData extends BaseBlockData {
+  readonly type: "social";
+  social: SocialUrls;
+}
+
+export interface BannerBlockData extends BaseBlockData {
+  readonly type: "banner";
+  src: string;
+  alt: string;
+  href: string;
+  caption: string;
+}
+
+export interface ProductBlockData extends BaseBlockData {
+  readonly type: "product";
+  src: string;
+  alt: string;
+  name: string;
+  price: string;
+  url: string;
+  buttonLabel: string;
+  color: ButtonColor;
+}
+
+export interface CouponBlockData extends BaseBlockData {
+  readonly type: "coupon";
+  code: string;
+  description: string;
+}
+
+export interface SignatureBlockData extends BaseBlockData {
+  readonly type: "signature";
+  name: string;
+  role: string;
+  photoSrc: string;
+  photoAlt: string;
+}
+
 export type AnyBlockData =
   | TitleBlockData
   | TextBlockData
@@ -97,7 +206,18 @@ export type AnyBlockData =
   | ListBlockData
   | QuoteBlockData
   | DividerBlockData
-  | ButtonBlockData;
+  | ButtonBlockData
+  | SpacerBlockData
+  | HeaderBlockData
+  | FooterBlockData
+  | CtaBlockData
+  | ColumnsBlockData
+  | TableBlockData
+  | SocialBlockData
+  | BannerBlockData
+  | ProductBlockData
+  | CouponBlockData
+  | SignatureBlockData;
 
 export function isBlockType(value: string): value is BlockType {
   return (
@@ -107,7 +227,18 @@ export function isBlockType(value: string): value is BlockType {
     value === "list" ||
     value === "quote" ||
     value === "divider" ||
-    value === "button"
+    value === "button" ||
+    value === "spacer" ||
+    value === "header" ||
+    value === "footer" ||
+    value === "cta" ||
+    value === "columns" ||
+    value === "table" ||
+    value === "social" ||
+    value === "banner" ||
+    value === "product" ||
+    value === "coupon" ||
+    value === "signature"
   );
 }
 

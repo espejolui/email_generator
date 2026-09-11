@@ -5,6 +5,17 @@ import "./ListBlock.js";
 import "./QuoteBlock.js";
 import "./DividerBlock.js";
 import "./ButtonBlock.js";
+import "./SpacerBlock.js";
+import "./HeaderBlock.js";
+import "./FooterBlock.js";
+import "./CtaBlock.js";
+import "./ColumnsBlock.js";
+import "./TableBlock.js";
+import "./SocialBlock.js";
+import "./BannerBlock.js";
+import "./ProductBlock.js";
+import "./CouponBlock.js";
+import "./SignatureBlock.js";
 import { getRegisteredBlocks } from "../core/decorators/Block.js";
 import type { AnyBlockData, BlockType } from "./types.js";
 
@@ -88,5 +99,58 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         marginTop: 0,
         marginBottom: 0,
       };
+    case "spacer":
+      return { id, type, height: 16 };
+    case "header":
+      return { id, type, logoSrc: "", logoAlt: "", tagline: "Tu tagline aquí", align: "center" };
+    case "footer":
+      return {
+        id,
+        type,
+        address: "Calle 123, Ciudad",
+        unsubscribeUrl: "",
+        social: { instagram: "", facebook: "", x: "", linkedin: "" },
+      };
+    case "cta":
+      return {
+        id,
+        type,
+        label: "Ver más",
+        url: "",
+        color: "blue",
+        align: "center",
+        marginTop: 0,
+        marginBottom: 0,
+      };
+    case "columns":
+      return { id, type, columns: [{ blocks: [] }, { blocks: [] }] };
+    case "table":
+      return {
+        id,
+        type,
+        headers: ["Columna 1", "Columna 2"],
+        rows: [["Valor 1", "Valor 2"]],
+        headerRow: true,
+      };
+    case "social":
+      return { id, type, social: { instagram: "", facebook: "", x: "", linkedin: "" } };
+    case "banner":
+      return { id, type, src: "", alt: "", href: "", caption: "▶ Ver video" };
+    case "product":
+      return {
+        id,
+        type,
+        src: "",
+        alt: "",
+        name: "Producto",
+        price: "$0",
+        url: "",
+        buttonLabel: "Comprar",
+        color: "blue",
+      };
+    case "coupon":
+      return { id, type, code: "DESCUENTO10", description: "En tu próxima compra" };
+    case "signature":
+      return { id, type, name: "Tu nombre", role: "Tu cargo", photoSrc: "", photoAlt: "" };
   }
 }

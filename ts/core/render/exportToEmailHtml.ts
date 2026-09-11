@@ -1,12 +1,30 @@
-import { buildWhatsAppUrl, sanitizeColor, sanitizeImageSrc } from "../sanitize/sanitize.js";
+import {
+  buildWhatsAppUrl,
+  sanitizeColor,
+  sanitizeHttpsUrl,
+  sanitizeImageSrc,
+} from "../sanitize/sanitize.js";
 import { lightenHex } from "../color/color.js";
 import type {
   AnyBlockData,
+  BannerBlockData,
+  ButtonAlign,
   ButtonBlockData,
+  ColumnsBlockData,
+  CouponBlockData,
+  CtaBlockData,
   DividerBlockData,
+  FooterBlockData,
+  HeaderBlockData,
   ImageBlockData,
   ListBlockData,
+  ProductBlockData,
   QuoteBlockData,
+  SignatureBlockData,
+  SocialBlockData,
+  SocialUrls,
+  SpacerBlockData,
+  TableBlockData,
   TextBlockData,
   TitleBlockData,
   TitleLevel,
@@ -164,24 +182,259 @@ export function renderDivider(data: DividerBlockData, corners: Corner = ""): Ren
   };
 }
 
+/**
+ * Fila de botón pill compartida por `button` (WhatsApp) y `cta` (enlace
+ * genérico): mismo markup, solo cambian href/etiqueta/color.
+ */
+/** Tabla pill interior; `pillRow` la envuelve en fila. La usa también `product`. */
+function pillTable(
+  href: string,
+  label: string,
+  bg: string,
+  align: ButtonAlign,
+  marginTop: number,
+  marginBottom: number,
+): string {
+  const text = href === ""
+    ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${label}</span>`
+    : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${label}</a>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${align}" style="margin:${String(marginTop)}px auto ${String(marginBottom)}px;">` +
+    `<tr><td align="center" style="background-color:${bg}; border-radius:50px;">${text}</td></tr>` +
+    `</table>`;
+}
+
+function pillRow(
+  href: string,
+  label: string,
+  bg: string,
+  align: ButtonAlign,
+  marginTop: number,
+  marginBottom: number,
+  corners: Corner = "",
+): RenderedRow {
+  return row(pillTable(href, label, bg, align, marginTop, marginBottom), "", corners);
+}
+
 export function renderButton(data: ButtonBlockData, corners: Corner = ""): RenderedRow {
   const bg = data.color === "blue" ? PRIMARY : GREEN;
   // message viaja en crudo hasta aquí y se codifica para URL (nunca toca HTML).
   const href = buildWhatsAppUrl(data.phone, data.message);
-  const text = href === ""
-    ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${data.label}</span>`
-    : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${data.label}</a>`;
+  return pillRow(href, data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
+}
+
+export function renderCta(data: CtaBlockData, corners: Corner = ""): RenderedRow {
+  const bg = data.color === "blue" ? PRIMARY : GREEN;
+  // Igual que renderImage revalida src: solo https (idempotente, sin doble escape).
+  return pillRow(sanitizeHttpsUrl(data.url), data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
+}
+
+export function renderSpacer(data: SpacerBlockData): RenderedRow {
+  // Fila vacía con height fijo: margin/padding se pierden en algunos
+  // clientes, height+bgcolor en <td> no. Sin radio propio (transparente).
+  const height = String(data.height);
+  return {
+    html: `<tr><td height="${height}" style="height:${height}px; padding:0 48px; font-family:${FONT}; font-size:0; line-height:0;">&nbsp;</td></tr>`,
+  };
+}
+
+export function renderHeader(data: HeaderBlockData, corners: Corner = ""): RenderedRow {
+  // Tabla anidada con align en <td>: centra el logo también en Outlook,
+  // donde margin:auto no funciona. El tagline usa text-align (soportado).
+  const logo = data.logoSrc === ""
+    ? ""
+    : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">` +
+      `<tr><td align="${data.align}"><img src="${data.logoSrc}" width="200" alt="${data.logoAlt}" style="display:block; width:200px; max-width:100%; height:auto; border:0;"></td></tr>` +
+      `</table>`;
+  const tagline = data.tagline === ""
+    ? ""
+    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${MUTED};">${data.tagline}</p>`;
+  return row(`${logo}${tagline}`, "", corners);
+}
+
+const SOCIAL_LABELS: ReadonlyArray<readonly [keyof SocialUrls, string]> = [
+  ["instagram", "Instagram"],
+  ["facebook", "Facebook"],
+  ["x", "X"],
+  ["linkedin", "LinkedIn"],
+];
+
+/** Enlaces de texto de redes; "" si no hay ninguna URL. La usan `social` y `footer`. */
+export function socialLinksInner(social: SocialUrls): string {
+  const links = SOCIAL_LABELS.filter(([key]) => social[key] !== "").map(
+    ([key, label]) =>
+      `<a href="${social[key]}" style="font-family:${FONT}; font-size:13px; color:${PRIMARY}; text-decoration:underline;">${label}</a>`,
+  );
+  return links.length === 0 ? "" : `<p style="margin:8px 0 0; text-align:center;">${links.join(" &nbsp;·&nbsp; ")}</p>`;
+}
+
+export function renderFooter(data: FooterBlockData, corners: Corner = ""): RenderedRow {
+  const address = data.address === ""
+    ? ""
+    : `<p style="margin:0; font-family:${FONT}; font-size:12px; line-height:1.6; text-align:center; color:${MUTED};">${data.address}</p>`;
+  const unsubscribe = data.unsubscribeUrl === ""
+    ? ""
+    : `<p style="margin:8px 0 0; text-align:center;"><a href="${data.unsubscribeUrl}" style="font-family:${FONT}; font-size:12px; color:${MUTED}; text-decoration:underline;">Darse de baja</a></p>`;
+  return row(`${address}${unsubscribe}${socialLinksInner(data.social)}`, "", corners);
+}
+
+export function renderColumns(data: ColumnsBlockData, corners: Corner = ""): RenderedRow {
+  // Tabla anidada: una <td> por columna (ancho fijo, Outlook-safe). El
+  // contenido interno se renderiza recursivamente sin radio (las esquinas
+  // solo pertenecen a los bordes de la tarjeta).
+  const count = data.columns.length;
+  const width = count >= 3 ? "33.33%" : "50%";
+  const cells = data.columns
+    .map((col) => {
+      const inner = col.blocks.map((b) => renderBlockToRow(b, 0, 1, "").html).join("");
+      const body = inner === ""
+        ? `<tr><td style="font-family:${FONT}; font-size:0; line-height:0;">&nbsp;</td></tr>`
+        : inner;
+      return `<td width="${width}" valign="top" align="left" style="padding:0 8px;">` +
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${body}</table></td>`;
+    })
+    .join("");
   return row(
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${data.align}" style="margin:${String(data.marginTop)}px auto ${String(data.marginBottom)}px;">` +
-      `<tr><td align="center" style="background-color:${bg}; border-radius:50px;">${text}</td></tr>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`,
+    "",
+    corners,
+  );
+}
+
+const TABLE_BORDER = "#d9d9d9";
+
+export function renderTable(data: TableBlockData, corners: Corner = ""): RenderedRow {
+  const colCount = Math.max(
+    data.headers.length,
+    ...data.rows.map((r) => r.length),
+    1,
+  );
+  const cell = (content: string, header: boolean): string => {
+    const tag = header ? "th" : "td";
+    const extra = header
+      ? ` font-weight:700; background-color:#f0f4ff;`
+      : "";
+    const text = content === "" ? "&nbsp;" : content;
+    return `<${tag} style="padding:6px 8px; font-family:${FONT}; font-size:13px; line-height:1.5; color:${BODY_TEXT}; border:1px solid ${TABLE_BORDER};${extra}">${text}</${tag}>`;
+  };
+  const head = data.headerRow && data.headers.length > 0
+    ? `<tr>${Array.from({ length: colCount }, (_, i) => cell(data.headers[i] ?? "", true)).join("")}</tr>`
+    : "";
+  const body = data.rows
+    .map((r) => `<tr>${Array.from({ length: colCount }, (_, i) => cell(r[i] ?? "", false)).join("")}</tr>`)
+    .join("");
+  return row(
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${head}${body}</table>`,
+    "",
+    corners,
+  );
+}
+
+export function renderSocial(data: SocialBlockData, corners: Corner = ""): RenderedRow {
+  const inner = socialLinksInner(data.social);
+  return row(
+    inner === ""
+      ? `<p style="margin:0; font-size:13px; color:${MUTED}; text-align:center;">[Sin redes configuradas]</p>`
+      : inner,
+    "",
+    corners,
+  );
+}
+
+export function renderBanner(data: BannerBlockData, corners: Corner = ""): RenderedRow {
+  // Video real no existe en email: imagen enlazable + pie opcional
+  // (p. ej. "▶ Ver video"). Sin overlay absoluto: Outlook no lo soporta.
+  // href revalidado (igual que cta/url y renderImage/src).
+  const href = sanitizeHttpsUrl(data.href);
+  const img = data.src === ""
+    ? `<p style="margin:0; font-size:13px; color:${MUTED}; text-align:center;">[Imagen sin URL válida]</p>`
+    : `<img src="${data.src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
+  const visual = href === "" ? img : `<a href="${href}" style="text-decoration:none;">${img}</a>`;
+  const caption = data.caption === ""
+    ? ""
+    : href === ""
+      ? `<p style="margin:8px 0 0; font-size:13px; color:${MUTED}; text-align:center;">${data.caption}</p>`
+      : `<p style="margin:8px 0 0; text-align:center;"><a href="${href}" style="font-family:${FONT}; font-size:13px; font-weight:700; color:${PRIMARY}; text-decoration:underline;">${data.caption}</a></p>`;
+  return row(`${visual}${caption}`, "", corners);
+}
+
+export function renderProduct(data: ProductBlockData, corners: Corner = ""): RenderedRow {
+  const bg = data.color === "blue" ? PRIMARY : GREEN;
+  const url = sanitizeHttpsUrl(data.url);
+  const img = data.src === ""
+    ? `<p style="margin:0; font-size:13px; color:${MUTED};">[Imagen sin URL válida]</p>`
+    : `<img src="${data.src}" width="220" alt="${data.alt}" style="display:block; width:220px; max-width:100%; height:auto; border:0; border-radius:12px;">`;
+  const visual = url === "" ? img : `<a href="${url}" style="text-decoration:none;">${img}</a>`;
+  const name = data.name === ""
+    ? ""
+    : `<p style="margin:0; font-family:${FONT}; font-size:17px; font-weight:900; color:#111111;">${data.name}</p>`;
+  const price = data.price === ""
+    ? ""
+    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:16px; font-weight:700; color:${PRIMARY};">${data.price}</p>`;
+  const cta = data.buttonLabel === ""
+    ? ""
+    : pillTable(url, data.buttonLabel, bg, "left", 12, 0);
+  return row(
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
+      `<td width="45%" valign="top" align="left" style="padding-right:12px;">${visual}</td>` +
+      `<td width="55%" valign="top" align="left">${name}${price}${cta}</td>` +
+      `</tr></table>`,
+    "",
+    corners,
+  );
+}
+
+export function renderCoupon(data: CouponBlockData, corners: Corner = ""): RenderedRow {
+  // Badge con border en <td> (Outlook-safe): estilo ticket sin imágenes.
+  const code = data.code === ""
+    ? ""
+    : `<p style="margin:0; font-family:${FONT}; font-size:22px; font-weight:900; letter-spacing:2px; text-align:center; color:#111111;">${data.code}</p>`;
+  const description = data.description === ""
+    ? ""
+    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; text-align:center; color:${MUTED};">${data.description}</p>`;
+  return row(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">` +
+      `<tr><td align="center" style="padding:16px 32px; border:2px dashed ${PRIMARY}; border-radius:12px;">${code}${description}</td></tr>` +
       `</table>`,
     "",
     corners,
   );
 }
 
-export function renderBlockToRow(data: AnyBlockData, index = 0, total = 1): RenderedRow {
-  const corners: Corner = total <= 1 ? "both" : index === 0 ? "top" : index === total - 1 ? "bottom" : "";
+export function renderSignature(data: SignatureBlockData, corners: Corner = ""): RenderedRow {
+  const photo = data.photoSrc === ""
+    ? ""
+    : `<img src="${data.photoSrc}" width="64" alt="${data.photoAlt}" style="display:block; width:64px; max-width:64px; height:auto; border:0; border-radius:50%;">`;
+  const name = data.name === ""
+    ? ""
+    : `<p style="margin:0; font-family:${FONT}; font-size:15px; font-weight:700; color:#111111;">${data.name}</p>`;
+  const role = data.role === ""
+    ? ""
+    : `<p style="margin:4px 0 0; font-family:${FONT}; font-size:13px; color:${MUTED};">${data.role}</p>`;
+  return row(
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
+      (photo === ""
+        ? `<td valign="top" align="left">${name}${role}</td>`
+        : `<td width="76" valign="top" align="left" style="padding-right:12px;">${photo}</td>` +
+          `<td valign="top" align="left">${name}${role}</td>`) +
+      `</tr></table>`,
+    "",
+    corners,
+  );
+}
+
+/**
+ * Despacha por tipo. `cornersOverride` fuerza las esquinas (lo usan las
+ * filas anidadas de `columns`, que nunca llevan radio: solo los bordes de
+ * la tarjeta). Sin override se calcula por posición, como siempre.
+ */
+export function renderBlockToRow(
+  data: AnyBlockData,
+  index = 0,
+  total = 1,
+  cornersOverride?: Corner,
+): RenderedRow {
+  const corners: Corner = cornersOverride ??
+    (total <= 1 ? "both" : index === 0 ? "top" : index === total - 1 ? "bottom" : "");
   switch (data.type) {
     case "title":
       return renderTitle(data, corners);
@@ -197,6 +450,28 @@ export function renderBlockToRow(data: AnyBlockData, index = 0, total = 1): Rend
       return renderDivider(data, corners);
     case "button":
       return renderButton(data, corners);
+    case "spacer":
+      return renderSpacer(data);
+    case "header":
+      return renderHeader(data, corners);
+    case "footer":
+      return renderFooter(data, corners);
+    case "cta":
+      return renderCta(data, corners);
+    case "columns":
+      return renderColumns(data, corners);
+    case "table":
+      return renderTable(data, corners);
+    case "social":
+      return renderSocial(data, corners);
+    case "banner":
+      return renderBanner(data, corners);
+    case "product":
+      return renderProduct(data, corners);
+    case "coupon":
+      return renderCoupon(data, corners);
+    case "signature":
+      return renderSignature(data, corners);
   }
 }
 
