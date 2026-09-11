@@ -2,9 +2,11 @@
 
 Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
 
-- `initCanvas(rootEl, listEl, hintEl, liveEl, store)` — cablea la zona de
+- `initCanvas(rootEl, listEl, hintEl, liveEl, store, clearBtn)` — cablea la zona de
   drop (todo el `main`), el `placeholder` de inserción y la suscripción al
   store. No re-renderiza ante cambios solo de contenido (conserva el foco).
+- Botón Limpiar (`clearBtn`): vacía el lienzo con `store.clear()`, anuncia
+  cuántos bloques eliminó y se deshabilita cuando no hay bloques.
 - Internas:
   - `announce` — mensajes al `aria-live`.
   - `signature` — firma tipo:id para detectar cambios estructurales.

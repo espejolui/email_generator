@@ -10,4 +10,5 @@ a él, nunca se leen entre sí.
 - `move(sourceId, targetIndex)` — reordena un bloque existente.
 - `update(id, patch)` — aplica cambios parciales sin cambiar `id`/`type`.
 - `remove(id)` — elimina un bloque.
+- `clear()` — vacía el lienzo de un solo golpe (sin bloques no emite).
 - `StoreListener` — tipo `(blocks) => void` de los suscriptores.
