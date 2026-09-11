@@ -42,6 +42,22 @@ export function sanitizeAlt(input: string): string {
   return sanitizeText(input).slice(0, 200);
 }
 
+/**
+ * Solo URLs absolutas `https:`. Difiere de `sanitizeImageSrc` (que admite
+ * `data:image/*` controlado) a propósito: los enlaces de navegación del
+ * email nunca deben ser data: ni relativos.
+ */
+export function sanitizeHttpsUrl(input: string): string {
+  const value = input.trim();
+  if (value === "") return "";
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
 /** Solo dígitos (sin "+", espacios ni guiones). */
 export function sanitizePhone(input: string): string {
   return input.replace(/\D/g, "").slice(0, 15);
