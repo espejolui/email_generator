@@ -20,7 +20,10 @@
       <ul id="palette-list"></ul>
     </aside>
     <main class="canvas" id="canvas" aria-label="Área de edición">
-      <h2>Lienzo</h2>
+      <div class="canvas__head">
+        <h2>Lienzo</h2>
+        <button type="button" class="block__btn-text" data-action="clear-canvas"><i data-lucide="rotate-ccw" class="icon" aria-hidden="true"></i> Limpiar</button>
+      </div>
       <p class="canvas__hint" id="canvas-hint">Arrastra aquí los bloques desde la paleta.</p>
       <ol class="canvas__list" id="canvas-list" aria-live="polite"></ol>
     </main>

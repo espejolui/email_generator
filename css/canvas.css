@@ -14,6 +14,25 @@
     font-size: 1.05rem;
   }
 
+  & .canvas__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    & h2 {
+      margin: 0;
+    }
+
+    & .block__btn-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex: none;
+    }
+  }
+
   &.canvas--dragover {
     outline: 2px solid var(--accent);
     outline-offset: 2px;

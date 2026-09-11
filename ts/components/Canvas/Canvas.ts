@@ -543,6 +543,7 @@ export function initCanvas(
   hintEl: HTMLElement,
   liveEl: HTMLElement,
   store: EditorStore,
+  clearBtn: HTMLButtonElement,
 ): void {
   let renderedSig = "";
   let placeholder: HTMLLIElement | null = null;
@@ -715,9 +716,17 @@ export function initCanvas(
     handleDrop(event);
   });
 
+  clearBtn.addEventListener("click", () => {
+    const count = store.blocks.length;
+    if (count === 0) return;
+    store.clear();
+    announce(liveEl, count === 1 ? "Lienzo vaciado: 1 bloque eliminado." : `Lienzo vaciado: ${String(count)} bloques eliminados.`);
+  });
+
   store.subscribe((blocks) => {
     latestBlocks = blocks;
     hintEl.hidden = blocks.length > 0;
+    clearBtn.disabled = blocks.length === 0;
     const sig = signature(blocks);
     if (sig === renderedSig) return; // solo cambió contenido: no re-render (conserva foco)
     renderedSig = sig;

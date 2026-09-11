@@ -22,6 +22,10 @@ const downloadBtn = document.querySelector<HTMLButtonElement>(
   '[data-action="download-template"]',
 );
 if (downloadBtn === null) throw new Error("Botón de descarga no encontrado");
+const clearBtn = document.querySelector<HTMLButtonElement>(
+  '[data-action="clear-canvas"]',
+);
+if (clearBtn === null) throw new Error("Botón de limpieza no encontrado");
 
 const store = new EditorStore();
 
@@ -31,6 +35,6 @@ function addBlockToEnd(type: BlockType): void {
 }
 
 initPalette(paletteList, addBlockToEnd);
-initCanvas(canvasRoot, canvasList, canvasHint, live, store);
+initCanvas(canvasRoot, canvasList, canvasHint, live, store, clearBtn);
 initPreview(previewFrame, downloadBtn, store);
 window.lucide?.createIcons();
