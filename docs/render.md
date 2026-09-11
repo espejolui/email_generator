@@ -20,6 +20,27 @@ funciones para no desincronizarse.
   defecto o uno que nace del color elegido (`lightenHex`).
 - `renderButton(data)` — pill con enlace `wa.me` oficial y márgenes
   superior/inferior; sin teléfono, pill sin enlace.
+- `pillRow(href, label, bg, align, marginTop, marginBottom, corners?)` —
+  fila pill compartida por `button` y `cta`.
+- `renderCta(data, corners?)` — pill con URL https (revalidada, igual que
+  `renderImage` con `src`); sin URL, pill sin enlace.
+- `renderSpacer(data)` — fila vacía con `height` + `bgcolor` en `<td>`
+  (Outlook-safe).
+- `renderHeader(data, corners?)` — logo (tabla anidada con `align` para
+  Outlook) + tagline.
+- `socialLinksInner(social)` — enlaces de texto de redes; la usan `social`
+  y `footer`.
+- `pillTable(href, label, bg, align, marginTop, marginBottom)` — tabla pill
+  interior; `pillRow` la envuelve en fila y `product` la incrusta.
+- `renderSocial / renderBanner / renderProduct / renderCoupon / renderSignature`
+  — fila de redes (con aviso si vacía), imagen enlazable + pie opcional,
+  tarjeta de producto 45/55, badge con `border` en `<td>`, firma con foto.
+- `renderFooter(data, corners?)` — dirección + enlace de baja + redes.
+- `renderBlockToRow(data, index?, total?, cornersOverride?)` — el override lo
+  usan las filas anidadas de `columns` (nunca llevan radio).
+- `renderColumns(data, corners?)` — tabla anidada (`<td width="50%|33.33%">`
+  por columna) con render recursivo sin esquinas.
+- `renderTable(data, corners?)` — tabla de datos real con `th/td` y bordes.
 - `renderBlockToRow(data, index?, total?)` — despacha por `type` y calcula
   si la fila es primera/última para heredar el radio de la tarjeta.
 - `buildEmailDocument(blocks)` — documento `.html` completo descargable.
