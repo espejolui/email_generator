@@ -1,12 +1,17 @@
 import type { AnyBlockData } from "../../blocks/types.js";
 import { DEFAULT_TEMPLATE_BG } from "../render/exportToEmailHtml.js";
-import { sanitizeColor } from "../sanitize/sanitize.js";
+import { sanitizeColor, sanitizeText } from "../sanitize/sanitize.js";
 
-export type StoreListener = (blocks: readonly AnyBlockData[], background: string) => void;
+export type StoreListener = (
+  blocks: readonly AnyBlockData[],
+  background: string,
+  docTitle: string,
+) => void;
 
 export class EditorStore {
   #blocks: AnyBlockData[] = [];
   #background = DEFAULT_TEMPLATE_BG;
+  #docTitle = "";
   #listeners = new Set<StoreListener>();
 
   get blocks(): readonly AnyBlockData[] {
@@ -17,9 +22,14 @@ export class EditorStore {
     return this.#background;
   }
 
+  /** Nombre de la plantilla (va al <title> del documento). Vacío = por defecto. */
+  get docTitle(): string {
+    return this.#docTitle;
+  }
+
   subscribe(listener: StoreListener): () => void {
     this.#listeners.add(listener);
-    listener(this.blocks, this.#background);
+    listener(this.blocks, this.#background, this.#docTitle);
     return () => {
       this.#listeners.delete(listener);
     };
@@ -27,7 +37,9 @@ export class EditorStore {
 
   #emit(): void {
     const snapshot = this.blocks;
-    for (const listener of this.#listeners) listener(snapshot, this.#background);
+    for (const listener of this.#listeners) {
+      listener(snapshot, this.#background, this.#docTitle);
+    }
   }
 
   insertAt(index: number, block: AnyBlockData): void {
@@ -72,6 +84,13 @@ export class EditorStore {
     const resolved = next === "" ? DEFAULT_TEMPLATE_BG : next;
     if (resolved === this.#background) return;
     this.#background = resolved;
+    this.#emit();
+  }
+
+  setDocTitle(value: string): void {
+    const next = sanitizeText(value).trim().slice(0, 120);
+    if (next === this.#docTitle) return;
+    this.#docTitle = next;
     this.#emit();
   }
 }
