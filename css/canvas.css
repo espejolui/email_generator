@@ -33,6 +33,36 @@
     }
   }
 
+  & .canvas__doctitle {
+    display: grid;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+
+    & label {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    & input {
+      width: 100%;
+      font: inherit;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 0.45rem 1rem;
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+    }
+
+    & .canvas__doctitle-note {
+      margin: 0;
+      font-size: 0.75rem;
+      color: #666;
+    }
+  }
+
   &.canvas--dragover {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
