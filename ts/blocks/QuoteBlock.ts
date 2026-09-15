@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeColor, sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { QuoteBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
@@ -18,6 +18,7 @@ export class QuoteBlock {
   #strike = false;
   #marginTop = 0;
   #marginBottom = 0;
+  #fontSize = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -122,6 +123,15 @@ export class QuoteBlock {
     return this.#marginBottom;
   }
 
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
   toData(): QuoteBlockData {
     return {
       id: this.id,
@@ -137,6 +147,7 @@ export class QuoteBlock {
       strike: this.#strike,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
     };
   }
 }
