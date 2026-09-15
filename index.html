@@ -24,13 +24,18 @@
         <h2>Lienzo</h2>
         <button type="button" class="block__btn-text" data-action="clear-canvas"><i data-lucide="rotate-ccw" class="icon" aria-hidden="true"></i> Limpiar</button>
       </div>
+      <div class="canvas__doctitle">
+        <label for="doc-title">Nombre de la plantilla</label>
+        <input type="text" id="doc-title" placeholder="Nombre de la plantilla de email" maxlength="120" autocomplete="off">
+        <p class="canvas__doctitle-note">(esto lo ves al descargar la plantilla)</p>
+      </div>
       <p class="canvas__hint" id="canvas-hint">Arrastra aquí los bloques desde la paleta.</p>
       <ol class="canvas__list" id="canvas-list" aria-live="polite"></ol>
     </main>
     <section class="preview" aria-label="Previsualización">
       <header class="preview__toolbar">
         <h2>Vista previa</h2>
-        <button type="button" data-action="download-template"><i data-lucide="download" class="icon" aria-hidden="true"></i> Descargar plantilla</button>
+        <button type="button" data-action="download-template" title="Requiere al menos un bloque y el nombre de la plantilla"><i data-lucide="download" class="icon" aria-hidden="true"></i> Descargar plantilla</button>
       </header>
       <div class="preview__frame" id="preview-frame" aria-live="polite"></div>
     </section>
