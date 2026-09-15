@@ -66,13 +66,27 @@ function row(inner: string, bg = "", corners: Corner = ""): RenderedRow {
 }
 
 const TITLE_SIZE: Record<TitleLevel, string> = {
-  1: "font-size:26px; font-weight:900;",
-  2: "font-size:22px; font-weight:700;",
-  3: "font-size:17px; font-weight:900;",
-  4: "font-size:16px; font-weight:700;",
-  5: "font-size:14px; font-weight:700;",
-  6: "font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase;",
+  1: "26px",
+  2: "22px",
+  3: "17px",
+  4: "16px",
+  5: "14px",
+  6: "12px",
 };
+
+const TITLE_WEIGHT: Record<TitleLevel, string> = {
+  1: "font-weight:900;",
+  2: "font-weight:700;",
+  3: "font-weight:900;",
+  4: "font-weight:700;",
+  5: "font-weight:700;",
+  6: "font-weight:700; letter-spacing:1px; text-transform:uppercase;",
+};
+
+/** Tamaño elegido por el usuario o el de la escala (0 = automático). Con unidad. */
+function fontSizeOr(size: number, fallback: string): string {
+  return size > 0 ? `${String(size)}px` : fallback;
+}
 
 const TITLE_COLOR: Record<TitleLevel, string> = {
   1: "#111111",
@@ -110,8 +124,9 @@ export function renderTitle(data: TitleBlockData, corners: Corner = ""): Rendere
   // al guardar, AGENTS §7). No re-escapar aquí para evitar doble escape.
   const tag = `h${String(data.level)}`;
   const color = data.color === "" ? TITLE_COLOR[data.level] : data.color;
+  const size = fontSizeOr(data.fontSize, TITLE_SIZE[data.level]);
   return row(
-    `<${tag} style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; text-align:${data.align}; color:${color}; ${TITLE_SIZE[data.level]}${formatStyle(data, true)}">${data.content}</${tag}>`,
+    `<${tag} style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; text-align:${data.align}; color:${color}; font-size:${size}; ${TITLE_WEIGHT[data.level]}${formatStyle(data, true)}">${data.content}</${tag}>`,
     data.bg,
     corners,
   );
@@ -119,8 +134,9 @@ export function renderTitle(data: TitleBlockData, corners: Corner = ""): Rendere
 
 export function renderText(data: TextBlockData, corners: Corner = ""): RenderedRow {
   const color = data.color === "" ? BODY_TEXT : data.color;
+  const size = fontSizeOr(data.fontSize, "16px");
   return row(
-    `<p style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; font-size:16px; line-height:1.75; text-align:${data.align}; color:${color};${formatStyle(data, false)}">${data.content}</p>`,
+    `<p style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; font-family:${FONT}; font-size:${size}; line-height:1.75; text-align:${data.align}; color:${color};${formatStyle(data, false)}">${data.content}</p>`,
     data.bg,
     corners,
   );
@@ -148,9 +164,10 @@ export function renderList(data: ListBlockData, corners: Corner = ""): RenderedR
 
 export function renderQuote(data: QuoteBlockData, corners: Corner = ""): RenderedRow {
   const color = data.color === "" ? "#555555" : data.color;
+  const size = fontSizeOr(data.fontSize, "16px");
   return row(
     `<blockquote style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; padding-left:12px; border-left:3px solid ${PRIMARY}; font-style:italic; text-align:${data.align}; color:${color};">` +
-      `<p style="margin:0; font-size:16px; line-height:1.75;${formatStyle(data, false)}">${data.content}</p>` +
+      `<p style="margin:0; font-size:${size}; line-height:1.75;${formatStyle(data, false)}">${data.content}</p>` +
       (data.cite === "" ? "" : `<cite style="font-size:12px; color:${MUTED};">— ${data.cite}</cite>`) +
       `</blockquote>`,
     data.bg,
@@ -482,6 +499,12 @@ function templateBg(input: string | undefined): string {
   return next === "" ? BG : next;
 }
 
+/** Nombre de la plantilla (ya sanitizado al entrar): vacío -> por defecto. */
+function templateTitle(input: string | undefined): string {
+  if (input === undefined || input === "") return "Plantilla";
+  return input;
+}
+
 function cardTable(body: string): string {
   // Sin espaciadores: el primer bloque arranca en el punto cero superior y
   // el último termina en el punto cero inferior, cada uno con su radio.
@@ -496,7 +519,11 @@ function cardTable(body: string): string {
 }
 
 /** Misma salida para Preview y descarga: evita desincronización. */
-export function buildEmailDocument(blocks: readonly AnyBlockData[], background?: string): string {
+export function buildEmailDocument(
+  blocks: readonly AnyBlockData[],
+  background?: string,
+  docTitle?: string,
+): string {
   const bg = templateBg(background);
   const body = blocks.map((b, i) => renderBlockToRow(b, i, blocks.length).html).join("\n");
   return `<!DOCTYPE html>
@@ -505,7 +532,7 @@ export function buildEmailDocument(blocks: readonly AnyBlockData[], background?:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title>Plantilla</title>
+<title>${templateTitle(docTitle)}</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
 </style>
