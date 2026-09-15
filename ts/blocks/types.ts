@@ -44,6 +44,7 @@ export interface TitleBlockData extends BaseBlockData {
   italic: boolean;
   underline: boolean;
   strike: boolean;
+  fontSize: number;
 }
 
 export interface TextBlockData extends BaseBlockData {
@@ -58,6 +59,7 @@ export interface TextBlockData extends BaseBlockData {
   italic: boolean;
   underline: boolean;
   strike: boolean;
+  fontSize: number;
 }
 
 export interface ImageBlockData extends BaseBlockData {
@@ -86,6 +88,7 @@ export interface QuoteBlockData extends BaseBlockData {
   strike: boolean;
   marginTop: number;
   marginBottom: number;
+  fontSize: number;
 }
 
 export interface DividerBlockData extends BaseBlockData {
