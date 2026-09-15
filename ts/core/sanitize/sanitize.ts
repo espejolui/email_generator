@@ -89,3 +89,10 @@ export function sanitizeMargin(input: string): number {
   if (Number.isNaN(parsed)) return 8;
   return Math.min(80, Math.max(0, parsed));
 }
+
+/** Tamaño de fuente 0-72 en px. 0 = automático (escala del bloque). Inválido -> 0. */
+export function sanitizeFontSize(input: string): number {
+  const parsed = Number.parseInt(input, 10);
+  if (Number.isNaN(parsed)) return 0;
+  return Math.min(72, Math.max(0, parsed));
+}
