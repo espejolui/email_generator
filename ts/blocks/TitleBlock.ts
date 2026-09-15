@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeColor, sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TitleBlockData, TitleLevel } from "./types.js";
 import { isTextAlign, isTitleLevel } from "./types.js";
 
@@ -18,6 +18,7 @@ export class TitleBlock {
   #italic = false;
   #underline = false;
   #strike = false;
+  #fontSize = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -87,6 +88,15 @@ export class TitleBlock {
   }
 
   @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
+  @Editable()
   set bold(value: boolean) {
     this.#bold = value;
   }
@@ -137,6 +147,7 @@ export class TitleBlock {
       italic: this.#italic,
       underline: this.#underline,
       strike: this.#strike,
+      fontSize: this.#fontSize,
     };
   }
 }
