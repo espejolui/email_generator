@@ -4,14 +4,15 @@ import {
   buildPreviewTable,
 } from "../../core/render/exportToEmailHtml.js";
 import type { EditorStore } from "../../core/store/store.js";
-import { downloadTemplate } from "./DownloadButton.js";
+import { downloadTemplate, fileNameFromTitle } from "./DownloadButton.js";
 
 export function initPreview(
   frameEl: HTMLElement,
   downloadBtn: HTMLButtonElement,
   store: EditorStore,
 ): void {
-  let latestDoc = buildEmailDocument([], store.background);
+  let latestDoc = buildEmailDocument([], store.background, store.docTitle);
+  let latestTitle = store.docTitle;
 
   // Control de fondo de plantilla en la barra del Preview (nivel plantilla,
   // no bloque): nativo <input type=color> ya entrega #rrggbb válido y el
@@ -41,17 +42,19 @@ export function initPreview(
     bgInput.value = store.background === "" ? DEFAULT_TEMPLATE_BG : store.background;
   });
 
-  store.subscribe((blocks, background) => {
+  store.subscribe((blocks, background, docTitle) => {
     const bg = background === "" ? DEFAULT_TEMPLATE_BG : background;
-    latestDoc = buildEmailDocument(blocks, bg);
+    latestDoc = buildEmailDocument(blocks, bg, docTitle);
+    latestTitle = docTitle;
     // buildPreviewTable solo contiene markup propio + texto ya sanitizado.
     frameEl.innerHTML = buildPreviewTable(blocks, bg);
     frameEl.style.backgroundColor = bg;
     if (bgInput.value.toLowerCase() !== bg.toLowerCase()) bgInput.value = bg;
-    downloadBtn.disabled = blocks.length === 0;
+    // Descarga obligatoria: al menos un bloque Y el nombre de la plantilla.
+    downloadBtn.disabled = blocks.length === 0 || docTitle === "";
   });
 
   downloadBtn.addEventListener("click", () => {
-    downloadTemplate(latestDoc);
+    downloadTemplate(latestDoc, fileNameFromTitle(latestTitle));
   });
 }
