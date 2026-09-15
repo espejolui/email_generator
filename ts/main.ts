@@ -16,6 +16,7 @@ const paletteList = requireEl("palette-list", HTMLElement);
 const canvasRoot = requireEl("canvas", HTMLElement);
 const canvasList = requireEl("canvas-list", HTMLElement);
 const canvasHint = requireEl("canvas-hint", HTMLElement);
+const docTitleInput = requireEl("doc-title", HTMLInputElement);
 const previewFrame = requireEl("preview-frame", HTMLElement);
 const live = requireEl("sr-live", HTMLElement);
 const downloadBtn = document.querySelector<HTMLButtonElement>(
@@ -28,6 +29,10 @@ const clearBtn = document.querySelector<HTMLButtonElement>(
 if (clearBtn === null) throw new Error("Botón de limpieza no encontrado");
 
 const store = new EditorStore();
+
+docTitleInput.addEventListener("input", () => {
+  store.setDocTitle(docTitleInput.value);
+});
 
 function addBlockToEnd(type: BlockType): void {
   store.insertAt(store.blocks.length, createBlockData(type, createId()));
