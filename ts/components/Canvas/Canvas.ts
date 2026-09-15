@@ -23,6 +23,7 @@ import {
 import {
   sanitizeAlt,
   sanitizeColor,
+  sanitizeFontSize,
   sanitizeHttpsUrl,
   sanitizeImageSrc,
   sanitizeMargin,
@@ -496,6 +497,26 @@ function formatRow(blockId: string, flags: FormatFlags, store: EditorStore): HTM
     row.appendChild(inlinePair(labelText, box, `${blockId}-fmt-${key}`));
   }
   return row;
+}
+
+/** Tamaño de fuente 0–72 (0 = automático). Reutiliza la fila de `.block__margins`. */
+function fontSizeControl(
+  blockId: string,
+  size: number,
+  onSize: (value: number) => void,
+): HTMLElement {
+  const wrap = el("div", "block__margins");
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = "0";
+  input.max = "72";
+  input.value = String(size);
+  input.setAttribute("aria-label", "Tamaño de fuente en píxeles, 0 automático");
+  input.addEventListener("input", () => {
+    onSize(sanitizeFontSize(input.value));
+  });
+  wrap.append(labelFor("Tamaño (px)", input, `${blockId}-fontsize`), input);
+  return wrap;
 }
 
 function marginControls(
@@ -992,6 +1013,9 @@ export function initCanvas(
             store.update(block.id, { marginBottom: n });
           },
         );
+        const titleSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          store.update(block.id, { fontSize: n });
+        });
         wrap.append(
           labelFor("Título", input, `${block.id}-title`),
           input,
@@ -999,6 +1023,7 @@ export function initCanvas(
           align,
           titleColors,
           formatRow(block.id, block, store),
+          titleSize,
           titleMargins,
         );
         break;
@@ -1033,12 +1058,16 @@ export function initCanvas(
             store.update(block.id, { marginBottom: n });
           },
         );
+        const textSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          store.update(block.id, { fontSize: n });
+        });
         wrap.append(
           labelFor("Texto", area, `${block.id}-text`),
           area,
           textAlign,
           textColors,
           formatRow(block.id, block, store),
+          textSize,
           textMargins,
         );
         break;
@@ -1134,6 +1163,9 @@ export function initCanvas(
             store.update(block.id, { marginBottom: n });
           },
         );
+        const quoteSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          store.update(block.id, { fontSize: n });
+        });
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
           area,
@@ -1142,6 +1174,7 @@ export function initCanvas(
           quoteAlign,
           colorRow(quoteBg, quoteFg),
           formatRow(block.id, block, store),
+          quoteSize,
           quoteMargins,
         );
         break;
