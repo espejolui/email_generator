@@ -1,6 +1,6 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeColor, sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TextBlockData } from "./types.js";
 import { isTextAlign } from "./types.js";
 
@@ -17,6 +17,7 @@ export class TextBlock {
   #italic = false;
   #underline = false;
   #strike = false;
+  #fontSize = 0;
 
   constructor(id: string) {
     this.id = id;
@@ -77,6 +78,15 @@ export class TextBlock {
   }
 
   @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
+  @Editable()
   set bold(value: boolean) {
     this.#bold = value;
   }
@@ -126,6 +136,7 @@ export class TextBlock {
       italic: this.#italic,
       underline: this.#underline,
       strike: this.#strike,
+      fontSize: this.#fontSize,
     };
   }
 }
