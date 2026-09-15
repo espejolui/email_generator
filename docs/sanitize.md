@@ -16,3 +16,5 @@ en crudo y se codifica para URL al renderizar.
 - `sanitizeHttpsUrl(input)` — solo URLs absolutas `https:`; otra cosa
   devuelve `""` (sin `data:`, a diferencia de `sanitizeImageSrc`).
 - `sanitizeMargin(input)` — entero 0–80 para márgenes en px; inválido → `8`.
+- `sanitizeFontSize(input)` — entero 0–72 para fuente en px (0 = automático);
+  inválido → `0`.

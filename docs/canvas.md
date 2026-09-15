@@ -27,6 +27,12 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
     re-entrante. En título/párrafo fondo y texto comparten fila.
   - `marginControls` — números de margen superior/inferior (0–80 px)
     usados en título, párrafo, botón y divisor.
+  - `fontSizeControl` — número de tamaño de fuente (0–72 px, 0 = automático)
+    en título, párrafo y cita; reutiliza la fila de `.block__margins`.
+  - Campo fijo "Nombre de la plantilla" (`#doc-title` en `index.html`,
+    cableado en `main.ts`): escribe con `store.setDocTitle()`; siempre visible,
+    sin eliminar ni estilos (obligatorio para el `<title>`), con nota de que
+    solo se ve al descargar.
   - `colorRow` — junta dos controles de color en una fila horizontal.
   - `formatRow` — casillas Negrita/Cursiva/Subrayado/Tachado en fila
     (título, párrafo y cita).

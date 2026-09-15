@@ -30,13 +30,14 @@ Cada una recibe `id` en el constructor, sanitiza en sus setters decorados
 con `@Editable()` y convierte a datos con `toData()`:
 
 - `TitleBlock` — `content`, `level` (h1–h6), `align`, `bg`, `color`,
-  `marginTop`, `marginBottom`, `bold`, `italic`, `underline`, `strike`.
+  `marginTop`, `marginBottom`, `bold`, `italic`, `underline`, `strike`,
+  `fontSize` (0 = escala del nivel).
 - `TextBlock` — `content`, `align`, `bg`, `color`, `marginTop`, `marginBottom`,
-  `bold`, `italic`, `underline`, `strike`.
+  `bold`, `italic`, `underline`, `strike`, `fontSize` (0 = 16 px).
 - `ImageBlock` — `src` (solo https/data), `alt` (sin pie de foto).
 - `ListBlock` — `items` (máx. 20), `ordered`, `align`.
 - `QuoteBlock` — `content`, `cite`, `align`, `bg`, `color`, `bold`, `italic`,
-  `underline`, `strike`, `marginTop`, `marginBottom`.
+  `underline`, `strike`, `marginTop`, `marginBottom`, `fontSize` (0 = 16 px).
 - `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom`,
   `thickness`, `borderRadius` (0 = cuadrado).
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,

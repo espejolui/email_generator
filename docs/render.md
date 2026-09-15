@@ -7,9 +7,9 @@ con radio 16 px, fondo exterior configurable con `DEFAULT_TEMPLATE_BG`
 funciones para no desincronizarse.
 
 - `RenderedRow` — `{ html: "<tr>…</tr>" }`.
-- `renderTitle(data, corners?)` — `h1`–`h6` con tamaño, color (o el del
-  nivel), alineación, banda de fondo, márgenes y formato (la negrita solo
-  se emite si aporta: los niveles ya son bold).
+- `renderTitle(data, corners?)` — `h1`–`h6` con tamaño (`fontSize` del bloque
+  o escala del nivel), color (o el del nivel), alineación, banda de fondo,
+  márgenes y formato (la negrita solo se emite si aporta: los niveles ya son bold).
 - `renderText(data, corners?)` — párrafo 16 px/1.75 con alineación, fondo,
   márgenes y formato (negrita/cursiva/subrayado/tachado).
 - `renderImage(data)` — imagen con radio 12 px o aviso si la URL no es válida.
@@ -42,7 +42,10 @@ funciones para no desincronizarse.
 - `renderColumns(data, corners?)` — tabla anidada (`<td width="50%|33.33%">`
   por columna) con render recursivo sin esquinas.
 - `renderTable(data, corners?)` — tabla de datos real con `th/td` y bordes.
-- `buildEmailDocument(blocks, background?)` — documento `.html` completo
-  descargable (fondo sanitizado, por defecto el de marca).
+- `buildEmailDocument(blocks, background?, docTitle?)` — documento `.html`
+  completo descargable (fondo sanitizado, por defecto el de marca; `<title>`
+  del nombre de plantilla, `"Plantilla"` si vacío).
+- `fontSizeOr(size, fallback)` — tamaño elegido o el de la escala
+  (0 = automático).
 - `buildPreviewTable(blocks, background?)` — solo la tarjeta, para el panel
   de preview.
