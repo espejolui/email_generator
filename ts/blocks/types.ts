@@ -16,7 +16,8 @@ export type BlockType =
   | "banner"
   | "product"
   | "coupon"
-  | "signature";
+  | "signature"
+  | "logo";
 
 export type ButtonColor = "green" | "blue";
 
@@ -202,6 +203,17 @@ export interface SignatureBlockData extends BaseBlockData {
   photoAlt: string;
 }
 
+export interface LogoBlockData extends BaseBlockData {
+  readonly type: "logo";
+  src: string;
+  alt: string;
+  align: TextAlign;
+  width: number;
+  bg: string;
+  marginTop: number;
+  marginBottom: number;
+}
+
 export type AnyBlockData =
   | TitleBlockData
   | TextBlockData
@@ -220,7 +232,8 @@ export type AnyBlockData =
   | BannerBlockData
   | ProductBlockData
   | CouponBlockData
-  | SignatureBlockData;
+  | SignatureBlockData
+  | LogoBlockData;
 
 export function isBlockType(value: string): value is BlockType {
   return (
@@ -241,7 +254,8 @@ export function isBlockType(value: string): value is BlockType {
     value === "banner" ||
     value === "product" ||
     value === "coupon" ||
-    value === "signature"
+    value === "signature" ||
+    value === "logo"
   );
 }
 
