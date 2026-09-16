@@ -16,6 +16,7 @@ import "./BannerBlock.js";
 import "./ProductBlock.js";
 import "./CouponBlock.js";
 import "./SignatureBlock.js";
+import "./LogoBlock.js";
 import { getRegisteredBlocks } from "../core/decorators/Block.js";
 import type { AnyBlockData, BlockType } from "./types.js";
 
@@ -155,5 +156,17 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
       return { id, type, code: "DESCUENTO10", description: "En tu próxima compra" };
     case "signature":
       return { id, type, name: "Tu nombre", role: "Tu cargo", photoSrc: "", photoAlt: "" };
+    case "logo":
+      return {
+        id,
+        type,
+        src: "",
+        alt: "",
+        align: "center",
+        width: 200,
+        bg: "",
+        marginTop: 0,
+        marginBottom: 0,
+      };
   }
 }
