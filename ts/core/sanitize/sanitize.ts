@@ -96,3 +96,10 @@ export function sanitizeFontSize(input: string): number {
   if (Number.isNaN(parsed)) return 0;
   return Math.min(72, Math.max(0, parsed));
 }
+
+/** Ancho de logo 16-600 en px. Inválido -> 200. */
+export function sanitizeImageWidth(input: string): number {
+  const parsed = Number.parseInt(input, 10);
+  if (Number.isNaN(parsed)) return 200;
+  return Math.min(600, Math.max(16, parsed));
+}
