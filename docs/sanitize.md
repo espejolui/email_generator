@@ -18,3 +18,5 @@ en crudo y se codifica para URL al renderizar.
 - `sanitizeMargin(input)` — entero 0–80 para márgenes en px; inválido → `8`.
 - `sanitizeFontSize(input)` — entero 0–72 para fuente en px (0 = automático);
   inválido → `0`.
+- `sanitizeImageWidth(input)` — entero 16–600 para ancho de logo en px;
+  inválido → `200`.

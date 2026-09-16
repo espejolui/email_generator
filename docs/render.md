@@ -29,6 +29,10 @@ funciones para no desincronizarse.
   (Outlook-safe).
 - `renderHeader(data, corners?)` — logo (tabla anidada con `align` para
   Outlook) + tagline.
+- `logoTable(src, alt, width, align)` — tabla de logo compartida por
+  `header` (200 px) y `logo`.
+- `renderLogo(data, corners?)` — logotipo con ancho configurable, banda de
+  fondo y márgenes en la tabla (patrón del divisor).
 - `socialLinksInner(social)` — enlaces de texto de redes; la usan `social`
   y `footer`.
 - `pillTable(href, label, bg, align, marginTop, marginBottom)` — tabla pill

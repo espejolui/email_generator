@@ -6,7 +6,7 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
 
 ## `types.ts`
 
-- `BlockType` — unión: `"title" | "text" | "image" | "list" | "quote" | "divider" | "button" | "spacer" | "header" | "footer" | "cta" | "columns" | "table"`.
+- `BlockType` — unión: `"title" | "text" | "image" | "list" | "quote" | "divider" | "button" | "spacer" | "header" | "footer" | "cta" | "columns" | "table" | "social" | "banner" | "product" | "coupon" | "signature" | "logo"`.
 - `TitleLevel` — `1 | 2 | 3 | 4 | 5 | 6`.
 - `TextAlign` — `"left" | "center" | "right"` (sin justificado).
 - `ButtonAlign` — `"left" | "center" | "right"`.
@@ -15,8 +15,8 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
   `QuoteBlockData`, `DividerBlockData`, `ButtonBlockData`, `SpacerBlockData`,
   `HeaderBlockData`, `FooterBlockData`, `CtaBlockData`, `ColumnData`,
   `ColumnsBlockData`, `TableBlockData`, `SocialBlockData`, `BannerBlockData`,
-  `ProductBlockData`, `CouponBlockData`, `SignatureBlockData`, `SocialUrls`
-  — datos de cada bloque.
+  `ProductBlockData`, `CouponBlockData`, `SignatureBlockData`, `LogoBlockData`,
+  `SocialUrls` — datos de cada bloque.
 - `AnyBlockData` — unión discriminada por `type`.
 - `isBlockType(value)` — guarda de tipo para `BlockType`.
 - `isButtonColor(value)` — guarda de tipo para `ButtonColor`.
@@ -24,7 +24,7 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
 - `isTextAlign(value)` — guarda de tipo para `TextAlign`.
 - `isButtonAlign(value)` — guarda de tipo para `ButtonAlign`.
 
-## Clases (`TitleBlock`, `TextBlock`, `ImageBlock`, `ListBlock`, `QuoteBlock`, `DividerBlock`, `ButtonBlock`, `SpacerBlock`, `HeaderBlock`, `FooterBlock`, `CtaBlock`, `ColumnsBlock`, `TableBlock`, `SocialBlock`, `BannerBlock`, `ProductBlock`, `CouponBlock`, `SignatureBlock`)
+## Clases (`TitleBlock`, `TextBlock`, `ImageBlock`, `ListBlock`, `QuoteBlock`, `DividerBlock`, `ButtonBlock`, `SpacerBlock`, `HeaderBlock`, `FooterBlock`, `CtaBlock`, `ColumnsBlock`, `TableBlock`, `SocialBlock`, `BannerBlock`, `ProductBlock`, `CouponBlock`, `SignatureBlock`, `LogoBlock`)
 
 Cada una recibe `id` en el constructor, sanitiza en sus setters decorados
 con `@Editable()` y convierte a datos con `toData()`:
@@ -58,6 +58,8 @@ con `@Editable()` y convierte a datos con `toData()`:
   `color`.
 - `CouponBlock` — `code` (máx. 40), `description` (máx. 200).
 - `SignatureBlock` — `name`, `role`, `photoSrc` (solo https/data), `photoAlt`.
+- `LogoBlock` — `src` (solo https/data), `alt`, `align`, `width` (16–600),
+  `bg`, `marginTop`, `marginBottom`.
 
 ## `index.ts`
 

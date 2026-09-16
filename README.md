@@ -28,7 +28,7 @@ Flujo de usuario: arrastra bloques de la **Paleta** al **Lienzo** (o pulsa
 Enter), reordénalos, edítalos, cambia el fondo de la plantilla desde el
 **Preview**, vacía todo con **Limpiar** y pulsa **Descargar plantilla**.
 
-## Bloques (18)
+## Bloques (19)
 
 | Tipo | Etiqueta | Contenido |
 |------|----------|-----------|
@@ -50,6 +50,7 @@ Enter), reordénalos, edítalos, cambia el fondo de la plantilla desde el
 | `product` | Producto | Imagen + nombre + precio + botón |
 | `coupon` | Cupón | Código estilo ticket con borde |
 | `signature` | Firma | Nombre + cargo + foto |
+| `logo` | Logotipo | Imagen con posición, tamaño, fondo y márgenes |
 
 Agregar uno nuevo: crear `ts/blocks/XBlock.ts` con `@Block` + `@Editable`,
 registrarlo en `ts/blocks/index.ts`; la Paleta lo descubre sola
@@ -60,7 +61,7 @@ registrarlo en `ts/blocks/index.ts`; la Paleta lo descubre sola
 
 ```
 ts/
-├── blocks/        # 18 clases decoradas + types.ts + index.ts (fábrica/registro)
+├── blocks/        # 19 clases decoradas + types.ts + index.ts (fábrica/registro)
 ├── core/
 │   ├── decorators/  # @Block (registro central) y @Editable
 │   ├── dnd/         # payloads HTML5 DnD (nivel superior + columnas anidadas)
