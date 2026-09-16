@@ -26,6 +26,7 @@ import {
   sanitizeFontSize,
   sanitizeHttpsUrl,
   sanitizeImageSrc,
+  sanitizeImageWidth,
   sanitizeMargin,
   sanitizePhone,
   sanitizeText,
@@ -1546,6 +1547,61 @@ export function initCanvas(
           photo,
           labelFor("Alt foto", photoAlt, `${block.id}-photoalt`),
           photoAlt,
+        );
+        break;
+      }
+      case "logo": {
+        const src = document.createElement("input");
+        src.type = "url";
+        src.value = block.src;
+        src.placeholder = "https://…";
+        src.setAttribute("aria-label", "URL del logotipo (https)");
+        src.addEventListener("input", () => {
+          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+        });
+        const alt = document.createElement("input");
+        alt.type = "text";
+        alt.value = block.alt;
+        alt.placeholder = "Texto alternativo";
+        alt.addEventListener("input", () => {
+          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+        });
+        const align = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del logotipo", `${block.id}-align`, "Alineación", (value) => {
+          store.update(block.id, { align: isTextAlign(value) ? value : "center" });
+        });
+        const width = document.createElement("input");
+        width.type = "number";
+        width.min = "16";
+        width.max = "600";
+        width.value = String(block.width);
+        width.setAttribute("aria-label", "Ancho en píxeles");
+        width.addEventListener("input", () => {
+          store.update(block.id, { width: sanitizeImageWidth(width.value) });
+        });
+        const bg = bgControls(block.id, block.bg, (next) => {
+          store.update(block.id, { bg: next });
+        });
+        const margins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            store.update(block.id, { marginTop: n });
+          },
+          (n) => {
+            store.update(block.id, { marginBottom: n });
+          },
+        );
+        wrap.append(
+          labelFor("Logo", src, `${block.id}-src`),
+          src,
+          labelFor("Alt", alt, `${block.id}-alt`),
+          alt,
+          align,
+          labelFor("Ancho (px)", width, `${block.id}-width`),
+          width,
+          bg,
+          margins,
         );
         break;
       }
