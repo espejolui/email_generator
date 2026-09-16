@@ -18,6 +18,7 @@ import type {
   HeaderBlockData,
   ImageBlockData,
   ListBlockData,
+  LogoBlockData,
   ProductBlockData,
   QuoteBlockData,
   SignatureBlockData,
@@ -25,6 +26,7 @@ import type {
   SocialUrls,
   SpacerBlockData,
   TableBlockData,
+  TextAlign,
   TextBlockData,
   TitleBlockData,
   TitleLevel,
@@ -254,18 +256,37 @@ export function renderSpacer(data: SpacerBlockData): RenderedRow {
   };
 }
 
+/**
+ * Logo en tabla anidada con align en <td>: centra también en Outlook,
+ * donde margin:auto no funciona. La usan `header` (ancho fijo) y `logo`.
+ */
+function logoTable(src: string, alt: string, width: number, align: TextAlign): string {
+  const w = String(width);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">` +
+    `<tr><td align="${align}"><img src="${src}" width="${w}" alt="${alt}" style="display:block; width:${w}px; max-width:100%; height:auto; border:0;"></td></tr>` +
+    `</table>`;
+}
+
 export function renderHeader(data: HeaderBlockData, corners: Corner = ""): RenderedRow {
-  // Tabla anidada con align en <td>: centra el logo también en Outlook,
-  // donde margin:auto no funciona. El tagline usa text-align (soportado).
-  const logo = data.logoSrc === ""
-    ? ""
-    : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">` +
-      `<tr><td align="${data.align}"><img src="${data.logoSrc}" width="200" alt="${data.logoAlt}" style="display:block; width:200px; max-width:100%; height:auto; border:0;"></td></tr>` +
-      `</table>`;
+  const logo = data.logoSrc === "" ? "" : logoTable(data.logoSrc, data.logoAlt, 200, data.align);
   const tagline = data.tagline === ""
     ? ""
     : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${MUTED};">${data.tagline}</p>`;
   return row(`${logo}${tagline}`, "", corners);
+}
+
+export function renderLogo(data: LogoBlockData, corners: Corner = ""): RenderedRow {
+  const logo = data.src === "" ? "" : logoTable(data.src, data.alt, data.width, data.align);
+  // Márgenes en la tabla (patrón del divisor): el <div> los pierde en Outlook.
+  const margins = `${String(data.marginTop)}px 0 ${String(data.marginBottom)}px`;
+  return row(
+    logo === ""
+      ? `<p style="margin:${margins}; font-size:13px; color:${MUTED}; text-align:${data.align}">[Logotipo sin URL válida]</p>`
+      : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${margins};">` +
+        `<tr><td>${logo}</td></tr></table>`,
+    data.bg,
+    corners,
+  );
 }
 
 const SOCIAL_LABELS: ReadonlyArray<readonly [keyof SocialUrls, string]> = [
@@ -489,6 +510,8 @@ export function renderBlockToRow(
       return renderCoupon(data, corners);
     case "signature":
       return renderSignature(data, corners);
+    case "logo":
+      return renderLogo(data, corners);
   }
 }
 
