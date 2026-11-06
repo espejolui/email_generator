@@ -4,15 +4,21 @@
   "version": "1.0.0",
   "type": "module",
   "packageManager": "pnpm@11.3.0",
+  "engines": {
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
+  },
   "scripts": {
     "preinstall": "node -e \"if(String(process.env.npm_config_user_agent||'').startsWith('npm/')){console.error('npm está prohibido por AGENTS.md: usa pnpm');process.exit(1)}\"",
-    "build": "tsc",
-    "build:pages": "node scripts/copy-static.mjs && tsc -p tsconfig.pages.json",
+    "build": "node scripts/copy-vendor.mjs && tsc",
+    "build:pages": "node scripts/copy-static.mjs && node scripts/copy-vendor.mjs dist && tsc -p tsconfig.pages.json",
     "start": "pnpm run build && node server.js",
     "check": "tsc --noEmit"
   },
   "devDependencies": {
-    "playwright-core": "^1.63.0",
-    "typescript": "5.6.3"
+    "playwright-core": "1.65.0",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "lucide": "1.69.0"
   }
 }
