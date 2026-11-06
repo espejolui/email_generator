@@ -22,7 +22,11 @@
     <main class="canvas" id="canvas" aria-label="Área de edición">
       <div class="canvas__head">
         <h2>Lienzo</h2>
-        <button type="button" class="block__btn-text" data-action="clear-canvas"><i data-lucide="rotate-ccw" class="icon" aria-hidden="true"></i> Limpiar</button>
+        <div class="canvas__actions">
+          <button type="button" class="block__btn-text" data-action="import-template"><i data-lucide="upload" class="icon" aria-hidden="true"></i> Importar HTML</button>
+          <input type="file" data-action="import-file" accept=".html,text/html" aria-label="Seleccionar plantilla HTML" hidden>
+          <button type="button" class="block__btn-text" data-action="clear-canvas"><i data-lucide="rotate-ccw" class="icon" aria-hidden="true"></i> Limpiar</button>
+        </div>
       </div>
       <div class="canvas__doctitle">
         <label for="doc-title">Nombre de la plantilla</label>

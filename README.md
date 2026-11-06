@@ -27,6 +27,9 @@ pnpm run build   # compilar ts/ -> js/
 Flujo de usuario: arrastra bloques de la **Paleta** al **Lienzo** (o pulsa
 Enter), reordénalos, edítalos, cambia el fondo de la plantilla desde el
 **Preview**, vacía todo con **Limpiar** y pulsa **Descargar plantilla**.
+También puedes pulsar **Importar HTML** para convertir una plantilla existente
+en bloques editables y continuar desde ella (detalle en
+[`docs/import.md`](./docs/import.md)).
 
 ## Bloques (19)
 
@@ -65,13 +68,14 @@ ts/
 ├── core/
 │   ├── decorators/  # @Block (registro central) y @Editable
 │   ├── dnd/         # payloads HTML5 DnD (nivel superior + columnas anidadas)
+│   ├── import/      # importEmailHtml: HTML existente -> bloques sanitizados
 │   ├── sanitize/    # escape y listas blancas (texto, imágenes, urls, colores…)
 │   ├── color/       # lightenHex para el degradado del divisor
-│   ├── store/       # EditorStore: única fuente de verdad (+ fondo y clear())
+│   ├── store/       # EditorStore: única fuente de verdad (+ fondo, clear/load)
 │   └── render/      # exportToEmailHtml: filas <tr> con inline (preview = descarga)
 ├── components/
 │   ├── Palette/     # columna 1 (aside): bloques arrastrables + atajos
-│   ├── Canvas/      # columna 2 (main): edición, reorden, columnas anidadas, Limpiar
+│   ├── Canvas/      # columna 2 (main): edición, columnas, Importar/Limpiar
 │   └── Preview/     # columna 3 (section): tarjeta viva + fondo + Descargar
 └── main.ts          # cableado (sin lógica de negocio)
 css/               # base/palette/canvas/preview/main: puro, con nesting nativo
@@ -84,7 +88,8 @@ Qué hace cada pieza, en detalle:
 
 - [`docs/blocks.md`](./docs/blocks.md) — sistema de bloques y datos por tipo.
 - [`docs/decorators.md`](./docs/decorators.md) — `@Block` y `@Editable`.
-- [`docs/store.md`](./docs/store.md) — `EditorStore` (`insertAt/move/update/remove/clear`, fondo).
+- [`docs/store.md`](./docs/store.md) — `EditorStore` (`insertAt/move/update/remove/clear/load`, fondo).
+- [`docs/import.md`](./docs/import.md) — importación de HTML a bloques editables.
 - [`docs/dnd.md`](./docs/dnd.md) — payloads y cálculo del índice de inserción.
 - [`docs/sanitize.md`](./docs/sanitize.md) — qué se sanitiza y dónde.
 - [`docs/render.md`](./docs/render.md) — motor de exportación a email.

@@ -36,7 +36,7 @@ Helpers compartidos (no duplicar código):
 - `footer`: `address` (texto), `unsubscribeUrl` (https) + `social: SocialUrls`
   (4 urls opcionales). Dirección tenue centrada + enlace unsubscribe + redes.
   Casi obligatorio (CAN-SPAM / spam).
-- `cta`: `label`, `url` (https), `color` (reutiliza `ButtonColor`),
+- `cta`: `label`, `url` (https), `color` (`#rrggbb` personalizado),
   `align` (reutiliza `ButtonAlign`), márgenes. Mismo pill vía `pillRow()`;
   sin URL muestra pill sin enlace (igual que `button` sin teléfono).
 

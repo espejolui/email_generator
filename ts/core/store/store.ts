@@ -72,6 +72,14 @@ export class EditorStore {
     if (this.#blocks.length !== before) this.#emit();
   }
 
+  /** Reemplaza la plantilla completa de forma atómica (por ejemplo, al importar HTML). */
+  load(blocks: readonly AnyBlockData[], background: string, docTitle: string): void {
+    this.#blocks = [...blocks];
+    this.#background = sanitizeColor(background) || DEFAULT_TEMPLATE_BG;
+    this.#docTitle = sanitizeText(docTitle).trim().slice(0, 120);
+    this.#emit();
+  }
+
   /** Vacía el lienzo de un solo golpe; sin bloques no emite. */
   clear(): void {
     if (this.#blocks.length === 0) return;

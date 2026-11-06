@@ -36,7 +36,7 @@ export interface RenderedRow {
   readonly html: string;
 }
 
-/** Tema "Bolos Comfacundi": Nunito + azules de marca sobre tarjeta blanca. */
+/** Tema visual genérico: Nunito + azules sobre tarjeta blanca. */
 const FONT = "'Nunito','Trebuchet MS',sans-serif";
 /** Fondo exterior de la plantilla (configurable desde el Preview, §1 Fix). */
 export const DEFAULT_TEMPLATE_BG = "#f0faff";
@@ -242,7 +242,13 @@ export function renderButton(data: ButtonBlockData, corners: Corner = ""): Rende
 }
 
 export function renderCta(data: CtaBlockData, corners: Corner = ""): RenderedRow {
-  const bg = data.color === "blue" ? PRIMARY : GREEN;
+  // Los valores blue/green se aceptan para conservar plantillas antiguas.
+  const custom = sanitizeColor(data.color);
+  const bg = data.color === "green"
+    ? GREEN
+    : data.color === "blue" || data.color === ""
+      ? PRIMARY
+      : custom === "" ? PRIMARY : custom;
   // Igual que renderImage revalida src: solo https (idempotente, sin doble escape).
   return pillRow(sanitizeHttpsUrl(data.url), data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
 }
@@ -325,7 +331,7 @@ export function renderColumns(data: ColumnsBlockData, corners: Corner = ""): Ren
     .map((col) => {
       const inner = col.blocks.map((b) => renderBlockToRow(b, 0, 1, "").html).join("");
       const body = inner === ""
-        ? `<tr><td style="font-family:${FONT}; font-size:0; line-height:0;">&nbsp;</td></tr>`
+        ? `<tr><td style="padding:8px; font-family:${FONT}; font-size:13px; line-height:1.5; color:${MUTED};">[Columna vacía]</td></tr>`
         : inner;
       return `<td width="${width}" valign="top" align="left" style="padding:0 8px;">` +
         `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${body}</table></td>`;

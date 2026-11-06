@@ -121,7 +121,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         type,
         label: "Ver más",
         url: "",
-        color: "blue",
+        color: "#41b6e6",
         align: "center",
         marginTop: 0,
         marginBottom: 0,

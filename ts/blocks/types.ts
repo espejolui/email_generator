@@ -143,7 +143,7 @@ export interface CtaBlockData extends BaseBlockData {
   readonly type: "cta";
   label: string;
   url: string;
-  color: ButtonColor;
+  color: string;
   align: ButtonAlign;
   marginTop: number;
   marginBottom: number;

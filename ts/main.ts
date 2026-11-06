@@ -3,6 +3,7 @@ import { createBlockData, createId } from "./blocks/index.js";
 import type { BlockType } from "./blocks/types.js";
 import { initPalette } from "./components/Palette/Palette.js";
 import { initCanvas } from "./components/Canvas/Canvas.js";
+import { initTemplateImport } from "./components/Canvas/ImportTemplate.js";
 import { initPreview } from "./components/Preview/Preview.js";
 import { EditorStore } from "./core/store/store.js";
 
@@ -27,6 +28,9 @@ const clearBtn = document.querySelector<HTMLButtonElement>(
   '[data-action="clear-canvas"]',
 );
 if (clearBtn === null) throw new Error("Botón de limpieza no encontrado");
+const importBtn = document.querySelector<HTMLButtonElement>('[data-action="import-template"]');
+const importInput = document.querySelector<HTMLInputElement>('[data-action="import-file"]');
+if (importBtn === null || importInput === null) throw new Error("Controles de importación no encontrados");
 
 const store = new EditorStore();
 
@@ -41,5 +45,8 @@ function addBlockToEnd(type: BlockType): void {
 
 initPalette(paletteList, addBlockToEnd);
 initCanvas(canvasRoot, canvasList, canvasHint, live, store, clearBtn);
+initTemplateImport(importBtn, importInput, store, live, (title) => {
+  docTitleInput.value = title;
+});
 initPreview(previewFrame, downloadBtn, store);
 window.lucide?.createIcons();

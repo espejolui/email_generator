@@ -1,15 +1,15 @@
 import { Block } from "../core/decorators/Block.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeHttpsUrl, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
-import type { ButtonAlign, ButtonColor, CtaBlockData } from "./types.js";
-import { isButtonAlign, isButtonColor } from "./types.js";
+import { sanitizeColor, sanitizeHttpsUrl, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import type { ButtonAlign, CtaBlockData } from "./types.js";
+import { isButtonAlign } from "./types.js";
 
 @Block({ type: "cta", label: "Botón enlace", icon: "link" })
 export class CtaBlock {
   readonly id: string;
   #label = "";
   #url = "";
-  #color: ButtonColor = "blue";
+  #color = "#41b6e6";
   #align: ButtonAlign = "center";
   #marginTop = 0;
   #marginBottom = 0;
@@ -38,10 +38,12 @@ export class CtaBlock {
 
   @Editable()
   set color(value: string) {
-    this.#color = isButtonColor(value) ? value : "blue";
+    this.#color = value === ""
+      ? ""
+      : value === "green" ? "#25d366" : sanitizeColor(value) || "#41b6e6";
   }
 
-  get color(): ButtonColor {
+  get color(): string {
     return this.#color;
   }
 

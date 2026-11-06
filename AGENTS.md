@@ -16,6 +16,7 @@ El usuario debe poder:
 - Arrastrar un bloque desde la **Paleta** hacia el **Lienzo**.
 - Reordenar bloques dentro del **Lienzo** libremente (drag para reposicionar).
 - Editar el contenido de cada bloque directamente en el **Lienzo**.
+- Importar una plantilla `.html` existente y convertirla en bloques editables.
 - Ver el resultado reflejado instantáneamente en el **Preview**.
 - **Descargar** desde el Preview el archivo `.html` final exactamente igual a lo que se está visualizando.
 
@@ -51,6 +52,7 @@ src/
 ├── core/
 │   ├── decorators/          # @Block, @Editable, @Sanitize, etc.
 │   ├── dnd/                 # Lógica de drag & drop (HTML5 DnD API / Pointer Events)
+│   ├── import/              # Interpretación de plantillas HTML existentes
 │   ├── sanitize/            # Utilidades de escape/seguridad
 │   └── render/               # Motor de renderizado del preview
 ├── components/

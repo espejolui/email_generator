@@ -24,7 +24,8 @@ funciones para no desincronizarse.
 - `pillRow(href, label, bg, align, marginTop, marginBottom, corners?)` —
   fila pill compartida por `button` y `cta`.
 - `renderCta(data, corners?)` — pill con URL https (revalidada, igual que
-  `renderImage` con `src`); sin URL, pill sin enlace.
+  `renderImage` con `src`), color `#rrggbb` personalizable (vacío = azul);
+  sin URL, pill sin enlace.
 - `renderSpacer(data)` — fila vacía con `height` + `bgcolor` en `<td>`
   (Outlook-safe).
 - `renderHeader(data, corners?)` — logo (tabla anidada con `align` para

@@ -7,6 +7,9 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
   store. No re-renderiza ante cambios solo de contenido (conserva el foco).
 - Botón Limpiar (`clearBtn`): vacía el lienzo con `store.clear()`, anuncia
   cuántos bloques eliminó y se deshabilita cuando no hay bloques.
+- `ImportTemplate.ts`: selecciona un `.html` (máx. 2 MB), lo interpreta con
+  `importEmailHtml()` y reemplaza el lienzo mediante `store.load()`; pide
+  confirmación si ya había contenido y sincroniza el nombre de la plantilla.
 - Internas:
   - `announce` — mensajes al `aria-live`.
   - `signature` / `innerSignature` — firma tipo:id (recursiva en `columns`,

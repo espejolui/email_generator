@@ -25,6 +25,14 @@
       margin: 0;
     }
 
+    & .canvas__actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
     & .block__btn-text {
       display: inline-flex;
       align-items: center;

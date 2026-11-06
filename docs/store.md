@@ -15,4 +15,6 @@ a él, nunca se leen entre sí.
 - `update(id, patch)` — aplica cambios parciales sin cambiar `id`/`type`.
 - `remove(id)` — elimina un bloque.
 - `clear()` — vacía el lienzo de un solo golpe (sin bloques no emite).
+- `load(blocks, background, docTitle)` — reemplaza la plantilla completa de
+  forma atómica al importar un HTML existente.
 - `StoreListener` — tipo `(blocks, background, docTitle) => void` de los suscriptores.

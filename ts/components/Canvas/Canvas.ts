@@ -246,7 +246,7 @@ const LEVEL_OPTIONS: ReadonlyArray<readonly [string, string]> = [
 
 const BUTTON_COLOR_OPTIONS: ReadonlyArray<readonly [string, string]> = [
   ["green", "Verde WhatsApp"],
-  ["blue", "Azul Comfacundi"],
+  ["blue", "Azul"],
 ];
 
 const PRESET_COLORS: ReadonlyArray<string> = [
@@ -1622,9 +1622,18 @@ export function initCanvas(
         url.addEventListener("input", () => {
           store.update(block.id, { url: sanitizeHttpsUrl(url.value) });
         });
-        const ctaColor = selectField(block.color, BUTTON_COLOR_OPTIONS, "Color del botón", `${block.id}-color`, "Color", (value) => {
-          store.update(block.id, { color: isButtonColor(value) ? value : "blue" });
-        });
+        const currentCtaColor = block.color === "blue"
+          ? "#41b6e6"
+          : block.color === "green" ? "#25d366" : block.color;
+        const ctaColor = optionalColor(
+          "Botón",
+          "Azul por defecto",
+          currentCtaColor,
+          "#41b6e6",
+          (next) => {
+            store.update(block.id, { color: next });
+          },
+        );
         const ctaAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
         });

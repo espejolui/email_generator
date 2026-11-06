@@ -46,8 +46,8 @@ con `@Editable()` y convierte a datos con `toData()`:
 - `HeaderBlock` — `logoSrc` (solo https/data), `logoAlt`, `tagline`, `align`.
 - `FooterBlock` — `address`, `unsubscribeUrl` (solo https), `social`
   (urls https por red, ver `SocialUrls`).
-- `CtaBlock` — `label`, `url` (solo https), `color`, `align`, `marginTop`,
-  `marginBottom`.
+- `CtaBlock` — `label`, `url` (solo https), `color` (`#rrggbb` personalizado,
+  vacío = azul por defecto), `align`, `marginTop`, `marginBottom`.
 - `ColumnsBlock` — `columns` (2–3, cada una con `blocks` anidados ya
   sanitizados; edición interna vía `update` mayorista, sin cambios al store).
 - `TableBlock` — `headers` (máx. 6), `rows` (máx. 20), `headerRow`.
