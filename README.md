@@ -12,7 +12,8 @@ semántico + ARIA y **pnpm** como único gestor (`pnpm-lock.yaml`).
 
 ## Requisitos
 
-- Node.js 22
+- Node.js 22.23.4 o superior dentro de una rama soportada y parcheada
+  (`.nvmrc` fija 22.23.4; también se admiten 24.22.1+ y 26.12.1+).
 - pnpm 11 (`npm` está prohibido por `AGENTS.md`; el `preinstall` lo bloquea)
 
 ## Uso
@@ -81,7 +82,8 @@ ts/
 css/               # base/palette/canvas/preview/main: puro, con nesting nativo
 index.html         # aside + main + section semánticos
 server.js          # servidor estático local (solo desarrollo)
-scripts/           # copy-static.mjs (build de Cloudflare Pages)
+scripts/           # copia de estáticos, cabeceras y Lucide local para builds
+_headers           # CSP y cabeceras de seguridad para Cloudflare Pages
 ```
 
 Qué hace cada pieza, en detalle:
@@ -96,6 +98,7 @@ Qué hace cada pieza, en detalle:
 - [`docs/palette.md`](./docs/palette.md) / [`docs/canvas.md`](./docs/canvas.md) / [`docs/preview.md`](./docs/preview.md) — las tres columnas.
 - [`docs/color.md`](./docs/color.md) — matemática de color.
 - [`docs/deployment.md`](./docs/deployment.md) — despliegue en Cloudflare Pages.
+- [`docs/security.md`](./docs/security.md) — controles, alcance y revisión de seguridad.
 
 ## Compatibilidad con email
 

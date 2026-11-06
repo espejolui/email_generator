@@ -7,13 +7,15 @@ build sirve el HTML de fallback en `/js/*` y la paleta sale vacía.
 ## Ajustes (Dashboard → Pages → genmail → Settings → Builds)
 
 - **Build command:** `pnpm run build:pages`
-  (compila a `dist/js` y copia `index.html` + `css/` a `dist/`;
-  Cloudflare detecta pnpm por `pnpm-lock.yaml`).
+  (compila a `dist/js` y copia `index.html`, `css/`, `_headers` y el Lucide
+  fijado a `dist/vendor/`; Cloudflare detecta pnpm por `pnpm-lock.yaml`).
 - **Build output directory:** `dist`
-- **Variable de entorno:** `NODE_VERSION=22`
+- **Variable de entorno:** `NODE_VERSION=22.23.4` (primera versión 22 con los
+  parches de seguridad del 21 de octubre de 2026).
 
-El desarrollo local no cambia: `pnpm start` compila a `js/` y sirve con
-`server.js`.
+El desarrollo local no cambia: `pnpm start` compila a `js/`, copia Lucide a
+`vendor/` y sirve con `server.js` únicamente en `127.0.0.1`. El `_headers`
+aplica CSP, anti-framing, `nosniff`, política de referencia y permisos mínimos.
 
 ## Cómo saber si el build se subió
 

@@ -5,4 +5,5 @@ rmSync("dist", { recursive: true, force: true });
 mkdirSync("dist", { recursive: true });
 cpSync("index.html", "dist/index.html");
 cpSync("css", "dist/css", { recursive: true });
-console.log("dist/ listo: index.html + css/ (+ js/ generado por tsc)");
+cpSync("_headers", "dist/_headers");
+console.log("dist/ listo: index.html + css/ + _headers (+ js/vendor generados)");
