@@ -9,8 +9,8 @@ import type {
 } from "../../blocks/types.js";
 import {
   isBlockType,
+  isBorderStyle,
   isButtonAlign,
-  isButtonColor,
   isTextAlign,
   isTitleLevel,
 } from "../../blocks/types.js";
@@ -244,9 +244,10 @@ const LEVEL_OPTIONS: ReadonlyArray<readonly [string, string]> = [
   ["6", "H6"],
 ];
 
-const BUTTON_COLOR_OPTIONS: ReadonlyArray<readonly [string, string]> = [
-  ["green", "Verde WhatsApp"],
-  ["blue", "Azul"],
+const BORDER_STYLE_OPTIONS: ReadonlyArray<readonly [string, string]> = [
+  ["solid", "Sólido"],
+  ["dashed", "Guiones"],
+  ["dotted", "Puntos"],
 ];
 
 const PRESET_COLORS: ReadonlyArray<string> = [
@@ -446,14 +447,6 @@ function optionalColor(
   return wrap;
 }
 
-function bgControls(
-  blockId: string,
-  currentBg: string,
-  onBg: (bg: string) => void,
-): HTMLElement {
-  return optionalColor("Fondo", "Sin fondo", currentBg, "#41b6e6", onBg);
-}
-
 /** Junta dos controles de color en una sola fila horizontal. */
 function colorRow(first: HTMLElement, second: HTMLElement): HTMLElement {
   const row = el("div", "block__color");
@@ -552,6 +545,73 @@ function marginControls(
     labelFor("Abajo (px)", bottomInput, `${blockId}-marginbottom`),
     bottomInput,
   );
+  return wrap;
+}
+
+function componentColorLabel(block: AnyBlockData): string {
+  if (block.type === "divider") return "Línea";
+  if (block.type === "button" || block.type === "cta" || block.type === "product") return "Botón";
+  if (["image", "banner", "logo", "spacer", "columns"].includes(block.type)) return "Componente";
+  return "Texto";
+}
+
+/** Controles comunes: fondo, color del componente y borde completo. */
+function appearanceControls(block: AnyBlockData, store: EditorStore): HTMLElement {
+  const wrap = el("div", "block__appearance");
+  const title = el("p", "block__appearance-title");
+  title.textContent = "Apariencia y bordes";
+
+  const bg = optionalColor("Fondo", "Sin fondo", block.bg, "#ffffff", (next) => {
+    store.update(block.id, { bg: next });
+  });
+  const color = optionalColor(componentColorLabel(block), "Automático", block.color, "#41b6e6", (next) => {
+    store.update(block.id, { color: next });
+  });
+  const colors = colorRow(bg, color);
+
+  const borderColor = optionalColor("Borde", "Automático", block.borderColor, "#d9d9d9", (next) => {
+    store.update(block.id, { borderColor: next });
+  });
+  const borderStyle = selectField(
+    block.borderStyle,
+    BORDER_STYLE_OPTIONS,
+    "Estilo del borde",
+    `${block.id}-borderstyle`,
+    "Estilo de borde",
+    (value) => {
+      store.update(block.id, { borderStyle: isBorderStyle(value) ? value : "solid" });
+    },
+  );
+  const borderRow = el("div", "block__inline");
+  borderRow.append(borderColor, borderStyle);
+
+  const borderWidth = document.createElement("input");
+  borderWidth.type = "number";
+  borderWidth.min = "0";
+  borderWidth.max = "80";
+  borderWidth.value = String(block.borderWidth);
+  borderWidth.setAttribute("aria-label", "Grosor del borde en píxeles");
+  borderWidth.addEventListener("input", () => {
+    store.update(block.id, { borderWidth: sanitizeMargin(borderWidth.value) });
+  });
+  const borderRadius = document.createElement("input");
+  borderRadius.type = "number";
+  borderRadius.min = "0";
+  borderRadius.max = "80";
+  borderRadius.value = String(block.borderRadius);
+  borderRadius.setAttribute("aria-label", "Radio del borde en píxeles");
+  borderRadius.addEventListener("input", () => {
+    store.update(block.id, { borderRadius: sanitizeMargin(borderRadius.value) });
+  });
+  const sizes = el("div", "block__margins");
+  sizes.append(
+    labelFor("Grosor borde (px)", borderWidth, `${block.id}-borderwidth`),
+    borderWidth,
+    labelFor("Radio borde (px)", borderRadius, `${block.id}-borderradius`),
+    borderRadius,
+  );
+
+  wrap.append(title, colors, borderRow, sizes);
   return wrap;
 }
 
@@ -996,13 +1056,6 @@ export function initCanvas(
         const align = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
-        const bg = bgControls(block.id, block.bg, (next) => {
-          store.update(block.id, { bg: next });
-        });
-        const fg = optionalColor("Texto", "Automático", block.color, "#111111", (next) => {
-          store.update(block.id, { color: next });
-        });
-        const titleColors = colorRow(bg, fg);
         const titleMargins = marginControls(
           block.id,
           block.marginTop,
@@ -1022,7 +1075,6 @@ export function initCanvas(
           input,
           level,
           align,
-          titleColors,
           formatRow(block.id, block, store),
           titleSize,
           titleMargins,
@@ -1041,13 +1093,6 @@ export function initCanvas(
         const textAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
-        const textBg = bgControls(block.id, block.bg, (next) => {
-          store.update(block.id, { bg: next });
-        });
-        const textFg = optionalColor("Texto", "Automático", block.color, "#444444", (next) => {
-          store.update(block.id, { color: next });
-        });
-        const textColors = colorRow(textBg, textFg);
         const textMargins = marginControls(
           block.id,
           block.marginTop,
@@ -1066,7 +1111,6 @@ export function initCanvas(
           labelFor("Texto", area, `${block.id}-text`),
           area,
           textAlign,
-          textColors,
           formatRow(block.id, block, store),
           textSize,
           textMargins,
@@ -1147,12 +1191,6 @@ export function initCanvas(
         const quoteAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isTextAlign(value) ? value : "left" });
         });
-        const quoteBg = bgControls(block.id, block.bg, (next) => {
-          store.update(block.id, { bg: next });
-        });
-        const quoteFg = optionalColor("Texto", "Automático", block.color, "#555555", (next) => {
-          store.update(block.id, { color: next });
-        });
         const quoteMargins = marginControls(
           block.id,
           block.marginTop,
@@ -1173,7 +1211,6 @@ export function initCanvas(
           labelFor("Autor", cite, `${block.id}-cite`),
           cite,
           quoteAlign,
-          colorRow(quoteBg, quoteFg),
           formatRow(block.id, block, store),
           quoteSize,
           quoteMargins,
@@ -1183,15 +1220,6 @@ export function initCanvas(
       case "divider": {
         const note = el("p", "block__note");
         note.textContent = "Separador horizontal";
-        const divColor = optionalColor(
-          "Línea",
-          "Por defecto",
-          block.color,
-          "#41b6e6",
-          (next) => {
-            store.update(block.id, { color: next });
-          },
-        );
         const divMargins = marginControls(
           block.id,
           block.marginTop,
@@ -1212,23 +1240,11 @@ export function initCanvas(
         thickness.addEventListener("input", () => {
           store.update(block.id, { thickness: sanitizeMargin(thickness.value) });
         });
-        const radius = document.createElement("input");
-        radius.type = "number";
-        radius.min = "0";
-        radius.max = "80";
-        radius.value = String(block.borderRadius);
-        radius.setAttribute("aria-label", "Radio de bordes en píxeles");
-        radius.addEventListener("input", () => {
-          store.update(block.id, { borderRadius: sanitizeMargin(radius.value) });
-        });
         wrap.append(
           note,
-          divColor,
           divMargins,
-          labelFor("Grosor (px)", thickness, `${block.id}-thickness`),
+          labelFor("Grosor línea (px)", thickness, `${block.id}-thickness`),
           thickness,
-          labelFor("Radio (px)", radius, `${block.id}-radius`),
-          radius,
         );
         break;
       }
@@ -1258,9 +1274,6 @@ export function initCanvas(
           // En crudo (recorte + tope): se codifica para URL al renderizar, nunca toca HTML.
           store.update(block.id, { message: message.value.trim().slice(0, 300) });
         });
-        const color = selectField(block.color, BUTTON_COLOR_OPTIONS, "Color del botón", `${block.id}-color`, "Color", (value) => {
-          store.update(block.id, { color: isButtonColor(value) ? value : "green" });
-        });
         const btnAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
         });
@@ -1282,7 +1295,6 @@ export function initCanvas(
           phone,
           labelFor("Mensaje", message, `${block.id}-message`),
           message,
-          color,
           btnAlign,
           btnMargins,
         );
@@ -1461,9 +1473,6 @@ export function initCanvas(
         buttonLabel.addEventListener("input", () => {
           store.update(block.id, { buttonLabel: sanitizeText(buttonLabel.value).slice(0, 40) });
         });
-        const color = selectField(block.color, BUTTON_COLOR_OPTIONS, "Color del botón", `${block.id}-color`, "Color", (value) => {
-          store.update(block.id, { color: isButtonColor(value) ? value : "blue" });
-        });
         wrap.append(
           labelFor("Imagen", src, `${block.id}-src`),
           src,
@@ -1477,7 +1486,6 @@ export function initCanvas(
           url,
           labelFor("Botón", buttonLabel, `${block.id}-buttonlabel`),
           buttonLabel,
-          color,
         );
         break;
       }
@@ -1578,9 +1586,6 @@ export function initCanvas(
         width.addEventListener("input", () => {
           store.update(block.id, { width: sanitizeImageWidth(width.value) });
         });
-        const bg = bgControls(block.id, block.bg, (next) => {
-          store.update(block.id, { bg: next });
-        });
         const margins = marginControls(
           block.id,
           block.marginTop,
@@ -1600,7 +1605,6 @@ export function initCanvas(
           align,
           labelFor("Ancho (px)", width, `${block.id}-width`),
           width,
-          bg,
           margins,
         );
         break;
@@ -1622,18 +1626,6 @@ export function initCanvas(
         url.addEventListener("input", () => {
           store.update(block.id, { url: sanitizeHttpsUrl(url.value) });
         });
-        const currentCtaColor = block.color === "blue"
-          ? "#41b6e6"
-          : block.color === "green" ? "#25d366" : block.color;
-        const ctaColor = optionalColor(
-          "Botón",
-          "Azul por defecto",
-          currentCtaColor,
-          "#41b6e6",
-          (next) => {
-            store.update(block.id, { color: next });
-          },
-        );
         const ctaAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
           store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
         });
@@ -1653,7 +1645,6 @@ export function initCanvas(
           ctaLabel,
           labelFor("URL", url, `${block.id}-url`),
           url,
-          ctaColor,
           ctaAlign,
           ctaMargins,
         );
@@ -1784,6 +1775,7 @@ export function initCanvas(
         break;
       }
     }
+    wrap.appendChild(appearanceControls(block, store));
     return wrap;
   }
 }

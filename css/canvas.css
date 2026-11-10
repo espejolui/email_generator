@@ -237,6 +237,29 @@
     }
   }
 
+  & .block__appearance {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--border-color);
+
+    & .block__appearance-title {
+      margin: 0;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #666;
+    }
+
+    & .block__inline {
+      align-items: flex-end;
+
+      & .block__select {
+        flex: 1 1 180px;
+      }
+    }
+  }
+
   & .block__color,
   & .block__margins,
   & .block__inline {
