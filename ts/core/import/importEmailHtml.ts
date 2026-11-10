@@ -1,4 +1,5 @@
 import { createId } from "../../blocks/index.js";
+import { createBlockAppearance } from "../../blocks/types.js";
 import type {
   AnyBlockData,
   ButtonAlign,
@@ -114,6 +115,7 @@ function textBlock(element: Element, content = element.textContent ?? ""): TextB
   const text = cleanText(content, 2000);
   if (text === "") return undefined;
   return {
+    ...createBlockAppearance(),
     id: createId(),
     type: "text",
     content: text,
@@ -176,6 +178,7 @@ class HtmlBlockParser {
       if (content === "") return;
       const level = Number(tag.slice(1)) as TitleLevel;
       output.push({
+        ...createBlockAppearance(),
         id: createId(),
         type: "title",
         content,
@@ -215,7 +218,14 @@ class HtmlBlockParser {
         .map((item) => cleanText(item.textContent ?? "", 300))
         .filter((item) => item !== "");
       if (items.length > 0) {
-        output.push({ id: createId(), type: "list", items, ordered: tag === "OL", align: alignOf(element) });
+        output.push({
+          ...createBlockAppearance(),
+          id: createId(),
+          type: "list",
+          items,
+          ordered: tag === "OL",
+          align: alignOf(element),
+        });
       }
       return;
     }
@@ -223,6 +233,7 @@ class HtmlBlockParser {
       const content = cleanText(textWithout(element, "cite"), 1000);
       if (content === "") return;
       output.push({
+        ...createBlockAppearance(),
         id: createId(),
         type: "quote",
         content,
@@ -239,6 +250,7 @@ class HtmlBlockParser {
     }
     if (tag === "HR") {
       output.push({
+        ...createBlockAppearance(),
         id: createId(),
         type: "divider",
         color: elementColor(element, "backgroundColor") || elementColor(element, "color"),
@@ -285,6 +297,7 @@ class HtmlBlockParser {
     const alt = sanitizeAlt(image.getAttribute("alt") ?? "");
     if (href !== "" || cleanText(caption, 120) !== "") {
       output.push({
+        ...createBlockAppearance(),
         id: createId(),
         type: "banner",
         src,
@@ -293,7 +306,7 @@ class HtmlBlockParser {
         caption: cleanText(caption, 120),
       });
     } else {
-      output.push({ id: createId(), type: "image", src, alt });
+      output.push({ ...createBlockAppearance(), id: createId(), type: "image", src, alt });
     }
   }
 
@@ -305,6 +318,7 @@ class HtmlBlockParser {
     const table = anchor.closest("table");
     const cellColor = cell === null ? "" : elementColor(cell, "backgroundColor");
     return {
+      ...createBlockAppearance(),
       id: createId(),
       type: "cta",
       label,
@@ -330,6 +344,7 @@ class HtmlBlockParser {
           .slice(0, 6).map((cell) => cleanText(cell.textContent ?? "", 200))
         : [];
       const block: TableBlockData = {
+        ...createBlockAppearance(),
         id: createId(),
         type: "table",
         headers,
@@ -354,7 +369,7 @@ class HtmlBlockParser {
           return { blocks: blocks as readonly AnyBlockData[] };
         });
         if (columns.some((column) => column.blocks.length > 0)) {
-          output.push({ id: createId(), type: "columns", columns });
+          output.push({ ...createBlockAppearance(), id: createId(), type: "columns", columns });
           return;
         }
       }

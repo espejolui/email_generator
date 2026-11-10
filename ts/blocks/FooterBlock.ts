@@ -1,4 +1,5 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeHttpsUrl, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { FooterBlockData, SocialUrls } from "./types.js";
@@ -6,15 +7,10 @@ import type { FooterBlockData, SocialUrls } from "./types.js";
 const EMPTY_SOCIAL: SocialUrls = { instagram: "", facebook: "", x: "", linkedin: "" };
 
 @Block({ type: "footer", label: "Pie de página", icon: "panel-bottom" })
-export class FooterBlock {
-  readonly id: string;
+export class FooterBlock extends StyledBlock {
   #address = "";
   #unsubscribeUrl = "";
   #social: SocialUrls = { ...EMPTY_SOCIAL };
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set address(value: string) {
@@ -50,6 +46,7 @@ export class FooterBlock {
 
   toData(): FooterBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "footer",
       address: this.#address,

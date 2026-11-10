@@ -19,6 +19,7 @@ import "./SignatureBlock.js";
 import "./LogoBlock.js";
 import { getRegisteredBlocks } from "../core/decorators/Block.js";
 import type { AnyBlockData, BlockType } from "./types.js";
+import { createBlockAppearance } from "./types.js";
 
 export type { AnyBlockData, BlockType };
 export { getRegisteredBlocks };
@@ -37,6 +38,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
   switch (type) {
     case "title":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         content: "Título de ejemplo",
@@ -54,6 +56,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
       };
     case "text":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         content: "Texto de ejemplo. Edítalo en el lienzo.",
@@ -69,11 +72,19 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         fontSize: 0,
       };
     case "image":
-      return { id, type, src: "", alt: "" };
+      return { ...createBlockAppearance(), id, type, src: "", alt: "" };
     case "list":
-      return { id, type, items: ["Primer punto", "Segundo punto"], ordered: false, align: "left" };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        items: ["Primer punto", "Segundo punto"],
+        ordered: false,
+        align: "left",
+      };
     case "quote":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         content: "Cita de ejemplo.",
@@ -90,25 +101,44 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         fontSize: 0,
       };
     case "divider":
-      return { id, type, color: "", marginTop: 8, marginBottom: 8, thickness: 2, borderRadius: 2 };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        color: "",
+        marginTop: 8,
+        marginBottom: 8,
+        thickness: 2,
+        borderRadius: 2,
+      };
     case "button":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         label: "Escríbeme haciendo clic aquí",
         phone: "",
         message: "Hola, quiero más información",
-        color: "green",
+        color: "#25d366",
         align: "center",
         marginTop: 0,
         marginBottom: 0,
       };
     case "spacer":
-      return { id, type, height: 16 };
+      return { ...createBlockAppearance(), id, type, height: 16 };
     case "header":
-      return { id, type, logoSrc: "", logoAlt: "", tagline: "Tu tagline aquí", align: "center" };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        logoSrc: "",
+        logoAlt: "",
+        tagline: "Tu tagline aquí",
+        align: "center",
+      };
     case "footer":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         address: "Calle 123, Ciudad",
@@ -117,6 +147,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
       };
     case "cta":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         label: "Ver más",
@@ -127,9 +158,10 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         marginBottom: 0,
       };
     case "columns":
-      return { id, type, columns: [{ blocks: [] }, { blocks: [] }] };
+      return { ...createBlockAppearance(), id, type, columns: [{ blocks: [] }, { blocks: [] }] };
     case "table":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         headers: ["Columna 1", "Columna 2"],
@@ -137,11 +169,17 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         headerRow: true,
       };
     case "social":
-      return { id, type, social: { instagram: "", facebook: "", x: "", linkedin: "" } };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        social: { instagram: "", facebook: "", x: "", linkedin: "" },
+      };
     case "banner":
-      return { id, type, src: "", alt: "", href: "", caption: "▶ Ver video" };
+      return { ...createBlockAppearance(), id, type, src: "", alt: "", href: "", caption: "▶ Ver video" };
     case "product":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         src: "",
@@ -150,14 +188,15 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         price: "$0",
         url: "",
         buttonLabel: "Comprar",
-        color: "blue",
+        color: "#41b6e6",
       };
     case "coupon":
-      return { id, type, code: "DESCUENTO10", description: "En tu próxima compra" };
+      return { ...createBlockAppearance(), id, type, code: "DESCUENTO10", description: "En tu próxima compra" };
     case "signature":
-      return { id, type, name: "Tu nombre", role: "Tu cargo", photoSrc: "", photoAlt: "" };
+      return { ...createBlockAppearance(), id, type, name: "Tu nombre", role: "Tu cargo", photoSrc: "", photoAlt: "" };
     case "logo":
       return {
+        ...createBlockAppearance(),
         id,
         type,
         src: "",

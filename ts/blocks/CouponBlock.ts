@@ -1,17 +1,13 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeText } from "../core/sanitize/sanitize.js";
 import type { CouponBlockData } from "./types.js";
 
 @Block({ type: "coupon", label: "Cupón", icon: "ticket" })
-export class CouponBlock {
-  readonly id: string;
+export class CouponBlock extends StyledBlock {
   #code = "";
   #description = "";
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set code(value: string) {
@@ -33,6 +29,7 @@ export class CouponBlock {
 
   toData(): CouponBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "coupon",
       code: this.#code,

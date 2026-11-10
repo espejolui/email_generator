@@ -1,4 +1,5 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TableBlockData } from "./types.js";
@@ -12,15 +13,10 @@ function sanitizeRow(cells: readonly string[]): string[] {
 }
 
 @Block({ type: "table", label: "Tabla de datos", icon: "table" })
-export class TableBlock {
-  readonly id: string;
+export class TableBlock extends StyledBlock {
   #headers: string[] = [];
   #rows: string[][] = [];
   #headerRow = true;
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set headers(values: readonly string[]) {
@@ -51,6 +47,7 @@ export class TableBlock {
 
   toData(): TableBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "table",
       headers: [...this.#headers],

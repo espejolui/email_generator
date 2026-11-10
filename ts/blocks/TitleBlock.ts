@@ -1,17 +1,15 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TitleBlockData, TitleLevel } from "./types.js";
 import { isTextAlign, isTitleLevel } from "./types.js";
 
 @Block({ type: "title", label: "Título", icon: "heading" })
-export class TitleBlock {
-  readonly id: string;
+export class TitleBlock extends StyledBlock {
   #content = "";
   #level: TitleLevel = 1;
   #align: TextAlign = "left";
-  #bg = "";
-  #color = "";
   #marginTop = 0;
   #marginBottom = 12;
   #bold = false;
@@ -19,10 +17,6 @@ export class TitleBlock {
   #underline = false;
   #strike = false;
   #fontSize = 0;
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set content(value: string) {
@@ -49,24 +43,6 @@ export class TitleBlock {
 
   get align(): TextAlign {
     return this.#align;
-  }
-
-  @Editable()
-  set bg(value: string) {
-    this.#bg = sanitizeColor(value);
-  }
-
-  get bg(): string {
-    return this.#bg;
-  }
-
-  @Editable()
-  set color(value: string) {
-    this.#color = sanitizeColor(value);
-  }
-
-  get color(): string {
-    return this.#color;
   }
 
   @Editable()
@@ -134,13 +110,12 @@ export class TitleBlock {
 
   toData(): TitleBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "title",
       content: this.#content,
       level: this.#level,
       align: this.#align,
-      bg: this.#bg,
-      color: this.#color,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
       bold: this.#bold,

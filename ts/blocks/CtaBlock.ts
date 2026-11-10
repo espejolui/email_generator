@@ -1,21 +1,20 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeHttpsUrl, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeHttpsUrl, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ButtonAlign, CtaBlockData } from "./types.js";
 import { isButtonAlign } from "./types.js";
 
 @Block({ type: "cta", label: "Botón enlace", icon: "link" })
-export class CtaBlock {
-  readonly id: string;
+export class CtaBlock extends StyledBlock {
   #label = "";
   #url = "";
-  #color = "#41b6e6";
   #align: ButtonAlign = "center";
   #marginTop = 0;
   #marginBottom = 0;
 
   constructor(id: string) {
-    this.id = id;
+    super(id, "#41b6e6");
   }
 
   @Editable()
@@ -34,17 +33,6 @@ export class CtaBlock {
 
   get url(): string {
     return this.#url;
-  }
-
-  @Editable()
-  set color(value: string) {
-    this.#color = value === ""
-      ? ""
-      : value === "green" ? "#25d366" : sanitizeColor(value) || "#41b6e6";
-  }
-
-  get color(): string {
-    return this.#color;
   }
 
   @Editable()
@@ -76,11 +64,11 @@ export class CtaBlock {
 
   toData(): CtaBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "cta",
       label: this.#label,
       url: this.#url,
-      color: this.#color,
       align: this.#align,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,

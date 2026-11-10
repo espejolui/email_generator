@@ -19,15 +19,28 @@ export type BlockType =
   | "signature"
   | "logo";
 
-export type ButtonColor = "green" | "blue";
-
 export type TitleLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type TextAlign = "left" | "center" | "right";
 
 export type ButtonAlign = "left" | "center" | "right";
 
-export interface BaseBlockData {
+export type BorderStyle = "solid" | "dashed" | "dotted";
+
+export interface BlockAppearance {
+  bg: string;
+  color: string;
+  borderColor: string;
+  borderWidth: number;
+  borderStyle: BorderStyle;
+  borderRadius: number;
+}
+
+export function createBlockAppearance(): BlockAppearance {
+  return { bg: "", color: "", borderColor: "", borderWidth: 0, borderStyle: "solid", borderRadius: 0 };
+}
+
+export interface BaseBlockData extends BlockAppearance {
   readonly id: string;
   readonly type: BlockType;
 }
@@ -106,7 +119,7 @@ export interface ButtonBlockData extends BaseBlockData {
   label: string;
   phone: string;
   message: string;
-  color: ButtonColor;
+  color: string;
   align: ButtonAlign;
   marginTop: number;
   marginBottom: number;
@@ -186,7 +199,7 @@ export interface ProductBlockData extends BaseBlockData {
   price: string;
   url: string;
   buttonLabel: string;
-  color: ButtonColor;
+  color: string;
 }
 
 export interface CouponBlockData extends BaseBlockData {
@@ -259,8 +272,8 @@ export function isBlockType(value: string): value is BlockType {
   );
 }
 
-export function isButtonColor(value: string): value is ButtonColor {
-  return value === "green" || value === "blue";
+export function isBorderStyle(value: string): value is BorderStyle {
+  return value === "solid" || value === "dashed" || value === "dotted";
 }
 
 export function isTitleLevel(value: unknown): value is TitleLevel {

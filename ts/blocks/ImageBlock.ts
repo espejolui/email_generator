@@ -1,17 +1,13 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeAlt, sanitizeImageSrc } from "../core/sanitize/sanitize.js";
 import type { ImageBlockData } from "./types.js";
 
 @Block({ type: "image", label: "Imagen", icon: "image" })
-export class ImageBlock {
-  readonly id: string;
+export class ImageBlock extends StyledBlock {
   #src = "";
   #alt = "";
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set src(value: string) {
@@ -32,6 +28,6 @@ export class ImageBlock {
   }
 
   toData(): ImageBlockData {
-    return { id: this.id, type: "image", src: this.#src, alt: this.#alt };
+    return { ...this.appearanceData(), id: this.id, type: "image", src: this.#src, alt: this.#alt };
   }
 }

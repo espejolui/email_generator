@@ -1,16 +1,14 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TextAlign, TextBlockData } from "./types.js";
 import { isTextAlign } from "./types.js";
 
 @Block({ type: "text", label: "Caja de texto", icon: "text" })
-export class TextBlock {
-  readonly id: string;
+export class TextBlock extends StyledBlock {
   #content = "";
   #align: TextAlign = "left";
-  #bg = "";
-  #color = "";
   #marginTop = 0;
   #marginBottom = 0;
   #bold = false;
@@ -18,10 +16,6 @@ export class TextBlock {
   #underline = false;
   #strike = false;
   #fontSize = 0;
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set content(value: string) {
@@ -39,24 +33,6 @@ export class TextBlock {
 
   get align(): TextAlign {
     return this.#align;
-  }
-
-  @Editable()
-  set bg(value: string) {
-    this.#bg = sanitizeColor(value);
-  }
-
-  get bg(): string {
-    return this.#bg;
-  }
-
-  @Editable()
-  set color(value: string) {
-    this.#color = sanitizeColor(value);
-  }
-
-  get color(): string {
-    return this.#color;
   }
 
   @Editable()
@@ -124,12 +100,11 @@ export class TextBlock {
 
   toData(): TextBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "text",
       content: this.#content,
       align: this.#align,
-      bg: this.#bg,
-      color: this.#color,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
       bold: this.#bold,

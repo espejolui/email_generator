@@ -1,20 +1,16 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeAlt, sanitizeImageSrc, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { HeaderBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
 @Block({ type: "header", label: "Encabezado", icon: "panel-top" })
-export class HeaderBlock {
-  readonly id: string;
+export class HeaderBlock extends StyledBlock {
   #logoSrc = "";
   #logoAlt = "";
   #tagline = "";
   #align: TextAlign = "center";
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set logoSrc(value: string) {
@@ -54,6 +50,7 @@ export class HeaderBlock {
 
   toData(): HeaderBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "header",
       logoSrc: this.#logoSrc,

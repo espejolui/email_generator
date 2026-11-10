@@ -1,4 +1,5 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import {
   sanitizeAlt,
@@ -9,16 +10,11 @@ import {
 import type { BannerBlockData } from "./types.js";
 
 @Block({ type: "banner", label: "Video / banner", icon: "play" })
-export class BannerBlock {
-  readonly id: string;
+export class BannerBlock extends StyledBlock {
   #src = "";
   #alt = "";
   #href = "";
   #caption = "";
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set src(value: string) {
@@ -58,6 +54,7 @@ export class BannerBlock {
 
   toData(): BannerBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "banner",
       src: this.#src,

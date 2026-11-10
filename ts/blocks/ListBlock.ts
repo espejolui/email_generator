@@ -1,19 +1,15 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ListBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
 @Block({ type: "list", label: "Lista", icon: "list" })
-export class ListBlock {
-  readonly id: string;
+export class ListBlock extends StyledBlock {
   #items: string[] = [""];
   #ordered = false;
   #align: TextAlign = "left";
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set items(values: readonly string[]) {
@@ -44,6 +40,6 @@ export class ListBlock {
   }
 
   toData(): ListBlockData {
-    return { id: this.id, type: "list", items: [...this.#items], ordered: this.#ordered, align: this.#align };
+    return { ...this.appearanceData(), id: this.id, type: "list", items: [...this.#items], ordered: this.#ordered, align: this.#align };
   }
 }

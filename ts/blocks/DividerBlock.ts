@@ -1,28 +1,17 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeMargin } from "../core/sanitize/sanitize.js";
+import { sanitizeMargin } from "../core/sanitize/sanitize.js";
 import type { DividerBlockData } from "./types.js";
 
 @Block({ type: "divider", label: "Separador", icon: "minus" })
-export class DividerBlock {
-  readonly id: string;
-  #color = "";
+export class DividerBlock extends StyledBlock {
   #marginTop = 8;
   #marginBottom = 8;
   #thickness = 2;
-  #borderRadius = 2;
 
   constructor(id: string) {
-    this.id = id;
-  }
-
-  @Editable()
-  set color(value: string) {
-    this.#color = sanitizeColor(value);
-  }
-
-  get color(): string {
-    return this.#color;
+    super(id, "", 2);
   }
 
   @Editable()
@@ -52,24 +41,14 @@ export class DividerBlock {
     return this.#thickness;
   }
 
-  @Editable()
-  set borderRadius(value: string) {
-    this.#borderRadius = sanitizeMargin(value);
-  }
-
-  get borderRadius(): number {
-    return this.#borderRadius;
-  }
-
   toData(): DividerBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "divider",
-      color: this.#color,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
       thickness: this.#thickness,
-      borderRadius: this.#borderRadius,
     };
   }
 }

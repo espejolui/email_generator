@@ -1,17 +1,15 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeColor, sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { QuoteBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
 @Block({ type: "quote", label: "Cita", icon: "quote" })
-export class QuoteBlock {
-  readonly id: string;
+export class QuoteBlock extends StyledBlock {
   #content = "";
   #cite = "";
   #align: TextAlign = "left";
-  #bg = "";
-  #color = "";
   #bold = false;
   #italic = false;
   #underline = false;
@@ -19,10 +17,6 @@ export class QuoteBlock {
   #marginTop = 0;
   #marginBottom = 0;
   #fontSize = 0;
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set content(value: string) {
@@ -49,24 +43,6 @@ export class QuoteBlock {
 
   get align(): TextAlign {
     return this.#align;
-  }
-
-  @Editable()
-  set bg(value: string) {
-    this.#bg = sanitizeColor(value);
-  }
-
-  get bg(): string {
-    return this.#bg;
-  }
-
-  @Editable()
-  set color(value: string) {
-    this.#color = sanitizeColor(value);
-  }
-
-  get color(): string {
-    return this.#color;
   }
 
   @Editable()
@@ -134,13 +110,12 @@ export class QuoteBlock {
 
   toData(): QuoteBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "quote",
       content: this.#content,
       cite: this.#cite,
       align: this.#align,
-      bg: this.#bg,
-      color: this.#color,
       bold: this.#bold,
       italic: this.#italic,
       underline: this.#underline,

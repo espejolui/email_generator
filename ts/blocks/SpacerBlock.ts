@@ -1,16 +1,12 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeMargin } from "../core/sanitize/sanitize.js";
 import type { SpacerBlockData } from "./types.js";
 
 @Block({ type: "spacer", label: "Espaciador", icon: "move-vertical" })
-export class SpacerBlock {
-  readonly id: string;
+export class SpacerBlock extends StyledBlock {
   #height = 16;
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set height(value: string) {
@@ -22,6 +18,6 @@ export class SpacerBlock {
   }
 
   toData(): SpacerBlockData {
-    return { id: this.id, type: "spacer", height: this.#height };
+    return { ...this.appearanceData(), id: this.id, type: "spacer", height: this.#height };
   }
 }

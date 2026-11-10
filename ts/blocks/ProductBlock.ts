@@ -1,4 +1,5 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import {
   sanitizeAlt,
@@ -6,22 +7,19 @@ import {
   sanitizeImageSrc,
   sanitizeText,
 } from "../core/sanitize/sanitize.js";
-import type { ButtonColor, ProductBlockData } from "./types.js";
-import { isButtonColor } from "./types.js";
+import type { ProductBlockData } from "./types.js";
 
 @Block({ type: "product", label: "Producto", icon: "shopping-bag" })
-export class ProductBlock {
-  readonly id: string;
+export class ProductBlock extends StyledBlock {
   #src = "";
   #alt = "";
   #name = "";
   #price = "";
   #url = "";
   #buttonLabel = "";
-  #color: ButtonColor = "blue";
 
   constructor(id: string) {
-    this.id = id;
+    super(id, "#41b6e6");
   }
 
   @Editable()
@@ -78,17 +76,9 @@ export class ProductBlock {
     return this.#buttonLabel;
   }
 
-  @Editable()
-  set color(value: string) {
-    this.#color = isButtonColor(value) ? value : "blue";
-  }
-
-  get color(): ButtonColor {
-    return this.#color;
-  }
-
   toData(): ProductBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "product",
       src: this.#src,
@@ -97,7 +87,6 @@ export class ProductBlock {
       price: this.#price,
       url: this.#url,
       buttonLabel: this.#buttonLabel,
-      color: this.#color,
     };
   }
 }

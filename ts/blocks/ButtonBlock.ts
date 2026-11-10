@@ -1,22 +1,21 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeMargin, sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
-import type { ButtonAlign, ButtonBlockData, ButtonColor } from "./types.js";
-import { isButtonAlign, isButtonColor } from "./types.js";
+import type { ButtonAlign, ButtonBlockData } from "./types.js";
+import { isButtonAlign } from "./types.js";
 
 @Block({ type: "button", label: "Botón WhatsApp", icon: "message-circle" })
-export class ButtonBlock {
-  readonly id: string;
+export class ButtonBlock extends StyledBlock {
   #label = "";
   #phone = "";
   #message = "";
-  #color: ButtonColor = "green";
   #align: ButtonAlign = "center";
   #marginTop = 0;
   #marginBottom = 0;
 
   constructor(id: string) {
-    this.id = id;
+    super(id, "#25d366");
   }
 
   @Editable()
@@ -48,15 +47,6 @@ export class ButtonBlock {
   }
 
   @Editable()
-  set color(value: string) {
-    this.#color = isButtonColor(value) ? value : "green";
-  }
-
-  get color(): ButtonColor {
-    return this.#color;
-  }
-
-  @Editable()
   set align(value: string) {
     this.#align = isButtonAlign(value) ? value : "center";
   }
@@ -85,12 +75,12 @@ export class ButtonBlock {
 
   toData(): ButtonBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "button",
       label: this.#label,
       phone: this.#phone,
       message: this.#message,
-      color: this.#color,
       align: this.#align,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,

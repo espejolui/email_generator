@@ -1,19 +1,15 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import { sanitizeAlt, sanitizeImageSrc, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { SignatureBlockData } from "./types.js";
 
 @Block({ type: "signature", label: "Firma", icon: "pen-line" })
-export class SignatureBlock {
-  readonly id: string;
+export class SignatureBlock extends StyledBlock {
   #name = "";
   #role = "";
   #photoSrc = "";
   #photoAlt = "";
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   @Editable()
   set name(value: string) {
@@ -53,6 +49,7 @@ export class SignatureBlock {
 
   toData(): SignatureBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "signature",
       name: this.#name,

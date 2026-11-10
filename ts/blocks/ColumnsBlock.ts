@@ -1,4 +1,5 @@
 import { Block } from "../core/decorators/Block.js";
+import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import type { ColumnData, ColumnsBlockData } from "./types.js";
 
@@ -7,13 +8,8 @@ function sanitizeColumn(column: ColumnData): ColumnData {
 }
 
 @Block({ type: "columns", label: "Columnas", icon: "columns-2" })
-export class ColumnsBlock {
-  readonly id: string;
+export class ColumnsBlock extends StyledBlock {
   #columns: ColumnData[] = [{ blocks: [] }, { blocks: [] }];
-
-  constructor(id: string) {
-    this.id = id;
-  }
 
   /**
    * Columnas completas (2–3). Los bloques internos ya vienen sanitizados
@@ -32,6 +28,7 @@ export class ColumnsBlock {
 
   toData(): ColumnsBlockData {
     return {
+      ...this.appearanceData(),
       id: this.id,
       type: "columns",
       columns: this.#columns.map((col) => ({ blocks: [...col.blocks] })),
