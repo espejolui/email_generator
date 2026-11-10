@@ -34,6 +34,10 @@ en bloques editables y continuar desde ella (detalle en
 
 ## Bloques (19)
 
+Todos incluyen controles de **fondo**, **color de texto o componente** y
+**borde** (color, estilo sólido/guiones/puntos, grosor y radio), también dentro
+de columnas.
+
 | Tipo | Etiqueta | Contenido |
 |------|----------|-----------|
 | `title` | Título | `h1`–`h6`, alineación, colores, formato, márgenes |

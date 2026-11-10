@@ -7,6 +7,9 @@ con radio 16 px, fondo exterior configurable con `DEFAULT_TEMPLATE_BG`
 funciones para no desincronizarse.
 
 - `RenderedRow` — `{ html: "<tr>…</tr>" }`.
+- `withAppearance(row, data)` — envuelve cualquier fila con el fondo, color y
+  borde comunes (color, estilo, grosor y radio) sin duplicar esa lógica en los
+  19 renderers; se aplica también a los bloques anidados en columnas.
 - `renderTitle(data, corners?)` — `h1`–`h6` con tamaño (`fontSize` del bloque
   o escala del nivel), color (o el del nivel), alineación, banda de fondo,
   márgenes y formato (la negrita solo se emite si aporta: los niveles ya son bold).

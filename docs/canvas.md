@@ -28,6 +28,9 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
     Sin fondo/Automático/Degradado nunca quede desfasado; se ancla al
     contenedor vivo, cierra con Escape o clic fuera y su cierre es
     re-entrante. En título/párrafo fondo y texto comparten fila.
+  - `appearanceControls` — sección común en los 19 bloques: fondo, color de
+    texto/componente, color/estilo/grosor/radio del borde. También se usa en
+    bloques anidados y evita controles duplicados en título, CTA, divisor, etc.
   - `marginControls` — números de margen superior/inferior (0–80 px)
     usados en título, párrafo, botón y divisor.
   - `fontSizeControl` — número de tamaño de fuente (0–72 px, 0 = automático)

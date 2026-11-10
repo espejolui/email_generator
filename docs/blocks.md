@@ -4,13 +4,18 @@ Sistema extensible de bloques. Cada bloque es una clase decorada con `@Block`
 y expone sus datos sanitizados vía `toData()`. Para agregar un tipo nuevo:
 crear el archivo, decorarlo y registrarlo en `index.ts`.
 
+Todos extienden `StyledBlock`, que comparte `bg`, `color`, `borderColor`,
+`borderWidth` (0–80), `borderStyle` (`solid`/`dashed`/`dotted`) y
+`borderRadius` (0–80). `createBlockAppearance()` proporciona sus valores
+iniciales a la fábrica y al importador.
+
 ## `types.ts`
 
+- `BlockAppearance` / `BorderStyle` — apariencia y borde comunes a todos los bloques.
 - `BlockType` — unión: `"title" | "text" | "image" | "list" | "quote" | "divider" | "button" | "spacer" | "header" | "footer" | "cta" | "columns" | "table" | "social" | "banner" | "product" | "coupon" | "signature" | "logo"`.
 - `TitleLevel` — `1 | 2 | 3 | 4 | 5 | 6`.
 - `TextAlign` — `"left" | "center" | "right"` (sin justificado).
 - `ButtonAlign` — `"left" | "center" | "right"`.
-- `ButtonColor` — `"green" | "blue"`.
 - `TitleBlockData`, `TextBlockData`, `ImageBlockData`, `ListBlockData`,
   `QuoteBlockData`, `DividerBlockData`, `ButtonBlockData`, `SpacerBlockData`,
   `HeaderBlockData`, `FooterBlockData`, `CtaBlockData`, `ColumnData`,
@@ -19,15 +24,16 @@ crear el archivo, decorarlo y registrarlo en `index.ts`.
   `SocialUrls` — datos de cada bloque.
 - `AnyBlockData` — unión discriminada por `type`.
 - `isBlockType(value)` — guarda de tipo para `BlockType`.
-- `isButtonColor(value)` — guarda de tipo para `ButtonColor`.
+- `isBorderStyle(value)` — guarda de tipo para `BorderStyle`.
 - `isTitleLevel(value)` — guarda de tipo para `TitleLevel`.
 - `isTextAlign(value)` — guarda de tipo para `TextAlign`.
 - `isButtonAlign(value)` — guarda de tipo para `ButtonAlign`.
 
 ## Clases (`TitleBlock`, `TextBlock`, `ImageBlock`, `ListBlock`, `QuoteBlock`, `DividerBlock`, `ButtonBlock`, `SpacerBlock`, `HeaderBlock`, `FooterBlock`, `CtaBlock`, `ColumnsBlock`, `TableBlock`, `SocialBlock`, `BannerBlock`, `ProductBlock`, `CouponBlock`, `SignatureBlock`, `LogoBlock`)
 
-Cada una recibe `id` en el constructor, sanitiza en sus setters decorados
-con `@Editable()` y convierte a datos con `toData()`:
+Cada una recibe `id` en el constructor, hereda la apariencia de `StyledBlock`,
+sanitiza en sus setters decorados con `@Editable()` y convierte a datos con
+`toData()`:
 
 - `TitleBlock` — `content`, `level` (h1–h6), `align`, `bg`, `color`,
   `marginTop`, `marginBottom`, `bold`, `italic`, `underline`, `strike`,

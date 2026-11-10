@@ -67,6 +67,20 @@ function row(inner: string, bg = "", corners: Corner = ""): RenderedRow {
   return { html: `<tr><td style="padding:0 48px ${String(bottomPad)}px; font-family:${FONT};${bgStyle}${cornerStyle(corners)}">${inner}</td></tr>` };
 }
 
+/** Aplica el fondo, color y borde comunes a la fila exterior de cualquier bloque. */
+function withAppearance(rendered: RenderedRow, data: AnyBlockData): RenderedRow {
+  const styles: string[] = [];
+  if (data.bg !== "") styles.push(`background-color:${data.bg};`);
+  if (data.color !== "") styles.push(`color:${data.color};`);
+  if (data.borderWidth > 0) {
+    const borderColor = data.borderColor || data.color || "#d9d9d9";
+    styles.push(`border:${String(data.borderWidth)}px ${data.borderStyle} ${borderColor};`);
+  }
+  if (data.borderRadius > 0) styles.push(`border-radius:${String(data.borderRadius)}px;`);
+  if (styles.length === 0) return rendered;
+  return { html: rendered.html.replace('style="', `style="${styles.join(" ")} `) };
+}
+
 const TITLE_SIZE: Record<TitleLevel, string> = {
   1: "26px",
   2: "22px",
@@ -147,7 +161,7 @@ export function renderText(data: TextBlockData, corners: Corner = ""): RenderedR
 export function renderImage(data: ImageBlockData, corners: Corner = ""): RenderedRow {
   const src = sanitizeImageSrc(data.src);
   const img = src === ""
-    ? `<p style="margin:0; font-size:13px; color:${MUTED};">[Imagen sin URL válida]</p>`
+    ? `<p style="margin:0; font-size:13px; color:${data.color || MUTED};">[Imagen sin URL válida]</p>`
     : `<img src="${src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
   return row(img, "", corners);
 }
@@ -155,7 +169,7 @@ export function renderImage(data: ImageBlockData, corners: Corner = ""): Rendere
 export function renderList(data: ListBlockData, corners: Corner = ""): RenderedRow {
   const tag = data.ordered ? "ol" : "ul";
   const items = data.items
-    .map((item) => `<li style="font-size:16px; line-height:1.75; color:${BODY_TEXT};">${item}</li>`)
+    .map((item) => `<li style="font-size:16px; line-height:1.75; color:${data.color || BODY_TEXT};">${item}</li>`)
     .join("");
   return row(
     `<${tag} style="margin:0; padding-left:20px; font-family:${FONT}; text-align:${data.align};">${items}</${tag}>`,
@@ -234,8 +248,15 @@ function pillRow(
   return row(pillTable(href, label, bg, align, marginTop, marginBottom), "", corners);
 }
 
+function buttonBackground(value: string, fallback: string): string {
+  if (value === "blue") return PRIMARY;
+  if (value === "green") return GREEN;
+  if (value === "") return fallback;
+  return sanitizeColor(value) || fallback;
+}
+
 export function renderButton(data: ButtonBlockData, corners: Corner = ""): RenderedRow {
-  const bg = data.color === "blue" ? PRIMARY : GREEN;
+  const bg = buttonBackground(data.color, GREEN);
   // message viaja en crudo hasta aquí y se codifica para URL (nunca toca HTML).
   const href = buildWhatsAppUrl(data.phone, data.message);
   return pillRow(href, data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
@@ -243,12 +264,7 @@ export function renderButton(data: ButtonBlockData, corners: Corner = ""): Rende
 
 export function renderCta(data: CtaBlockData, corners: Corner = ""): RenderedRow {
   // Los valores blue/green se aceptan para conservar plantillas antiguas.
-  const custom = sanitizeColor(data.color);
-  const bg = data.color === "green"
-    ? GREEN
-    : data.color === "blue" || data.color === ""
-      ? PRIMARY
-      : custom === "" ? PRIMARY : custom;
+  const bg = buttonBackground(data.color, PRIMARY);
   // Igual que renderImage revalida src: solo https (idempotente, sin doble escape).
   return pillRow(sanitizeHttpsUrl(data.url), data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
 }
@@ -257,8 +273,12 @@ export function renderSpacer(data: SpacerBlockData): RenderedRow {
   // Fila vacía con height fijo: margin/padding se pierden en algunos
   // clientes, height+bgcolor en <td> no. Sin radio propio (transparente).
   const height = String(data.height);
+  const fill = data.color;
+  const content = fill === ""
+    ? "&nbsp;"
+    : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="${height}" bgcolor="${fill}" style="height:${height}px; background-color:${fill}; font-size:0; line-height:0;">&nbsp;</td></tr></table>`;
   return {
-    html: `<tr><td height="${height}" style="height:${height}px; padding:0 48px; font-family:${FONT}; font-size:0; line-height:0;">&nbsp;</td></tr>`,
+    html: `<tr><td height="${height}" style="height:${height}px; padding:0 48px; font-family:${FONT}; font-size:0; line-height:0;">${content}</td></tr>`,
   };
 }
 
@@ -277,7 +297,7 @@ export function renderHeader(data: HeaderBlockData, corners: Corner = ""): Rende
   const logo = data.logoSrc === "" ? "" : logoTable(data.logoSrc, data.logoAlt, 200, data.align);
   const tagline = data.tagline === ""
     ? ""
-    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${MUTED};">${data.tagline}</p>`;
+    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${data.color || MUTED};">${data.tagline}</p>`;
   return row(`${logo}${tagline}`, "", corners);
 }
 
@@ -287,7 +307,7 @@ export function renderLogo(data: LogoBlockData, corners: Corner = ""): RenderedR
   const margins = `${String(data.marginTop)}px 0 ${String(data.marginBottom)}px`;
   return row(
     logo === ""
-      ? `<p style="margin:${margins}; font-size:13px; color:${MUTED}; text-align:${data.align}">[Logotipo sin URL válida]</p>`
+      ? `<p style="margin:${margins}; font-size:13px; color:${data.color || MUTED}; text-align:${data.align}">[Logotipo sin URL válida]</p>`
       : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${margins};">` +
         `<tr><td>${logo}</td></tr></table>`,
     data.bg,
@@ -303,10 +323,10 @@ const SOCIAL_LABELS: ReadonlyArray<readonly [keyof SocialUrls, string]> = [
 ];
 
 /** Enlaces de texto de redes; "" si no hay ninguna URL. La usan `social` y `footer`. */
-export function socialLinksInner(social: SocialUrls): string {
+export function socialLinksInner(social: SocialUrls, color = PRIMARY): string {
   const links = SOCIAL_LABELS.filter(([key]) => social[key] !== "").map(
     ([key, label]) =>
-      `<a href="${social[key]}" style="font-family:${FONT}; font-size:13px; color:${PRIMARY}; text-decoration:underline;">${label}</a>`,
+      `<a href="${social[key]}" style="font-family:${FONT}; font-size:13px; color:${color}; text-decoration:underline;">${label}</a>`,
   );
   return links.length === 0 ? "" : `<p style="margin:8px 0 0; text-align:center;">${links.join(" &nbsp;·&nbsp; ")}</p>`;
 }
@@ -314,11 +334,11 @@ export function socialLinksInner(social: SocialUrls): string {
 export function renderFooter(data: FooterBlockData, corners: Corner = ""): RenderedRow {
   const address = data.address === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:12px; line-height:1.6; text-align:center; color:${MUTED};">${data.address}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:12px; line-height:1.6; text-align:center; color:${data.color || MUTED};">${data.address}</p>`;
   const unsubscribe = data.unsubscribeUrl === ""
     ? ""
-    : `<p style="margin:8px 0 0; text-align:center;"><a href="${data.unsubscribeUrl}" style="font-family:${FONT}; font-size:12px; color:${MUTED}; text-decoration:underline;">Darse de baja</a></p>`;
-  return row(`${address}${unsubscribe}${socialLinksInner(data.social)}`, "", corners);
+    : `<p style="margin:8px 0 0; text-align:center;"><a href="${data.unsubscribeUrl}" style="font-family:${FONT}; font-size:12px; color:${data.color || MUTED}; text-decoration:underline;">Darse de baja</a></p>`;
+  return row(`${address}${unsubscribe}${socialLinksInner(data.social, data.color || PRIMARY)}`, "", corners);
 }
 
 export function renderColumns(data: ColumnsBlockData, corners: Corner = ""): RenderedRow {
@@ -358,7 +378,7 @@ export function renderTable(data: TableBlockData, corners: Corner = ""): Rendere
       ? ` font-weight:700; background-color:#f0f4ff;`
       : "";
     const text = content === "" ? "&nbsp;" : content;
-    return `<${tag} style="padding:6px 8px; font-family:${FONT}; font-size:13px; line-height:1.5; color:${BODY_TEXT}; border:1px solid ${TABLE_BORDER};${extra}">${text}</${tag}>`;
+    return `<${tag} style="padding:6px 8px; font-family:${FONT}; font-size:13px; line-height:1.5; color:${data.color || BODY_TEXT}; border:1px solid ${TABLE_BORDER};${extra}">${text}</${tag}>`;
   };
   const head = data.headerRow && data.headers.length > 0
     ? `<tr>${Array.from({ length: colCount }, (_, i) => cell(data.headers[i] ?? "", true)).join("")}</tr>`
@@ -374,7 +394,7 @@ export function renderTable(data: TableBlockData, corners: Corner = ""): Rendere
 }
 
 export function renderSocial(data: SocialBlockData, corners: Corner = ""): RenderedRow {
-  const inner = socialLinksInner(data.social);
+  const inner = socialLinksInner(data.social, data.color || PRIMARY);
   return row(
     inner === ""
       ? `<p style="margin:0; font-size:13px; color:${MUTED}; text-align:center;">[Sin redes configuradas]</p>`
@@ -390,22 +410,22 @@ export function renderBanner(data: BannerBlockData, corners: Corner = ""): Rende
   // href revalidado (igual que cta/url y renderImage/src).
   const href = sanitizeHttpsUrl(data.href);
   const img = data.src === ""
-    ? `<p style="margin:0; font-size:13px; color:${MUTED}; text-align:center;">[Imagen sin URL válida]</p>`
+    ? `<p style="margin:0; font-size:13px; color:${data.color || MUTED}; text-align:center;">[Imagen sin URL válida]</p>`
     : `<img src="${data.src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
   const visual = href === "" ? img : `<a href="${href}" style="text-decoration:none;">${img}</a>`;
   const caption = data.caption === ""
     ? ""
     : href === ""
-      ? `<p style="margin:8px 0 0; font-size:13px; color:${MUTED}; text-align:center;">${data.caption}</p>`
-      : `<p style="margin:8px 0 0; text-align:center;"><a href="${href}" style="font-family:${FONT}; font-size:13px; font-weight:700; color:${PRIMARY}; text-decoration:underline;">${data.caption}</a></p>`;
+      ? `<p style="margin:8px 0 0; font-size:13px; color:${data.color || MUTED}; text-align:center;">${data.caption}</p>`
+      : `<p style="margin:8px 0 0; text-align:center;"><a href="${href}" style="font-family:${FONT}; font-size:13px; font-weight:700; color:${data.color || PRIMARY}; text-decoration:underline;">${data.caption}</a></p>`;
   return row(`${visual}${caption}`, "", corners);
 }
 
 export function renderProduct(data: ProductBlockData, corners: Corner = ""): RenderedRow {
-  const bg = data.color === "blue" ? PRIMARY : GREEN;
+  const bg = buttonBackground(data.color, PRIMARY);
   const url = sanitizeHttpsUrl(data.url);
   const img = data.src === ""
-    ? `<p style="margin:0; font-size:13px; color:${MUTED};">[Imagen sin URL válida]</p>`
+    ? `<p style="margin:0; font-size:13px; color:${data.color || MUTED};">[Imagen sin URL válida]</p>`
     : `<img src="${data.src}" width="220" alt="${data.alt}" style="display:block; width:220px; max-width:100%; height:auto; border:0; border-radius:12px;">`;
   const visual = url === "" ? img : `<a href="${url}" style="text-decoration:none;">${img}</a>`;
   const name = data.name === ""
@@ -431,13 +451,13 @@ export function renderCoupon(data: CouponBlockData, corners: Corner = ""): Rende
   // Badge con border en <td> (Outlook-safe): estilo ticket sin imágenes.
   const code = data.code === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:22px; font-weight:900; letter-spacing:2px; text-align:center; color:#111111;">${data.code}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:22px; font-weight:900; letter-spacing:2px; text-align:center; color:${data.color || "#111111"};">${data.code}</p>`;
   const description = data.description === ""
     ? ""
-    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; text-align:center; color:${MUTED};">${data.description}</p>`;
+    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; text-align:center; color:${data.color || MUTED};">${data.description}</p>`;
   return row(
     `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">` +
-      `<tr><td align="center" style="padding:16px 32px; border:2px dashed ${PRIMARY}; border-radius:12px;">${code}${description}</td></tr>` +
+      `<tr><td align="center" style="padding:16px 32px; border:2px dashed ${data.color || PRIMARY}; border-radius:12px;">${code}${description}</td></tr>` +
       `</table>`,
     "",
     corners,
@@ -450,10 +470,10 @@ export function renderSignature(data: SignatureBlockData, corners: Corner = ""):
     : `<img src="${data.photoSrc}" width="64" alt="${data.photoAlt}" style="display:block; width:64px; max-width:64px; height:auto; border:0; border-radius:50%;">`;
   const name = data.name === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:15px; font-weight:700; color:#111111;">${data.name}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:15px; font-weight:700; color:${data.color || "#111111"};">${data.name}</p>`;
   const role = data.role === ""
     ? ""
-    : `<p style="margin:4px 0 0; font-family:${FONT}; font-size:13px; color:${MUTED};">${data.role}</p>`;
+    : `<p style="margin:4px 0 0; font-family:${FONT}; font-size:13px; color:${data.color || MUTED};">${data.role}</p>`;
   return row(
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
       (photo === ""
@@ -481,43 +501,43 @@ export function renderBlockToRow(
     (total <= 1 ? "both" : index === 0 ? "top" : index === total - 1 ? "bottom" : "");
   switch (data.type) {
     case "title":
-      return renderTitle(data, corners);
+      return withAppearance(renderTitle(data, corners), data);
     case "text":
-      return renderText(data, corners);
+      return withAppearance(renderText(data, corners), data);
     case "image":
-      return renderImage(data, corners);
+      return withAppearance(renderImage(data, corners), data);
     case "list":
-      return renderList(data, corners);
+      return withAppearance(renderList(data, corners), data);
     case "quote":
-      return renderQuote(data, corners);
+      return withAppearance(renderQuote(data, corners), data);
     case "divider":
-      return renderDivider(data, corners);
+      return withAppearance(renderDivider(data, corners), data);
     case "button":
-      return renderButton(data, corners);
+      return withAppearance(renderButton(data, corners), data);
     case "spacer":
-      return renderSpacer(data);
+      return withAppearance(renderSpacer(data), data);
     case "header":
-      return renderHeader(data, corners);
+      return withAppearance(renderHeader(data, corners), data);
     case "footer":
-      return renderFooter(data, corners);
+      return withAppearance(renderFooter(data, corners), data);
     case "cta":
-      return renderCta(data, corners);
+      return withAppearance(renderCta(data, corners), data);
     case "columns":
-      return renderColumns(data, corners);
+      return withAppearance(renderColumns(data, corners), data);
     case "table":
-      return renderTable(data, corners);
+      return withAppearance(renderTable(data, corners), data);
     case "social":
-      return renderSocial(data, corners);
+      return withAppearance(renderSocial(data, corners), data);
     case "banner":
-      return renderBanner(data, corners);
+      return withAppearance(renderBanner(data, corners), data);
     case "product":
-      return renderProduct(data, corners);
+      return withAppearance(renderProduct(data, corners), data);
     case "coupon":
-      return renderCoupon(data, corners);
+      return withAppearance(renderCoupon(data, corners), data);
     case "signature":
-      return renderSignature(data, corners);
+      return withAppearance(renderSignature(data, corners), data);
     case "logo":
-      return renderLogo(data, corners);
+      return withAppearance(renderLogo(data, corners), data);
   }
 }
 

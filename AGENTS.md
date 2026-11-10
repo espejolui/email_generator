@@ -71,7 +71,7 @@ src/
 
 ## 4. Sistema de bloques (extensible)
 
-Cada bloque se define como una clase decorada, de forma que agregar uno nuevo no requiera tocar el núcleo del editor.
+Cada bloque se define como una clase decorada, de forma que agregar uno nuevo no requiera tocar el núcleo del editor. Todos comparten la apariencia heredada de `StyledBlock`: color de fondo, color de texto/componente y borde configurable (color, estilo, grosor y radio).
 
 ```ts
 // core/decorators/Block.ts
