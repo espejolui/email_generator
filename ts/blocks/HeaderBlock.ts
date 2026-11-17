@@ -1,7 +1,7 @@
 import { Block } from "../core/decorators/Block.js";
 import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeAlt, sanitizeImageSrc, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeAlt, sanitizeFontSize, sanitizeImageSrc, sanitizeImageWidth, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { HeaderBlockData, HeaderTextPosition, TextAlign } from "./types.js";
 import { isHeaderTextPosition, isTextAlign } from "./types.js";
 
@@ -13,6 +13,10 @@ export class HeaderBlock extends StyledBlock {
   #tagline = "";
   #align: TextAlign = "center";
   #textPosition: HeaderTextPosition = "bottom";
+  #marginTop = 0;
+  #marginBottom = 0;
+  #fontSize = 0;
+  #logoWidth = 200;
 
   @Editable()
   set logoSrc(value: string) {
@@ -68,6 +72,42 @@ export class HeaderBlock extends StyledBlock {
     return this.#textPosition;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
+  @Editable()
+  set logoWidth(value: string) {
+    this.#logoWidth = sanitizeImageWidth(value);
+  }
+
+  get logoWidth(): number {
+    return this.#logoWidth;
+  }
+
   toData(): HeaderBlockData {
     return {
       ...this.appearanceData(),
@@ -79,6 +119,10 @@ export class HeaderBlock extends StyledBlock {
       tagline: this.#tagline,
       align: this.#align,
       textPosition: this.#textPosition,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
+      logoWidth: this.#logoWidth,
     };
   }
 }

@@ -3,8 +3,11 @@ import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import {
   sanitizeAlt,
+  sanitizeFontSize,
   sanitizeHttpsUrl,
   sanitizeImageSrc,
+  sanitizeImageWidth,
+  sanitizeMargin,
   sanitizeText,
 } from "../core/sanitize/sanitize.js";
 import type { BannerBlockData } from "./types.js";
@@ -15,6 +18,10 @@ export class BannerBlock extends StyledBlock {
   #alt = "";
   #href = "";
   #caption = "";
+  #marginTop = 0;
+  #marginBottom = 0;
+  #fontSize = 0;
+  #width = 504;
 
   @Editable()
   set src(value: string) {
@@ -52,6 +59,42 @@ export class BannerBlock extends StyledBlock {
     return this.#caption;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
+  @Editable()
+  set width(value: string) {
+    this.#width = sanitizeImageWidth(value);
+  }
+
+  get width(): number {
+    return this.#width;
+  }
+
   toData(): BannerBlockData {
     return {
       ...this.appearanceData(),
@@ -61,6 +104,10 @@ export class BannerBlock extends StyledBlock {
       alt: this.#alt,
       href: this.#href,
       caption: this.#caption,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
+      width: this.#width,
     };
   }
 }

@@ -1,7 +1,7 @@
 import { Block } from "../core/decorators/Block.js";
 import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { TableBlockData } from "./types.js";
 
 const MAX_COLS = 6;
@@ -17,6 +17,9 @@ export class TableBlock extends StyledBlock {
   #headers: string[] = [];
   #rows: string[][] = [];
   #headerRow = true;
+  #marginTop = 0;
+  #marginBottom = 0;
+  #fontSize = 0;
 
   @Editable()
   set headers(values: readonly string[]) {
@@ -45,6 +48,33 @@ export class TableBlock extends StyledBlock {
     return this.#headerRow;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
   toData(): TableBlockData {
     return {
       ...this.appearanceData(),
@@ -53,6 +83,9 @@ export class TableBlock extends StyledBlock {
       headers: [...this.#headers],
       rows: this.#rows.map((row) => [...row]),
       headerRow: this.#headerRow,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
     };
   }
 }

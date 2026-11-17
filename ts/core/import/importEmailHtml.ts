@@ -15,6 +15,7 @@ import {
   sanitizeFontSize,
   sanitizeHttpsUrl,
   sanitizeImageSrc,
+  sanitizeImageWidth,
   sanitizeMargin,
   sanitizeText,
 } from "../sanitize/sanitize.js";
@@ -78,6 +79,18 @@ function buttonAlignOf(element: Element): ButtonAlign {
 function pixelValue(value: string): number | undefined {
   const match = /^(\d{1,3})(?:px)?$/i.exec(value.trim());
   return match?.[1] === undefined ? undefined : Number(match[1]);
+}
+
+/** Ancho de imagen desde el atributo `width` o el estilo inline (16–600). */
+function imageWidthOf(image: HTMLImageElement, fallback: number): number {
+  const attr = Number(image.getAttribute("width") ?? "");
+  const styled = image.style.width === undefined ? undefined : pixelValue(image.style.width);
+  const parsed = Number.isInteger(attr) && attr > 0 ? attr : styled;
+  if (parsed === undefined) return fallback;
+  const width = sanitizeImageWidth(String(parsed));
+  // sanitizeImageWidth devuelve 200 ante lo inválido: si el valor leído era
+  // válido pero fuera de rango, se limita; si era inválido, usa el fallback.
+  return parsed >= 16 && parsed <= 600 ? width : fallback;
 }
 
 function marginOf(element: Element, property: "marginTop" | "marginBottom", fallback: number): number {
@@ -225,6 +238,9 @@ class HtmlBlockParser {
           items,
           ordered: tag === "OL",
           align: alignOf(element),
+          marginTop: marginOf(element, "marginTop", 0),
+          marginBottom: marginOf(element, "marginBottom", 0),
+          fontSize: fontSizeOf(element),
         });
       }
       return;
@@ -296,6 +312,7 @@ class HtmlBlockParser {
     const href = sanitizeHttpsUrl(link?.getAttribute("href") ?? "");
     const alt = sanitizeAlt(image.getAttribute("alt") ?? "");
     if (href !== "" || cleanText(caption, 120) !== "") {
+      const captionEl = image.closest("figure")?.querySelector("figcaption") ?? undefined;
       output.push({
         ...createBlockAppearance(),
         id: createId(),
@@ -304,9 +321,22 @@ class HtmlBlockParser {
         alt,
         href,
         caption: cleanText(caption, 120),
+        marginTop: marginOf(image, "marginTop", 0),
+        marginBottom: marginOf(image, "marginBottom", 0),
+        fontSize: captionEl === undefined ? 0 : fontSizeOf(captionEl),
+        width: imageWidthOf(image, 504),
       });
     } else {
-      output.push({ ...createBlockAppearance(), id: createId(), type: "image", src, alt });
+      output.push({
+        ...createBlockAppearance(),
+        id: createId(),
+        type: "image",
+        src,
+        alt,
+        marginTop: marginOf(image, "marginTop", 0),
+        marginBottom: marginOf(image, "marginBottom", 0),
+        width: imageWidthOf(image, 504),
+      });
     }
   }
 
@@ -327,6 +357,7 @@ class HtmlBlockParser {
       align: table === null ? buttonAlignOf(anchor) : buttonAlignOf(table),
       marginTop: 0,
       marginBottom: 0,
+      fontSize: fontSizeOf(anchor),
     };
   }
 
@@ -351,6 +382,9 @@ class HtmlBlockParser {
         rows: dataRows.slice(0, 20).map((row) =>
           directCells(row).slice(0, 6).map((cell) => cleanText(cell.textContent ?? "", 200))),
         headerRow: hasHeaders,
+        marginTop: marginOf(table, "marginTop", 0),
+        marginBottom: marginOf(table, "marginBottom", 0),
+        fontSize: fontSizeOf(table),
       };
       output.push(block);
       return;
@@ -369,7 +403,14 @@ class HtmlBlockParser {
           return { blocks: blocks as readonly AnyBlockData[] };
         });
         if (columns.some((column) => column.blocks.length > 0)) {
-          output.push({ ...createBlockAppearance(), id: createId(), type: "columns", columns });
+          output.push({
+            ...createBlockAppearance(),
+            id: createId(),
+            type: "columns",
+            columns,
+            marginTop: 0,
+            marginBottom: 0,
+          });
           return;
         }
       }

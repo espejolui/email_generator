@@ -40,31 +40,45 @@ sanitiza en sus setters decorados con `@Editable()` y convierte a datos con
   `fontSize` (0 = escala del nivel).
 - `TextBlock` — `content`, `align`, `bg`, `color`, `marginTop`, `marginBottom`,
   `bold`, `italic`, `underline`, `strike`, `fontSize` (0 = 16 px).
-- `ImageBlock` — `src` (solo https/data), `alt` (sin pie de foto).
-- `ListBlock` — `items` (máx. 20), `ordered`, `align`.
+- `ImageBlock` — `src` (solo https/data), `alt`, `marginTop`,
+  `marginBottom`, `width` (16–600, defecto 504).
+- `ListBlock` — `items` (máx. 20), `ordered`, `align`, `marginTop`,
+  `marginBottom`, `fontSize` (0 = 16 px).
 - `QuoteBlock` — `content`, `cite`, `align`, `bg`, `color`, `bold`, `italic`,
   `underline`, `strike`, `marginTop`, `marginBottom`, `fontSize` (0 = 16 px).
 - `DividerBlock` — `color` (vacío = degradado), `marginTop`, `marginBottom`,
   `thickness`, `borderRadius` (0 = cuadrado).
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,
-  `color`, `align`, `marginTop`, `marginBottom`.
+  `color`, `align`, `marginTop`, `marginBottom`, `fontSize` (0 = 15 px).
 - `SpacerBlock` — `height` (0–80 px).
 - `HeaderBlock` — `logoSrc` (solo https/data), `logoAlt`, `title` (opcional),
-  `tagline`, `align`, `textPosition` (`top`/`bottom`/`left`/`right`).
+  `tagline`, `align`, `textPosition` (`top`/`bottom`/`left`/`right`),
+  `marginTop`, `marginBottom`, `fontSize` (0 = 17 px, título),
+  `logoWidth` (16–600, defecto 200).
 - `FooterBlock` — `address`, `unsubscribeUrl` (solo https), `social`
-  (urls https por red, ver `SocialUrls`).
+  (urls https por red, ver `SocialUrls`), `marginTop`, `marginBottom`,
+  `fontSize` (0 = 12 px).
 - `CtaBlock` — `label`, `url` (solo https), `color` (`#rrggbb` personalizado,
-  vacío = azul por defecto), `align`, `marginTop`, `marginBottom`.
+  vacío = azul por defecto), `align`, `marginTop`, `marginBottom`,
+  `fontSize` (0 = 15 px).
 - `ColumnsBlock` — `columns` (2–3, cada una con `blocks` anidados ya
-  sanitizados; edición interna vía `update` mayorista, sin cambios al store).
-- `TableBlock` — `headers` (máx. 6), `rows` (máx. 20), `headerRow`.
-- `SocialBlock` — `social` (ver `SocialUrls`).
+  sanitizados; edición interna vía `update` mayorista, sin cambios al store),
+  `marginTop`, `marginBottom`.
+- `TableBlock` — `headers` (máx. 6), `rows` (máx. 20), `headerRow`,
+  `marginTop`, `marginBottom`, `fontSize` (0 = 13 px).
+- `SocialBlock` — `social` (ver `SocialUrls`), `marginTop`, `marginBottom`,
+  `fontSize` (0 = 13 px).
 - `BannerBlock` — `src` (solo https/data), `alt`, `href` (solo https),
-  `caption` (máx. 120).
+  `caption` (máx. 120), `marginTop`, `marginBottom`, `fontSize` (0 = 13 px),
+  `width` (16–600, defecto 504).
 - `ProductBlock` — `src`, `alt`, `name`, `price`, `url`, `buttonLabel`,
-  `color`.
-- `CouponBlock` — `code` (máx. 40), `description` (máx. 200).
-- `SignatureBlock` — `name`, `role`, `photoSrc` (solo https/data), `photoAlt`.
+  `color`, `marginTop`, `marginBottom`, `fontSize` (0 = 17 px, nombre),
+  `imgWidth` (16–600, defecto 220).
+- `CouponBlock` — `code` (máx. 40), `description` (máx. 200), `marginTop`,
+  `marginBottom`, `fontSize` (0 = 22 px, código).
+- `SignatureBlock` — `name`, `role`, `photoSrc` (solo https/data), `photoAlt`,
+  `marginTop`, `marginBottom`, `fontSize` (0 = 15 px, nombre),
+  `photoWidth` (16–600, defecto 64).
 - `LogoBlock` — `src` (solo https/data), `alt`, `align`, `width` (16–600),
   `bg`, `marginTop`, `marginBottom`.
 

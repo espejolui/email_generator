@@ -1,7 +1,7 @@
 import { Block } from "../core/decorators/Block.js";
 import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ListBlockData, TextAlign } from "./types.js";
 import { isTextAlign } from "./types.js";
 
@@ -10,6 +10,9 @@ export class ListBlock extends StyledBlock {
   #items: string[] = [""];
   #ordered = false;
   #align: TextAlign = "left";
+  #marginTop = 0;
+  #marginBottom = 0;
+  #fontSize = 0;
 
   @Editable()
   set items(values: readonly string[]) {
@@ -39,7 +42,44 @@ export class ListBlock extends StyledBlock {
     return this.#align;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
   toData(): ListBlockData {
-    return { ...this.appearanceData(), id: this.id, type: "list", items: [...this.#items], ordered: this.#ordered, align: this.#align };
+    return {
+      ...this.appearanceData(),
+      id: this.id,
+      type: "list",
+      items: [...this.#items],
+      ordered: this.#ordered,
+      align: this.#align,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
+    };
   }
 }

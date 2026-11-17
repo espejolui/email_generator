@@ -72,7 +72,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         fontSize: 0,
       };
     case "image":
-      return { ...createBlockAppearance(), id, type, src: "", alt: "" };
+      return { ...createBlockAppearance(), id, type, src: "", alt: "", marginTop: 0, marginBottom: 0, width: 504 };
     case "list":
       return {
         ...createBlockAppearance(),
@@ -81,6 +81,9 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         items: ["Primer punto", "Segundo punto"],
         ordered: false,
         align: "left",
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
       };
     case "quote":
       return {
@@ -123,6 +126,7 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         align: "center",
         marginTop: 0,
         marginBottom: 0,
+        fontSize: 0,
       };
     case "spacer":
       return { ...createBlockAppearance(), id, type, height: 16 };
@@ -137,6 +141,10 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         tagline: "Tu tagline aquí",
         align: "center",
         textPosition: "bottom",
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
+        logoWidth: 200,
       };
     case "footer":
       return {
@@ -146,6 +154,9 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         address: "Calle 123, Ciudad",
         unsubscribeUrl: "",
         social: { instagram: "", facebook: "", x: "", linkedin: "" },
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
       };
     case "cta":
       return {
@@ -158,9 +169,17 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         align: "center",
         marginTop: 0,
         marginBottom: 0,
+        fontSize: 0,
       };
     case "columns":
-      return { ...createBlockAppearance(), id, type, columns: [{ blocks: [] }, { blocks: [] }] };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        columns: [{ blocks: [] }, { blocks: [] }],
+        marginTop: 0,
+        marginBottom: 0,
+      };
     case "table":
       return {
         ...createBlockAppearance(),
@@ -169,6 +188,9 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         headers: ["Columna 1", "Columna 2"],
         rows: [["Valor 1", "Valor 2"]],
         headerRow: true,
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
       };
     case "social":
       return {
@@ -176,9 +198,24 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         id,
         type,
         social: { instagram: "", facebook: "", x: "", linkedin: "" },
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
       };
     case "banner":
-      return { ...createBlockAppearance(), id, type, src: "", alt: "", href: "", caption: "▶ Ver video" };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        src: "",
+        alt: "",
+        href: "",
+        caption: "▶ Ver video",
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
+        width: 504,
+      };
     case "product":
       return {
         ...createBlockAppearance(),
@@ -191,11 +228,36 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         url: "",
         buttonLabel: "Comprar",
         color: "#41b6e6",
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
+        imgWidth: 220,
       };
     case "coupon":
-      return { ...createBlockAppearance(), id, type, code: "DESCUENTO10", description: "En tu próxima compra" };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        code: "DESCUENTO10",
+        description: "En tu próxima compra",
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
+      };
     case "signature":
-      return { ...createBlockAppearance(), id, type, name: "Tu nombre", role: "Tu cargo", photoSrc: "", photoAlt: "" };
+      return {
+        ...createBlockAppearance(),
+        id,
+        type,
+        name: "Tu nombre",
+        role: "Tu cargo",
+        photoSrc: "",
+        photoAlt: "",
+        marginTop: 0,
+        marginBottom: 0,
+        fontSize: 0,
+        photoWidth: 64,
+      };
     case "logo":
       return {
         ...createBlockAppearance(),

@@ -1,7 +1,7 @@
 import { Block } from "../core/decorators/Block.js";
 import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeHttpsUrl, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeHttpsUrl, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ButtonAlign, CtaBlockData } from "./types.js";
 import { isButtonAlign } from "./types.js";
 
@@ -12,6 +12,7 @@ export class CtaBlock extends StyledBlock {
   #align: ButtonAlign = "center";
   #marginTop = 0;
   #marginBottom = 0;
+  #fontSize = 0;
 
   constructor(id: string) {
     super(id, "#41b6e6");
@@ -62,6 +63,15 @@ export class CtaBlock extends StyledBlock {
     return this.#marginBottom;
   }
 
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
   toData(): CtaBlockData {
     return {
       ...this.appearanceData(),
@@ -72,6 +82,7 @@ export class CtaBlock extends StyledBlock {
       align: this.#align,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
     };
   }
 }

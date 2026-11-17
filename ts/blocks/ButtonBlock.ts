@@ -1,7 +1,7 @@
 import { Block } from "../core/decorators/Block.js";
 import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeMargin, sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeFontSize, sanitizeMargin, sanitizePhone, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { ButtonAlign, ButtonBlockData } from "./types.js";
 import { isButtonAlign } from "./types.js";
 
@@ -13,6 +13,7 @@ export class ButtonBlock extends StyledBlock {
   #align: ButtonAlign = "center";
   #marginTop = 0;
   #marginBottom = 0;
+  #fontSize = 0;
 
   constructor(id: string) {
     super(id, "#25d366");
@@ -73,6 +74,15 @@ export class ButtonBlock extends StyledBlock {
     return this.#marginBottom;
   }
 
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
   toData(): ButtonBlockData {
     return {
       ...this.appearanceData(),
@@ -84,6 +94,7 @@ export class ButtonBlock extends StyledBlock {
       align: this.#align,
       marginTop: this.#marginTop,
       marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
     };
   }
 }

@@ -3,8 +3,11 @@ import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
 import {
   sanitizeAlt,
+  sanitizeFontSize,
   sanitizeHttpsUrl,
   sanitizeImageSrc,
+  sanitizeImageWidth,
+  sanitizeMargin,
   sanitizeText,
 } from "../core/sanitize/sanitize.js";
 import type { ProductBlockData } from "./types.js";
@@ -17,6 +20,10 @@ export class ProductBlock extends StyledBlock {
   #price = "";
   #url = "";
   #buttonLabel = "";
+  #marginTop = 0;
+  #marginBottom = 0;
+  #fontSize = 0;
+  #imgWidth = 220;
 
   constructor(id: string) {
     super(id, "#41b6e6");
@@ -76,6 +83,42 @@ export class ProductBlock extends StyledBlock {
     return this.#buttonLabel;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
+  @Editable()
+  set imgWidth(value: string) {
+    this.#imgWidth = sanitizeImageWidth(value);
+  }
+
+  get imgWidth(): number {
+    return this.#imgWidth;
+  }
+
   toData(): ProductBlockData {
     return {
       ...this.appearanceData(),
@@ -87,6 +130,10 @@ export class ProductBlock extends StyledBlock {
       price: this.#price,
       url: this.#url,
       buttonLabel: this.#buttonLabel,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
+      imgWidth: this.#imgWidth,
     };
   }
 }

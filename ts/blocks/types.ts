@@ -82,6 +82,9 @@ export interface ImageBlockData extends BaseBlockData {
   readonly type: "image";
   src: string;
   alt: string;
+  marginTop: number;
+  marginBottom: number;
+  width: number;
 }
 
 export interface ListBlockData extends BaseBlockData {
@@ -89,6 +92,9 @@ export interface ListBlockData extends BaseBlockData {
   items: readonly string[];
   ordered: boolean;
   align: TextAlign;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
 }
 
 export interface QuoteBlockData extends BaseBlockData {
@@ -125,6 +131,7 @@ export interface ButtonBlockData extends BaseBlockData {
   align: ButtonAlign;
   marginTop: number;
   marginBottom: number;
+  fontSize: number;
 }
 
 export interface SpacerBlockData extends BaseBlockData {
@@ -140,6 +147,10 @@ export interface HeaderBlockData extends BaseBlockData {
   tagline: string;
   align: TextAlign;
   textPosition: HeaderTextPosition;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
+  logoWidth: number;
 }
 
 export interface SocialUrls {
@@ -154,6 +165,9 @@ export interface FooterBlockData extends BaseBlockData {
   address: string;
   unsubscribeUrl: string;
   social: SocialUrls;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
 }
 
 export interface CtaBlockData extends BaseBlockData {
@@ -164,6 +178,7 @@ export interface CtaBlockData extends BaseBlockData {
   align: ButtonAlign;
   marginTop: number;
   marginBottom: number;
+  fontSize: number;
 }
 
 export interface ColumnData {
@@ -173,6 +188,8 @@ export interface ColumnData {
 export interface ColumnsBlockData extends BaseBlockData {
   readonly type: "columns";
   columns: readonly ColumnData[];
+  marginTop: number;
+  marginBottom: number;
 }
 
 export interface TableBlockData extends BaseBlockData {
@@ -180,11 +197,17 @@ export interface TableBlockData extends BaseBlockData {
   headers: readonly string[];
   rows: readonly (readonly string[])[];
   headerRow: boolean;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
 }
 
 export interface SocialBlockData extends BaseBlockData {
   readonly type: "social";
   social: SocialUrls;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
 }
 
 export interface BannerBlockData extends BaseBlockData {
@@ -193,6 +216,10 @@ export interface BannerBlockData extends BaseBlockData {
   alt: string;
   href: string;
   caption: string;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
+  width: number;
 }
 
 export interface ProductBlockData extends BaseBlockData {
@@ -204,12 +231,19 @@ export interface ProductBlockData extends BaseBlockData {
   url: string;
   buttonLabel: string;
   color: string;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
+  imgWidth: number;
 }
 
 export interface CouponBlockData extends BaseBlockData {
   readonly type: "coupon";
   code: string;
   description: string;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
 }
 
 export interface SignatureBlockData extends BaseBlockData {
@@ -218,6 +252,10 @@ export interface SignatureBlockData extends BaseBlockData {
   role: string;
   photoSrc: string;
   photoAlt: string;
+  marginTop: number;
+  marginBottom: number;
+  fontSize: number;
+  photoWidth: number;
 }
 
 export interface LogoBlockData extends BaseBlockData {

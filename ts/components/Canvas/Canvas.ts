@@ -1254,11 +1254,34 @@ export function initCanvas(
         alt.addEventListener("input", () => {
           update({ alt: sanitizeAlt(alt.value) });
         });
+        const imgWidth = document.createElement("input");
+        imgWidth.type = "number";
+        imgWidth.min = "16";
+        imgWidth.max = "600";
+        imgWidth.value = String(block.width);
+        imgWidth.setAttribute("aria-label", "Ancho en píxeles");
+        imgWidth.addEventListener("input", () => {
+          update({ width: sanitizeImageWidth(imgWidth.value) });
+        });
+        const imgMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("URL", src, `${block.id}-src`),
           src,
           labelFor("Alt", alt, `${block.id}-alt`),
           alt,
+          labelFor("Ancho (px)", imgWidth, `${block.id}-width`),
+          imgWidth,
+          imgMargins,
         );
         break;
       }
@@ -1284,6 +1307,20 @@ export function initCanvas(
         const listAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
           update({ align: isTextAlign(value) ? value : "left" });
         });
+        const listMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
+        const listSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
         const orderedRow = el("div", "block__inline");
         orderedRow.appendChild(inlinePair("Ordenada", ordered, `${block.id}-ordered`));
         wrap.append(
@@ -1291,6 +1328,8 @@ export function initCanvas(
           area,
           orderedRow,
           listAlign,
+          listSize,
+          listMargins,
         );
         break;
       }
@@ -1398,6 +1437,9 @@ export function initCanvas(
         const btnAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
           update({ align: isButtonAlign(value) ? value : "center" });
         });
+        const btnSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
         const btnMargins = marginControls(
           block.id,
           block.marginTop,
@@ -1417,6 +1459,7 @@ export function initCanvas(
           labelFor("Mensaje", message, `${block.id}-message`),
           message,
           btnAlign,
+          btnSize,
           btnMargins,
         );
         break;
@@ -1472,17 +1515,44 @@ export function initCanvas(
         const textPosition = selectField(block.textPosition, HEADER_POSITION_OPTIONS, "Posición del texto", `${block.id}-textpos`, "Texto", (value) => {
           update({ textPosition: isHeaderTextPosition(value) ? value : "bottom" });
         });
+        const logoWidth = document.createElement("input");
+        logoWidth.type = "number";
+        logoWidth.min = "16";
+        logoWidth.max = "600";
+        logoWidth.value = String(block.logoWidth);
+        logoWidth.setAttribute("aria-label", "Ancho del logo en píxeles");
+        logoWidth.addEventListener("input", () => {
+          update({ logoWidth: sanitizeImageWidth(logoWidth.value) });
+        });
+        const headerSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const headerMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Logo", logo, `${block.id}-logo`),
           logo,
           labelFor("Alt logo", logoAlt, `${block.id}-logoalt`),
           logoAlt,
+          labelFor("Ancho logo (px)", logoWidth, `${block.id}-logowidth`),
+          logoWidth,
           labelFor("Título", headerTitle, `${block.id}-headertitle`),
           headerTitle,
           labelFor("Tagline", tagline, `${block.id}-tagline`),
           tagline,
           headerAlign,
           textPosition,
+          headerSize,
+          headerMargins,
         );
         break;
       }
@@ -1503,16 +1573,47 @@ export function initCanvas(
         unsubscribe.addEventListener("input", () => {
           update({ unsubscribeUrl: sanitizeHttpsUrl(unsubscribe.value) });
         });
+        const footerSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const footerMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Dirección", address, `${block.id}-address`),
           address,
           labelFor("Unsubscribe", unsubscribe, `${block.id}-unsub`),
           unsubscribe,
+          footerSize,
+          footerMargins,
         );
         appendSocialFields(wrap, block.id, read, update);
         break;
       }
       case "social": {
+        const socialSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const socialMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
+        wrap.append(socialSize, socialMargins);
         appendSocialFields(wrap, block.id, read, update);
         break;
       }
@@ -1548,15 +1649,42 @@ export function initCanvas(
         caption.addEventListener("input", () => {
           update({ caption: sanitizeText(caption.value).slice(0, 120) });
         });
+        const bannerWidth = document.createElement("input");
+        bannerWidth.type = "number";
+        bannerWidth.min = "16";
+        bannerWidth.max = "600";
+        bannerWidth.value = String(block.width);
+        bannerWidth.setAttribute("aria-label", "Ancho en píxeles");
+        bannerWidth.addEventListener("input", () => {
+          update({ width: sanitizeImageWidth(bannerWidth.value) });
+        });
+        const bannerSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const bannerMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Imagen", src, `${block.id}-src`),
           src,
           labelFor("Alt", alt, `${block.id}-alt`),
           alt,
+          labelFor("Ancho (px)", bannerWidth, `${block.id}-width`),
+          bannerWidth,
           labelFor("Enlace", href, `${block.id}-href`),
           href,
           labelFor("Pie", caption, `${block.id}-caption`),
           caption,
+          bannerSize,
+          bannerMargins,
         );
         break;
       }
@@ -1608,11 +1736,36 @@ export function initCanvas(
         buttonLabel.addEventListener("input", () => {
           update({ buttonLabel: sanitizeText(buttonLabel.value).slice(0, 40) });
         });
+        const imgWidth = document.createElement("input");
+        imgWidth.type = "number";
+        imgWidth.min = "16";
+        imgWidth.max = "600";
+        imgWidth.value = String(block.imgWidth);
+        imgWidth.setAttribute("aria-label", "Ancho de la imagen en píxeles");
+        imgWidth.addEventListener("input", () => {
+          update({ imgWidth: sanitizeImageWidth(imgWidth.value) });
+        });
+        const productSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const productMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Imagen", src, `${block.id}-src`),
           src,
           labelFor("Alt", alt, `${block.id}-alt`),
           alt,
+          labelFor("Ancho img (px)", imgWidth, `${block.id}-imgwidth`),
+          imgWidth,
           labelFor("Nombre", name, `${block.id}-name`),
           name,
           labelFor("Precio", price, `${block.id}-price`),
@@ -1621,6 +1774,8 @@ export function initCanvas(
           url,
           labelFor("Botón", buttonLabel, `${block.id}-buttonlabel`),
           buttonLabel,
+          productSize,
+          productMargins,
         );
         break;
       }
@@ -1641,11 +1796,27 @@ export function initCanvas(
         description.addEventListener("input", () => {
           update({ description: sanitizeText(description.value).slice(0, 200) });
         });
+        const couponSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const couponMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Código", code, `${block.id}-code`),
           code,
           labelFor("Descripción", description, `${block.id}-description`),
           description,
+          couponSize,
+          couponMargins,
         );
         break;
       }
@@ -1681,6 +1852,29 @@ export function initCanvas(
         photoAlt.addEventListener("input", () => {
           update({ photoAlt: sanitizeAlt(photoAlt.value) });
         });
+        const photoWidth = document.createElement("input");
+        photoWidth.type = "number";
+        photoWidth.min = "16";
+        photoWidth.max = "600";
+        photoWidth.value = String(block.photoWidth);
+        photoWidth.setAttribute("aria-label", "Ancho de la foto en píxeles");
+        photoWidth.addEventListener("input", () => {
+          update({ photoWidth: sanitizeImageWidth(photoWidth.value) });
+        });
+        const signatureSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const signatureMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           labelFor("Nombre", name, `${block.id}-name`),
           name,
@@ -1690,6 +1884,10 @@ export function initCanvas(
           photo,
           labelFor("Alt foto", photoAlt, `${block.id}-photoalt`),
           photoAlt,
+          labelFor("Ancho foto (px)", photoWidth, `${block.id}-photowidth`),
+          photoWidth,
+          signatureSize,
+          signatureMargins,
         );
         break;
       }
@@ -1764,6 +1962,9 @@ export function initCanvas(
         const ctaAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
           update({ align: isButtonAlign(value) ? value : "center" });
         });
+        const ctaSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
         const ctaMargins = marginControls(
           block.id,
           block.marginTop,
@@ -1781,6 +1982,7 @@ export function initCanvas(
           labelFor("URL", url, `${block.id}-url`),
           url,
           ctaAlign,
+          ctaSize,
           ctaMargins,
         );
         break;
@@ -1865,7 +2067,18 @@ export function initCanvas(
           announce(liveEl, "Columna quitada.");
         });
         colsRow.append(addCol, delCol);
-        wrap.append(colsWrap, colsRow);
+        const colsMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
+        wrap.append(colsWrap, colsRow, colsMargins);
         break;
       }
       case "table": {
@@ -1900,12 +2113,28 @@ export function initCanvas(
               .map((line) => line.split("|").slice(0, 6).map((v) => sanitizeText(v).slice(0, 200))),
           });
         });
+        const tableSize = fontSizeControl(block.id, block.fontSize, (n) => {
+          update({ fontSize: n });
+        });
+        const tableMargins = marginControls(
+          block.id,
+          block.marginTop,
+          block.marginBottom,
+          (n) => {
+            update({ marginTop: n });
+          },
+          (n) => {
+            update({ marginBottom: n });
+          },
+        );
         wrap.append(
           headerRow,
           labelFor("Cabeceras", headers, `${block.id}-headers`),
           headers,
           labelFor("Filas", rows, `${block.id}-rows`),
           rows,
+          tableSize,
+          tableMargins,
         );
         break;
       }

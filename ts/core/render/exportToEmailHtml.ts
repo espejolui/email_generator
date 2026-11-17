@@ -67,6 +67,16 @@ function row(inner: string, bg = "", corners: Corner = ""): RenderedRow {
   return { html: `<tr><td style="padding:0 48px ${String(bottomPad)}px; font-family:${FONT};${bgStyle}${cornerStyle(corners)}">${inner}</td></tr>` };
 }
 
+/**
+ * Márgenes superior/inferior Outlook-safe: tabla anidada con `margin`, como
+ * el logo. Con 0/0 devuelve el contenido intacto (sin cambios visuales).
+ */
+function margined(inner: string, top: number, bottom: number): string {
+  if (top === 0 && bottom === 0) return inner;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${String(top)}px 0 ${String(bottom)}px;">` +
+    `<tr><td>${inner}</td></tr></table>`;
+}
+
 /** Aplica el fondo, color y borde comunes a la fila exterior de cualquier bloque. */
 function withAppearance(rendered: RenderedRow, data: AnyBlockData): RenderedRow {
   const styles: string[] = [];
@@ -160,19 +170,21 @@ export function renderText(data: TextBlockData, corners: Corner = ""): RenderedR
 
 export function renderImage(data: ImageBlockData, corners: Corner = ""): RenderedRow {
   const src = sanitizeImageSrc(data.src);
+  const w = String(data.width);
   const img = src === ""
     ? `<p style="margin:0; font-size:13px; color:${data.color || MUTED};">[Imagen sin URL válida]</p>`
-    : `<img src="${src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
-  return row(img, "", corners);
+    : `<img src="${src}" width="${w}" alt="${data.alt}" style="display:block; width:100%; max-width:${w}px; height:auto; border:0; border-radius:12px;">`;
+  return row(margined(img, data.marginTop, data.marginBottom), "", corners);
 }
 
 export function renderList(data: ListBlockData, corners: Corner = ""): RenderedRow {
+  const size = fontSizeOr(data.fontSize, "16px");
   const tag = data.ordered ? "ol" : "ul";
   const items = data.items
-    .map((item) => `<li style="font-size:16px; line-height:1.75; color:${data.color || BODY_TEXT};">${item}</li>`)
+    .map((item) => `<li style="font-size:${size}; line-height:1.75; color:${data.color || BODY_TEXT};">${item}</li>`)
     .join("");
   return row(
-    `<${tag} style="margin:0; padding-left:20px; font-family:${FONT}; text-align:${data.align};">${items}</${tag}>`,
+    `<${tag} style="margin:${String(data.marginTop)}px 0 ${String(data.marginBottom)}px; padding-left:20px; font-family:${FONT}; text-align:${data.align};">${items}</${tag}>`,
     "",
     corners,
   );
@@ -227,10 +239,11 @@ function pillTable(
   align: ButtonAlign,
   marginTop: number,
   marginBottom: number,
+  fontPx = "15px",
 ): string {
   const text = href === ""
-    ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${label}</span>`
-    : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:15px; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${label}</a>`;
+    ? `<span style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:${fontPx}; font-weight:900; color:#ffffff; letter-spacing:0.4px;">${label}</span>`
+    : `<a href="${href}" style="display:inline-block; padding:13px 32px; font-family:${FONT}; font-size:${fontPx}; font-weight:900; color:#ffffff; text-decoration:none; letter-spacing:0.4px;">${label}</a>`;
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${align}" style="margin:${String(marginTop)}px auto ${String(marginBottom)}px;">` +
     `<tr><td align="center" style="background-color:${bg}; border-radius:50px;">${text}</td></tr>` +
     `</table>`;
@@ -244,8 +257,9 @@ function pillRow(
   marginTop: number,
   marginBottom: number,
   corners: Corner = "",
+  fontPx = "15px",
 ): RenderedRow {
-  return row(pillTable(href, label, bg, align, marginTop, marginBottom), "", corners);
+  return row(pillTable(href, label, bg, align, marginTop, marginBottom, fontPx), "", corners);
 }
 
 function buttonBackground(value: string, fallback: string): string {
@@ -259,14 +273,14 @@ export function renderButton(data: ButtonBlockData, corners: Corner = ""): Rende
   const bg = buttonBackground(data.color, GREEN);
   // message viaja en crudo hasta aquí y se codifica para URL (nunca toca HTML).
   const href = buildWhatsAppUrl(data.phone, data.message);
-  return pillRow(href, data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
+  return pillRow(href, data.label, bg, data.align, data.marginTop, data.marginBottom, corners, fontSizeOr(data.fontSize, "15px"));
 }
 
 export function renderCta(data: CtaBlockData, corners: Corner = ""): RenderedRow {
   // Los valores blue/green se aceptan para conservar plantillas antiguas.
   const bg = buttonBackground(data.color, PRIMARY);
   // Igual que renderImage revalida src: solo https (idempotente, sin doble escape).
-  return pillRow(sanitizeHttpsUrl(data.url), data.label, bg, data.align, data.marginTop, data.marginBottom, corners);
+  return pillRow(sanitizeHttpsUrl(data.url), data.label, bg, data.align, data.marginTop, data.marginBottom, corners, fontSizeOr(data.fontSize, "15px"));
 }
 
 export function renderSpacer(data: SpacerBlockData): RenderedRow {
@@ -294,29 +308,38 @@ function logoTable(src: string, alt: string, width: number, align: TextAlign): s
 }
 
 export function renderHeader(data: HeaderBlockData, corners: Corner = ""): RenderedRow {
-  const logo = data.logoSrc === "" ? "" : logoTable(data.logoSrc, data.logoAlt, 200, data.align);
+  const logoWidth = String(data.logoWidth);
+  const logo = data.logoSrc === ""
+    ? ""
+    : logoTable(data.logoSrc, data.logoAlt, data.logoWidth, data.align);
   // Texto opcional en dos niveles: título de marca + tagline secundario.
+  const titleSize = fontSizeOr(data.fontSize, "17px");
   const gapBelow = data.textPosition === "top" && logo !== "" ? "8px" : "0";
   const title = data.title === ""
     ? ""
-    : `<p style="margin:0 0 ${data.tagline === "" ? gapBelow : "4px"}; font-family:${FONT}; font-size:17px; font-weight:900; line-height:1.4; text-align:${data.align}; color:${data.color || "#111111"};">${data.title}</p>`;
+    : `<p style="margin:0 0 ${data.tagline === "" ? gapBelow : "4px"}; font-family:${FONT}; font-size:${titleSize}; font-weight:900; line-height:1.4; text-align:${data.align}; color:${data.color || "#111111"};">${data.title}</p>`;
   const tagline = data.tagline === ""
     ? ""
     : `<p style="margin:${title === "" ? "8px" : "4px"} 0 ${gapBelow}; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${data.color || MUTED};">${data.tagline}</p>`;
   const text = `${title}${tagline}`;
-  if (text === "" || logo === "") return row(`${logo}${text}`, "", corners);
+  const stacked = `${logo}${text}`;
+  if (text === "" || logo === "") return row(margined(stacked, data.marginTop, data.marginBottom), "", corners);
   // Texto a un lado del logo: tabla anidada de dos celdas (Outlook-safe).
   if (data.textPosition === "left" || data.textPosition === "right") {
     const textCell = `<td valign="middle" style="font-family:${FONT};">${text}</td>`;
-    const logoCell = `<td width="200" valign="middle" align="${data.align}">${logo}</td>`;
+    const logoCell = `<td width="${logoWidth}" valign="middle" align="${data.align}">${logo}</td>`;
     const cells = data.textPosition === "left" ? `${textCell}${logoCell}` : `${logoCell}${textCell}`;
     return row(
-      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`,
+      margined(
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`,
+        data.marginTop,
+        data.marginBottom,
+      ),
       "",
       corners,
     );
   }
-  return row(data.textPosition === "top" ? `${text}${logo}` : `${logo}${text}`, "", corners);
+  return row(margined(data.textPosition === "top" ? `${text}${logo}` : stacked, data.marginTop, data.marginBottom), "", corners);
 }
 
 export function renderLogo(data: LogoBlockData, corners: Corner = ""): RenderedRow {
@@ -341,22 +364,23 @@ const SOCIAL_LABELS: ReadonlyArray<readonly [keyof SocialUrls, string]> = [
 ];
 
 /** Enlaces de texto de redes; "" si no hay ninguna URL. La usan `social` y `footer`. */
-export function socialLinksInner(social: SocialUrls, color = PRIMARY): string {
+export function socialLinksInner(social: SocialUrls, color = PRIMARY, fontPx = "13px"): string {
   const links = SOCIAL_LABELS.filter(([key]) => social[key] !== "").map(
     ([key, label]) =>
-      `<a href="${social[key]}" style="font-family:${FONT}; font-size:13px; color:${color}; text-decoration:underline;">${label}</a>`,
+      `<a href="${social[key]}" style="font-family:${FONT}; font-size:${fontPx}; color:${color}; text-decoration:underline;">${label}</a>`,
   );
   return links.length === 0 ? "" : `<p style="margin:8px 0 0; text-align:center;">${links.join(" &nbsp;·&nbsp; ")}</p>`;
 }
 
 export function renderFooter(data: FooterBlockData, corners: Corner = ""): RenderedRow {
+  const size = fontSizeOr(data.fontSize, "12px");
   const address = data.address === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:12px; line-height:1.6; text-align:center; color:${data.color || MUTED};">${data.address}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:${size}; line-height:1.6; text-align:center; color:${data.color || MUTED};">${data.address}</p>`;
   const unsubscribe = data.unsubscribeUrl === ""
     ? ""
-    : `<p style="margin:8px 0 0; text-align:center;"><a href="${data.unsubscribeUrl}" style="font-family:${FONT}; font-size:12px; color:${data.color || MUTED}; text-decoration:underline;">Darse de baja</a></p>`;
-  return row(`${address}${unsubscribe}${socialLinksInner(data.social, data.color || PRIMARY)}`, "", corners);
+    : `<p style="margin:8px 0 0; text-align:center;"><a href="${data.unsubscribeUrl}" style="font-family:${FONT}; font-size:${size}; color:${data.color || MUTED}; text-decoration:underline;">Darse de baja</a></p>`;
+  return row(margined(`${address}${unsubscribe}${socialLinksInner(data.social, data.color || PRIMARY)}`, data.marginTop, data.marginBottom), "", corners);
 }
 
 export function renderColumns(data: ColumnsBlockData, corners: Corner = ""): RenderedRow {
@@ -376,7 +400,11 @@ export function renderColumns(data: ColumnsBlockData, corners: Corner = ""): Ren
     })
     .join("");
   return row(
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`,
+    margined(
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`,
+      data.marginTop,
+      data.marginBottom,
+    ),
     "",
     corners,
   );
@@ -385,6 +413,7 @@ export function renderColumns(data: ColumnsBlockData, corners: Corner = ""): Ren
 const TABLE_BORDER = "#d9d9d9";
 
 export function renderTable(data: TableBlockData, corners: Corner = ""): RenderedRow {
+  const size = fontSizeOr(data.fontSize, "13px");
   const colCount = Math.max(
     data.headers.length,
     ...data.rows.map((r) => r.length),
@@ -396,7 +425,7 @@ export function renderTable(data: TableBlockData, corners: Corner = ""): Rendere
       ? ` font-weight:700; background-color:#f0f4ff;`
       : "";
     const text = content === "" ? "&nbsp;" : content;
-    return `<${tag} style="padding:6px 8px; font-family:${FONT}; font-size:13px; line-height:1.5; color:${data.color || BODY_TEXT}; border:1px solid ${TABLE_BORDER};${extra}">${text}</${tag}>`;
+    return `<${tag} style="padding:6px 8px; font-family:${FONT}; font-size:${size}; line-height:1.5; color:${data.color || BODY_TEXT}; border:1px solid ${TABLE_BORDER};${extra}">${text}</${tag}>`;
   };
   const head = data.headerRow && data.headers.length > 0
     ? `<tr>${Array.from({ length: colCount }, (_, i) => cell(data.headers[i] ?? "", true)).join("")}</tr>`
@@ -405,18 +434,27 @@ export function renderTable(data: TableBlockData, corners: Corner = ""): Rendere
     .map((r) => `<tr>${Array.from({ length: colCount }, (_, i) => cell(r[i] ?? "", false)).join("")}</tr>`)
     .join("");
   return row(
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${head}${body}</table>`,
+    margined(
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${head}${body}</table>`,
+      data.marginTop,
+      data.marginBottom,
+    ),
     "",
     corners,
   );
 }
 
 export function renderSocial(data: SocialBlockData, corners: Corner = ""): RenderedRow {
-  const inner = socialLinksInner(data.social, data.color || PRIMARY);
+  const size = fontSizeOr(data.fontSize, "13px");
+  const inner = socialLinksInner(data.social, data.color || PRIMARY, size);
   return row(
-    inner === ""
-      ? `<p style="margin:0; font-size:13px; color:${MUTED}; text-align:center;">[Sin redes configuradas]</p>`
-      : inner,
+    margined(
+      inner === ""
+        ? `<p style="margin:0; font-size:${size}; color:${MUTED}; text-align:center;">[Sin redes configuradas]</p>`
+        : inner,
+      data.marginTop,
+      data.marginBottom,
+    ),
     "",
     corners,
   );
@@ -427,28 +465,32 @@ export function renderBanner(data: BannerBlockData, corners: Corner = ""): Rende
   // (p. ej. "▶ Ver video"). Sin overlay absoluto: Outlook no lo soporta.
   // href revalidado (igual que cta/url y renderImage/src).
   const href = sanitizeHttpsUrl(data.href);
+  const size = fontSizeOr(data.fontSize, "13px");
+  const w = String(data.width);
   const img = data.src === ""
-    ? `<p style="margin:0; font-size:13px; color:${data.color || MUTED}; text-align:center;">[Imagen sin URL válida]</p>`
-    : `<img src="${data.src}" width="504" alt="${data.alt}" style="display:block; width:100%; max-width:504px; height:auto; border:0; border-radius:12px;">`;
+    ? `<p style="margin:0; font-size:${size}; color:${data.color || MUTED}; text-align:center;">[Imagen sin URL válida]</p>`
+    : `<img src="${data.src}" width="${w}" alt="${data.alt}" style="display:block; width:100%; max-width:${w}px; height:auto; border:0; border-radius:12px;">`;
   const visual = href === "" ? img : `<a href="${href}" style="text-decoration:none;">${img}</a>`;
   const caption = data.caption === ""
     ? ""
     : href === ""
-      ? `<p style="margin:8px 0 0; font-size:13px; color:${data.color || MUTED}; text-align:center;">${data.caption}</p>`
-      : `<p style="margin:8px 0 0; text-align:center;"><a href="${href}" style="font-family:${FONT}; font-size:13px; font-weight:700; color:${data.color || PRIMARY}; text-decoration:underline;">${data.caption}</a></p>`;
-  return row(`${visual}${caption}`, "", corners);
+      ? `<p style="margin:8px 0 0; font-size:${size}; color:${data.color || MUTED}; text-align:center;">${data.caption}</p>`
+      : `<p style="margin:8px 0 0; text-align:center;"><a href="${href}" style="font-family:${FONT}; font-size:${size}; font-weight:700; color:${data.color || PRIMARY}; text-decoration:underline;">${data.caption}</a></p>`;
+  return row(margined(`${visual}${caption}`, data.marginTop, data.marginBottom), "", corners);
 }
 
 export function renderProduct(data: ProductBlockData, corners: Corner = ""): RenderedRow {
   const bg = buttonBackground(data.color, PRIMARY);
   const url = sanitizeHttpsUrl(data.url);
+  const nameSize = fontSizeOr(data.fontSize, "17px");
+  const w = String(data.imgWidth);
   const img = data.src === ""
     ? `<p style="margin:0; font-size:13px; color:${data.color || MUTED};">[Imagen sin URL válida]</p>`
-    : `<img src="${data.src}" width="220" alt="${data.alt}" style="display:block; width:220px; max-width:100%; height:auto; border:0; border-radius:12px;">`;
+    : `<img src="${data.src}" width="${w}" alt="${data.alt}" style="display:block; width:${w}px; max-width:100%; height:auto; border:0; border-radius:12px;">`;
   const visual = url === "" ? img : `<a href="${url}" style="text-decoration:none;">${img}</a>`;
   const name = data.name === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:17px; font-weight:900; color:#111111;">${data.name}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:${nameSize}; font-weight:900; color:#111111;">${data.name}</p>`;
   const price = data.price === ""
     ? ""
     : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:16px; font-weight:700; color:${PRIMARY};">${data.price}</p>`;
@@ -456,10 +498,14 @@ export function renderProduct(data: ProductBlockData, corners: Corner = ""): Ren
     ? ""
     : pillTable(url, data.buttonLabel, bg, "left", 12, 0);
   return row(
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
-      `<td width="45%" valign="top" align="left" style="padding-right:12px;">${visual}</td>` +
-      `<td width="55%" valign="top" align="left">${name}${price}${cta}</td>` +
-      `</tr></table>`,
+    margined(
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
+        `<td width="45%" valign="top" align="left" style="padding-right:12px;">${visual}</td>` +
+        `<td width="55%" valign="top" align="left">${name}${price}${cta}</td>` +
+        `</tr></table>`,
+      data.marginTop,
+      data.marginBottom,
+    ),
     "",
     corners,
   );
@@ -467,38 +513,49 @@ export function renderProduct(data: ProductBlockData, corners: Corner = ""): Ren
 
 export function renderCoupon(data: CouponBlockData, corners: Corner = ""): RenderedRow {
   // Badge con border en <td> (Outlook-safe): estilo ticket sin imágenes.
+  const size = fontSizeOr(data.fontSize, "22px");
   const code = data.code === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:22px; font-weight:900; letter-spacing:2px; text-align:center; color:${data.color || "#111111"};">${data.code}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:${size}; font-weight:900; letter-spacing:2px; text-align:center; color:${data.color || "#111111"};">${data.code}</p>`;
   const description = data.description === ""
     ? ""
     : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; text-align:center; color:${data.color || MUTED};">${data.description}</p>`;
   return row(
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">` +
-      `<tr><td align="center" style="padding:16px 32px; border:2px dashed ${data.color || PRIMARY}; border-radius:12px;">${code}${description}</td></tr>` +
-      `</table>`,
+    margined(
+      `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center">` +
+        `<tr><td align="center" style="padding:16px 32px; border:2px dashed ${data.color || PRIMARY}; border-radius:12px;">${code}${description}</td></tr>` +
+        `</table>`,
+      data.marginTop,
+      data.marginBottom,
+    ),
     "",
     corners,
   );
 }
 
 export function renderSignature(data: SignatureBlockData, corners: Corner = ""): RenderedRow {
+  const nameSize = fontSizeOr(data.fontSize, "15px");
+  const w = String(data.photoWidth);
   const photo = data.photoSrc === ""
     ? ""
-    : `<img src="${data.photoSrc}" width="64" alt="${data.photoAlt}" style="display:block; width:64px; max-width:64px; height:auto; border:0; border-radius:50%;">`;
+    : `<img src="${data.photoSrc}" width="${w}" alt="${data.photoAlt}" style="display:block; width:${w}px; max-width:${w}px; height:auto; border:0; border-radius:50%;">`;
   const name = data.name === ""
     ? ""
-    : `<p style="margin:0; font-family:${FONT}; font-size:15px; font-weight:700; color:${data.color || "#111111"};">${data.name}</p>`;
+    : `<p style="margin:0; font-family:${FONT}; font-size:${nameSize}; font-weight:700; color:${data.color || "#111111"};">${data.name}</p>`;
   const role = data.role === ""
     ? ""
     : `<p style="margin:4px 0 0; font-family:${FONT}; font-size:13px; color:${data.color || MUTED};">${data.role}</p>`;
   return row(
-    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
-      (photo === ""
-        ? `<td valign="top" align="left">${name}${role}</td>`
-        : `<td width="76" valign="top" align="left" style="padding-right:12px;">${photo}</td>` +
-          `<td valign="top" align="left">${name}${role}</td>`) +
-      `</tr></table>`,
+    margined(
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>` +
+        (photo === ""
+          ? `<td valign="top" align="left">${name}${role}</td>`
+          : `<td width="${String(data.photoWidth + 12)}" valign="top" align="left" style="padding-right:12px;">${photo}</td>` +
+            `<td valign="top" align="left">${name}${role}</td>`) +
+        `</tr></table>`,
+      data.marginTop,
+      data.marginBottom,
+    ),
     "",
     corners,
   );

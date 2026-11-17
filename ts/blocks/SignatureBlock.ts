@@ -1,7 +1,7 @@
 import { Block } from "../core/decorators/Block.js";
 import { StyledBlock } from "./StyledBlock.js";
 import { Editable } from "../core/decorators/Editable.js";
-import { sanitizeAlt, sanitizeImageSrc, sanitizeText } from "../core/sanitize/sanitize.js";
+import { sanitizeAlt, sanitizeFontSize, sanitizeImageSrc, sanitizeImageWidth, sanitizeMargin, sanitizeText } from "../core/sanitize/sanitize.js";
 import type { SignatureBlockData } from "./types.js";
 
 @Block({ type: "signature", label: "Firma", icon: "pen-line" })
@@ -10,6 +10,10 @@ export class SignatureBlock extends StyledBlock {
   #role = "";
   #photoSrc = "";
   #photoAlt = "";
+  #marginTop = 0;
+  #marginBottom = 0;
+  #fontSize = 0;
+  #photoWidth = 64;
 
   @Editable()
   set name(value: string) {
@@ -47,6 +51,42 @@ export class SignatureBlock extends StyledBlock {
     return this.#photoAlt;
   }
 
+  @Editable()
+  set marginTop(value: string) {
+    this.#marginTop = sanitizeMargin(value);
+  }
+
+  get marginTop(): number {
+    return this.#marginTop;
+  }
+
+  @Editable()
+  set marginBottom(value: string) {
+    this.#marginBottom = sanitizeMargin(value);
+  }
+
+  get marginBottom(): number {
+    return this.#marginBottom;
+  }
+
+  @Editable()
+  set fontSize(value: string) {
+    this.#fontSize = sanitizeFontSize(value);
+  }
+
+  get fontSize(): number {
+    return this.#fontSize;
+  }
+
+  @Editable()
+  set photoWidth(value: string) {
+    this.#photoWidth = sanitizeImageWidth(value);
+  }
+
+  get photoWidth(): number {
+    return this.#photoWidth;
+  }
+
   toData(): SignatureBlockData {
     return {
       ...this.appearanceData(),
@@ -56,6 +96,10 @@ export class SignatureBlock extends StyledBlock {
       role: this.#role,
       photoSrc: this.#photoSrc,
       photoAlt: this.#photoAlt,
+      marginTop: this.#marginTop,
+      marginBottom: this.#marginBottom,
+      fontSize: this.#fontSize,
+      photoWidth: this.#photoWidth,
     };
   }
 }
