@@ -27,6 +27,8 @@ export type ButtonAlign = "left" | "center" | "right";
 
 export type BorderStyle = "solid" | "dashed" | "dotted";
 
+export type HeaderTextPosition = "top" | "bottom" | "left" | "right";
+
 export interface BlockAppearance {
   bg: string;
   color: string;
@@ -134,8 +136,10 @@ export interface HeaderBlockData extends BaseBlockData {
   readonly type: "header";
   logoSrc: string;
   logoAlt: string;
+  title: string;
   tagline: string;
   align: TextAlign;
+  textPosition: HeaderTextPosition;
 }
 
 export interface SocialUrls {
@@ -286,4 +290,8 @@ export function isTextAlign(value: string): value is TextAlign {
 
 export function isButtonAlign(value: string): value is ButtonAlign {
   return value === "left" || value === "center" || value === "right";
+}
+
+export function isHeaderTextPosition(value: string): value is HeaderTextPosition {
+  return value === "top" || value === "bottom" || value === "left" || value === "right";
 }

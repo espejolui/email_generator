@@ -5,6 +5,7 @@ reordena dentro del lienzo.
 
 - `DragPayload` — `{ blockType, sourceId?, fromColumn? }` (`sourceId` solo en
   reorden; `fromColumn: ColumnRef` solo en arrastres nacidos en una columna).
+  Arrastrar un bloque anidado al lienzo lo rescata al nivel superior.
 - `ColumnRef` — `{ columnsId, colIndex }` (origen anidado; ausente = nivel superior).
 - `setDragPayload(event, payload)` — guarda el JSON en `dataTransfer`
   (`application/json`) con `effectAllowed` compatible con el `dropEffect`

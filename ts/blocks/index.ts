@@ -133,8 +133,10 @@ export function createBlockData(type: BlockType, id: string): AnyBlockData {
         type,
         logoSrc: "",
         logoAlt: "",
+        title: "",
         tagline: "Tu tagline aquí",
         align: "center",
+        textPosition: "bottom",
       };
     case "footer":
       return {

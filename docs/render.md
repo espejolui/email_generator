@@ -32,7 +32,9 @@ funciones para no desincronizarse.
 - `renderSpacer(data)` — fila vacía con `height` + `bgcolor` en `<td>`
   (Outlook-safe).
 - `renderHeader(data, corners?)` — logo (tabla anidada con `align` para
-  Outlook) + tagline.
+  Outlook) + título opcional + tagline; el texto se apila
+  (`top`/`bottom`) o va al lado del logo (`left`/`right`, tabla de dos
+  celdas Outlook-safe).
 - `logoTable(src, alt, width, align)` — tabla de logo compartida por
   `header` (200 px) y `logo`.
 - `renderLogo(data, corners?)` — logotipo con ancho configurable, banda de

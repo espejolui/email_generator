@@ -295,10 +295,28 @@ function logoTable(src: string, alt: string, width: number, align: TextAlign): s
 
 export function renderHeader(data: HeaderBlockData, corners: Corner = ""): RenderedRow {
   const logo = data.logoSrc === "" ? "" : logoTable(data.logoSrc, data.logoAlt, 200, data.align);
+  // Texto opcional en dos niveles: título de marca + tagline secundario.
+  const gapBelow = data.textPosition === "top" && logo !== "" ? "8px" : "0";
+  const title = data.title === ""
+    ? ""
+    : `<p style="margin:0 0 ${data.tagline === "" ? gapBelow : "4px"}; font-family:${FONT}; font-size:17px; font-weight:900; line-height:1.4; text-align:${data.align}; color:${data.color || "#111111"};">${data.title}</p>`;
   const tagline = data.tagline === ""
     ? ""
-    : `<p style="margin:8px 0 0; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${data.color || MUTED};">${data.tagline}</p>`;
-  return row(`${logo}${tagline}`, "", corners);
+    : `<p style="margin:${title === "" ? "8px" : "4px"} 0 ${gapBelow}; font-family:${FONT}; font-size:13px; line-height:1.5; text-align:${data.align}; color:${data.color || MUTED};">${data.tagline}</p>`;
+  const text = `${title}${tagline}`;
+  if (text === "" || logo === "") return row(`${logo}${text}`, "", corners);
+  // Texto a un lado del logo: tabla anidada de dos celdas (Outlook-safe).
+  if (data.textPosition === "left" || data.textPosition === "right") {
+    const textCell = `<td valign="middle" style="font-family:${FONT};">${text}</td>`;
+    const logoCell = `<td width="200" valign="middle" align="${data.align}">${logo}</td>`;
+    const cells = data.textPosition === "left" ? `${textCell}${logoCell}` : `${logoCell}${textCell}`;
+    return row(
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${cells}</tr></table>`,
+      "",
+      corners,
+    );
+  }
+  return row(data.textPosition === "top" ? `${text}${logo}` : `${logo}${text}`, "", corners);
 }
 
 export function renderLogo(data: LogoBlockData, corners: Corner = ""): RenderedRow {

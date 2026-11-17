@@ -4,6 +4,7 @@ import type {
   BlockType,
   ButtonAlign,
   ColumnData,
+  HeaderTextPosition,
   SocialUrls,
   TextAlign,
 } from "../../blocks/types.js";
@@ -11,6 +12,7 @@ import {
   isBlockType,
   isBorderStyle,
   isButtonAlign,
+  isHeaderTextPosition,
   isTextAlign,
   isTitleLevel,
 } from "../../blocks/types.js";
@@ -77,6 +79,22 @@ const BUTTON_ALIGN_OPTIONS: ReadonlyArray<readonly [ButtonAlign, string]> = [
   ["center", "Centrado"],
   ["right", "Derecha"],
 ];
+
+const HEADER_POSITION_OPTIONS: ReadonlyArray<readonly [HeaderTextPosition, string]> = [
+  ["top", "Arriba"],
+  ["bottom", "Debajo"],
+  ["left", "Izquierda"],
+  ["right", "Derecha"],
+];
+
+/**
+ * Escritura de un bloque por id sin exponer su ruta: vale para el nivel
+ * superior y para bloques anidados en columnas (el llamador cierra el id).
+ */
+type BlockUpdater = (patch: Partial<AnyBlockData>) => void;
+
+/** Lectura vigente de un bloque (evita cierres sobre datos obsoletos). */
+type BlockReader = () => AnyBlockData | undefined;
 
 const SOCIAL_NETWORKS: ReadonlyArray<readonly [keyof SocialUrls, string]> = [
   ["instagram", "Instagram"],
@@ -469,7 +487,7 @@ interface FormatFlags {
 }
 
 /** Casillas Negrita/Cursiva/Subrayado/Tachado en una fila horizontal. */
-function formatRow(blockId: string, flags: FormatFlags, store: EditorStore): HTMLElement {
+function formatRow(blockId: string, flags: FormatFlags, update: BlockUpdater): HTMLElement {
   const row = el("div", "block__inline");
   const defs = [
     ["bold", "Negrita"],
@@ -483,10 +501,10 @@ function formatRow(blockId: string, flags: FormatFlags, store: EditorStore): HTM
     box.checked = flags[key];
     box.addEventListener("change", () => {
       const value = box.checked;
-      if (key === "bold") store.update(blockId, { bold: value });
-      else if (key === "italic") store.update(blockId, { italic: value });
-      else if (key === "underline") store.update(blockId, { underline: value });
-      else store.update(blockId, { strike: value });
+      if (key === "bold") update({ bold: value });
+      else if (key === "italic") update({ italic: value });
+      else if (key === "underline") update({ underline: value });
+      else update({ strike: value });
     });
     row.appendChild(inlinePair(labelText, box, `${blockId}-fmt-${key}`));
   }
@@ -556,21 +574,21 @@ function componentColorLabel(block: AnyBlockData): string {
 }
 
 /** Controles comunes: fondo, color del componente y borde completo. */
-function appearanceControls(block: AnyBlockData, store: EditorStore): HTMLElement {
+function appearanceControls(block: AnyBlockData, update: BlockUpdater): HTMLElement {
   const wrap = el("div", "block__appearance");
   const title = el("p", "block__appearance-title");
   title.textContent = "Apariencia y bordes";
 
   const bg = optionalColor("Fondo", "Sin fondo", block.bg, "#ffffff", (next) => {
-    store.update(block.id, { bg: next });
+    update({ bg: next });
   });
   const color = optionalColor(componentColorLabel(block), "Automático", block.color, "#41b6e6", (next) => {
-    store.update(block.id, { color: next });
+    update({ color: next });
   });
   const colors = colorRow(bg, color);
 
   const borderColor = optionalColor("Borde", "Automático", block.borderColor, "#d9d9d9", (next) => {
-    store.update(block.id, { borderColor: next });
+    update({ borderColor: next });
   });
   const borderStyle = selectField(
     block.borderStyle,
@@ -579,7 +597,7 @@ function appearanceControls(block: AnyBlockData, store: EditorStore): HTMLElemen
     `${block.id}-borderstyle`,
     "Estilo de borde",
     (value) => {
-      store.update(block.id, { borderStyle: isBorderStyle(value) ? value : "solid" });
+      update({ borderStyle: isBorderStyle(value) ? value : "solid" });
     },
   );
   const borderRow = el("div", "block__inline");
@@ -592,7 +610,7 @@ function appearanceControls(block: AnyBlockData, store: EditorStore): HTMLElemen
   borderWidth.value = String(block.borderWidth);
   borderWidth.setAttribute("aria-label", "Grosor del borde en píxeles");
   borderWidth.addEventListener("input", () => {
-    store.update(block.id, { borderWidth: sanitizeMargin(borderWidth.value) });
+    update({ borderWidth: sanitizeMargin(borderWidth.value) });
   });
   const borderRadius = document.createElement("input");
   borderRadius.type = "number";
@@ -601,7 +619,7 @@ function appearanceControls(block: AnyBlockData, store: EditorStore): HTMLElemen
   borderRadius.value = String(block.borderRadius);
   borderRadius.setAttribute("aria-label", "Radio del borde en píxeles");
   borderRadius.addEventListener("input", () => {
-    store.update(block.id, { borderRadius: sanitizeMargin(borderRadius.value) });
+    update({ borderRadius: sanitizeMargin(borderRadius.value) });
   });
   const sizes = el("div", "block__margins");
   sizes.append(
@@ -664,27 +682,111 @@ export function initCanvas(
     clearPlaceholder();
     const payload = getDragPayload(event);
     if (payload === undefined) return;
-    // Los arrastres nacidos en una columna se gestionan en su propia lista;
-    // aquí se ignoran para no mover un id interno en el nivel superior.
-    if (payload.fromColumn !== undefined) return;
     const index = insertionIndexFor(listEl, event.clientY);
     if (payload.sourceId !== undefined) {
+      const from = payload.fromColumn;
+      if (from !== undefined) {
+        // Sacar un bloque de su columna al nivel superior. Antes estos
+        // arrastres se ignoraban aquí y el bloque parecía "atascado".
+        const cols = readHostColumns(from.columnsId);
+        if (cols === undefined) return;
+        const origin = cols[from.colIndex];
+        if (origin === undefined) return;
+        const at = origin.blocks.findIndex((b) => b.id === payload.sourceId);
+        if (at === -1) return;
+        const [moving] = origin.blocks.slice(at, at + 1);
+        if (moving === undefined) return;
+        const next = cloneColumns(cols);
+        const dest = next[from.colIndex];
+        if (dest === undefined) return;
+        dest.blocks = [...dest.blocks.slice(0, at), ...dest.blocks.slice(at + 1)];
+        writeHostColumns(from.columnsId, next);
+        store.insertAt(index, moving);
+        announce(liveEl, "Bloque movido al lienzo.");
+        return;
+      }
       store.move(payload.sourceId, index);
       announce(liveEl, "Bloque reordenado.");
-    } else {
-      const id = createId();
-      store.insertAt(index, createBlockData(payload.blockType, id));
-      announce(liveEl, "Bloque añadido al lienzo.");
+      return;
+    }
+    // Los arrastres nuevos nacidos en una columna los gestiona su lista.
+    if (payload.fromColumn !== undefined) return;
+    const id = createId();
+    store.insertAt(index, createBlockData(payload.blockType, id));
+    announce(liveEl, "Bloque añadido al lienzo.");
+  }
+
+  /** Busca un bloque por id en el árbol (nivel superior + columnas anidadas). */
+  function findInTree(node: AnyBlockData, targetId: string): AnyBlockData | undefined {
+    if (node.id === targetId) return node;
+    if (node.type === "columns") {
+      for (const col of node.columns) {
+        for (const child of col.blocks) {
+          const found = findInTree(child, targetId);
+          if (found !== undefined) return found;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  function findDeep(targetId: string): AnyBlockData | undefined {
+    for (const top of latestBlocks) {
+      const found = findInTree(top, targetId);
+      if (found !== undefined) return found;
+    }
+    return undefined;
+  }
+
+  function patchInTree(
+    node: AnyBlockData,
+    targetId: string,
+    patch: Partial<AnyBlockData>,
+  ): AnyBlockData {
+    if (node.id === targetId) {
+      return { ...node, ...patch, id: node.id, type: node.type } as AnyBlockData;
+    }
+    if (node.type === "columns") {
+      return {
+        ...node,
+        columns: node.columns.map((col) => ({
+          blocks: col.blocks.map((child) => patchInTree(child, targetId, patch)),
+        })),
+      } as AnyBlockData;
+    }
+    return node;
+  }
+
+  /**
+   * Escritura de cualquier bloque por id: nivel superior vía `store.update`
+   * y anidados clonando el ancestro superior (el store no cambia de forma).
+   * Sin esto, editar dentro de columnas se perdía en silencio y el Preview
+   * nunca se enteraba (origen de los fallos 1 y 2).
+   */
+  function updateDeep(targetId: string, patch: Partial<AnyBlockData>): void {
+    if (latestBlocks.some((b) => b.id === targetId)) {
+      store.update(targetId, patch);
+      return;
+    }
+    for (const ancestor of latestBlocks) {
+      if (ancestor.type !== "columns") continue;
+      if (findInTree(ancestor, targetId) === undefined) continue;
+      const next = ancestor.columns.map((col) => ({
+        blocks: col.blocks.map((child) => patchInTree(child, targetId, patch)),
+      }));
+      store.update(ancestor.id, { columns: next });
+      return;
     }
   }
 
-  /** Lee el bloque `columns` vigente por id (o undefined si ya no existe). */
-  function liveColumns(columnsId: string): AnyBlockData | undefined {
-    return latestBlocks.find((b) => b.id === columnsId);
+  /** Columnas del bloque anfitrión (superior o anidado) por id. */
+  function readHostColumns(columnsId: string): readonly ColumnData[] | undefined {
+    const host = findDeep(columnsId);
+    return host !== undefined && host.type === "columns" ? host.columns : undefined;
   }
 
-  function writeColumns(columnsId: string, columns: readonly ColumnData[]): void {
-    store.update(columnsId, { columns });
+  function writeHostColumns(columnsId: string, columns: readonly ColumnData[]): void {
+    updateDeep(columnsId, { columns });
   }
 
   function cloneColumns(columns: readonly ColumnData[]): { blocks: AnyBlockData[] }[] {
@@ -707,8 +809,8 @@ export function initCanvas(
     clearPlaceholder();
     const payload = getDragPayload(event);
     if (payload === undefined) return;
-    const host = liveColumns(columnsId);
-    if (host === undefined || host.type !== "columns") return;
+    const hostCols = readHostColumns(columnsId);
+    if (hostCols === undefined) return;
     const items = Array.from(list.querySelectorAll<HTMLElement>("[data-nested-id]"));
     let target = items.length;
     for (let i = 0; i < items.length; i += 1) {
@@ -719,7 +821,7 @@ export function initCanvas(
         break;
       }
     }
-    const next = cloneColumns(host.columns);
+    const next = cloneColumns(hostCols);
     const dest = next[colIndex];
     if (dest === undefined) return;
 
@@ -729,7 +831,7 @@ export function initCanvas(
         createBlockData(payload.blockType, createId()),
         ...dest.blocks.slice(target),
       ];
-      writeColumns(columnsId, next);
+      writeHostColumns(columnsId, next);
       announce(liveEl, "Bloque añadido a la columna.");
       return;
     }
@@ -747,15 +849,15 @@ export function initCanvas(
       let at2 = target;
       if (from.colIndex === colIndex && at < target) at2 = target - 1;
       into.blocks = [...into.blocks.slice(0, at2), moving, ...into.blocks.slice(at2)];
-      writeColumns(columnsId, next);
+      writeHostColumns(columnsId, next);
       announce(liveEl, "Bloque reordenado en la columna.");
       return;
     }
 
     if (from !== undefined) {
-      const other = liveColumns(from.columnsId);
-      if (other === undefined || other.type !== "columns") return;
-      const foreign = cloneColumns(other.columns);
+      const foreignCols = readHostColumns(from.columnsId);
+      if (foreignCols === undefined) return;
+      const foreign = cloneColumns(foreignCols);
       const origin = foreign[from.colIndex];
       if (origin === undefined) return;
       const at = origin.blocks.findIndex((b) => b.id === payload.sourceId);
@@ -767,8 +869,14 @@ export function initCanvas(
         moving,
         ...dest.blocks.slice(target),
       ];
-      writeColumns(from.columnsId, foreign);
-      writeColumns(columnsId, next);
+      // Evita ciclos: un bloque no puede entrar en su propio descendiente.
+      const movingNode = findDeep(payload.sourceId);
+      if (movingNode !== undefined && findInTree(movingNode, columnsId) !== undefined) {
+        announce(liveEl, "Ese movimiento no es posible.");
+        return;
+      }
+      writeHostColumns(from.columnsId, foreign);
+      writeHostColumns(columnsId, next);
       announce(liveEl, "Bloque movido de columna.");
       return;
     }
@@ -777,7 +885,7 @@ export function initCanvas(
     if (top === undefined) return;
     store.remove(top.id);
     dest.blocks = [...dest.blocks.slice(0, target), top, ...dest.blocks.slice(target)];
-    writeColumns(columnsId, next);
+    writeHostColumns(columnsId, next);
     announce(liveEl, "Bloque movido a la columna.");
   }
 
@@ -856,7 +964,11 @@ export function initCanvas(
     const badgeLabel = el("span", "block__type-label");
     badgeLabel.textContent = meta?.label ?? block.type;
     badge.appendChild(badgeLabel);
-    body.append(badge, renderFields(block));
+    body.append(badge, renderFields(
+      block,
+      (patch) => store.update(block.id, patch),
+      () => latestBlocks.find((b) => b.id === block.id),
+    ));
 
     const actions = el("div", "block__actions");
     const up = el("button", "block__btn");
@@ -893,9 +1005,9 @@ export function initCanvas(
 
   /** Mueve un bloque interno dentro de su columna (pasos +/-1). */
   function moveNested(columnsId: string, innerId: string, delta: number): void {
-    const host = liveColumns(columnsId);
-    if (host === undefined || host.type !== "columns") return;
-    const next = cloneColumns(host.columns);
+    const cols = readHostColumns(columnsId);
+    if (cols === undefined) return;
+    const next = cloneColumns(cols);
     for (const col of next) {
       const at = col.blocks.findIndex((b) => b.id === innerId);
       if (at === -1) continue;
@@ -906,7 +1018,7 @@ export function initCanvas(
       if (moving === undefined) return;
       copy.splice(to, 0, moving);
       col.blocks = copy;
-      writeColumns(columnsId, next);
+      writeHostColumns(columnsId, next);
       announce(liveEl, delta < 0 ? "Bloque subido." : "Bloque bajado.");
       return;
     }
@@ -914,12 +1026,12 @@ export function initCanvas(
 
   /** Quita un bloque interno de su columna. */
   function removeNested(columnsId: string, innerId: string): void {
-    const host = liveColumns(columnsId);
-    if (host === undefined || host.type !== "columns") return;
-    const next = cloneColumns(host.columns).map((col) => ({
+    const cols = readHostColumns(columnsId);
+    if (cols === undefined) return;
+    const next = cloneColumns(cols).map((col) => ({
       blocks: col.blocks.filter((b) => b.id !== innerId),
     }));
-    writeColumns(columnsId, next);
+    writeHostColumns(columnsId, next);
     announce(liveEl, "Bloque eliminado de la columna.");
   }
 
@@ -964,7 +1076,11 @@ export function initCanvas(
     const badgeLabel = el("span", "block__type-label");
     badgeLabel.textContent = meta?.label ?? inner.type;
     badge.appendChild(badgeLabel);
-    body.append(badge, renderFields(inner));
+    body.append(badge, renderFields(
+      inner,
+      (patch) => updateDeep(inner.id, patch),
+      () => findDeep(inner.id),
+    ));
 
     const actions = el("div", "block__actions");
     const up = el("button", "block__btn");
@@ -1000,9 +1116,14 @@ export function initCanvas(
    * Cuatro URLs de redes para `footer` y `social`. Lee el valor vigente en
    * cada evento (no el capturado al renderizar) para no pisar ediciones.
    */
-  function appendSocialFields(wrap: HTMLElement, blockId: string): void {
+  function appendSocialFields(
+    wrap: HTMLElement,
+    blockId: string,
+    read: BlockReader,
+    update: BlockUpdater,
+  ): void {
     const current = (): SocialUrls => {
-      const live = latestBlocks.find((b) => b.id === blockId);
+      const live = read();
       if (live !== undefined && (live.type === "footer" || live.type === "social")) {
         return live.social;
       }
@@ -1016,7 +1137,7 @@ export function initCanvas(
       input.placeholder = "https://…";
       input.setAttribute("aria-label", `URL de ${labelText} (https)`);
       input.addEventListener("input", () => {
-        store.update(blockId, {
+        update({
           social: { ...current(), [key]: sanitizeHttpsUrl(input.value) },
         });
       });
@@ -1037,7 +1158,7 @@ export function initCanvas(
     ul.appendChild(ph);
   }
 
-  function renderFields(block: AnyBlockData): HTMLElement {
+  function renderFields(block: AnyBlockData, update: BlockUpdater, read: BlockReader): HTMLElement {
     const wrap = el("div", "block__fields");
     switch (block.type) {
       case "title": {
@@ -1047,35 +1168,35 @@ export function initCanvas(
         input.placeholder = "Título";
         input.setAttribute("aria-label", "Contenido del título");
         input.addEventListener("input", () => {
-          store.update(block.id, { content: sanitizeText(input.value).slice(0, 300) });
+          update({ content: sanitizeText(input.value).slice(0, 300) });
         });
         const level = selectField(String(block.level), LEVEL_OPTIONS, "Nivel del título", `${block.id}-level`, "Nivel", (value) => {
           const levelNumber = Number(value);
-          store.update(block.id, { level: isTitleLevel(levelNumber) ? levelNumber : 2 });
+          update({ level: isTitleLevel(levelNumber) ? levelNumber : 2 });
         });
         const align = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
+          update({ align: isTextAlign(value) ? value : "left" });
         });
         const titleMargins = marginControls(
           block.id,
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         const titleSize = fontSizeControl(block.id, block.fontSize, (n) => {
-          store.update(block.id, { fontSize: n });
+          update({ fontSize: n });
         });
         wrap.append(
           labelFor("Título", input, `${block.id}-title`),
           input,
           level,
           align,
-          formatRow(block.id, block, store),
+          formatRow(block.id, block, update),
           titleSize,
           titleMargins,
         );
@@ -1088,30 +1209,30 @@ export function initCanvas(
         area.placeholder = "Texto…";
         area.setAttribute("aria-label", "Contenido del texto");
         area.addEventListener("input", () => {
-          store.update(block.id, { content: sanitizeText(area.value).slice(0, 2000) });
+          update({ content: sanitizeText(area.value).slice(0, 2000) });
         });
         const textAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
+          update({ align: isTextAlign(value) ? value : "left" });
         });
         const textMargins = marginControls(
           block.id,
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         const textSize = fontSizeControl(block.id, block.fontSize, (n) => {
-          store.update(block.id, { fontSize: n });
+          update({ fontSize: n });
         });
         wrap.append(
           labelFor("Texto", area, `${block.id}-text`),
           area,
           textAlign,
-          formatRow(block.id, block, store),
+          formatRow(block.id, block, update),
           textSize,
           textMargins,
         );
@@ -1124,14 +1245,14 @@ export function initCanvas(
         src.placeholder = "https://…";
         src.setAttribute("aria-label", "URL de la imagen (https)");
         src.addEventListener("input", () => {
-          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+          update({ src: sanitizeImageSrc(src.value) });
         });
         const alt = document.createElement("input");
         alt.type = "text";
         alt.value = block.alt;
         alt.placeholder = "Texto alternativo";
         alt.addEventListener("input", () => {
-          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+          update({ alt: sanitizeAlt(alt.value) });
         });
         wrap.append(
           labelFor("URL", src, `${block.id}-src`),
@@ -1152,16 +1273,16 @@ export function initCanvas(
             .split("\n")
             .slice(0, 20)
             .map((v) => sanitizeText(v).slice(0, 300));
-          store.update(block.id, { items: items.length > 0 ? items : [""] });
+          update({ items: items.length > 0 ? items : [""] });
         });
         const ordered = document.createElement("input");
         ordered.type = "checkbox";
         ordered.checked = block.ordered;
         ordered.addEventListener("change", () => {
-          store.update(block.id, { ordered: ordered.checked });
+          update({ ordered: ordered.checked });
         });
         const listAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
+          update({ align: isTextAlign(value) ? value : "left" });
         });
         const orderedRow = el("div", "block__inline");
         orderedRow.appendChild(inlinePair("Ordenada", ordered, `${block.id}-ordered`));
@@ -1179,31 +1300,31 @@ export function initCanvas(
         area.value = block.content;
         area.placeholder = "Cita…";
         area.addEventListener("input", () => {
-          store.update(block.id, { content: sanitizeText(area.value).slice(0, 1000) });
+          update({ content: sanitizeText(area.value).slice(0, 1000) });
         });
         const cite = document.createElement("input");
         cite.type = "text";
         cite.value = block.cite;
         cite.placeholder = "Autor (opcional)";
         cite.addEventListener("input", () => {
-          store.update(block.id, { cite: sanitizeText(cite.value).slice(0, 200) });
+          update({ cite: sanitizeText(cite.value).slice(0, 200) });
         });
         const quoteAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del texto", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isTextAlign(value) ? value : "left" });
+          update({ align: isTextAlign(value) ? value : "left" });
         });
         const quoteMargins = marginControls(
           block.id,
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         const quoteSize = fontSizeControl(block.id, block.fontSize, (n) => {
-          store.update(block.id, { fontSize: n });
+          update({ fontSize: n });
         });
         wrap.append(
           labelFor("Cita", area, `${block.id}-quote`),
@@ -1211,7 +1332,7 @@ export function initCanvas(
           labelFor("Autor", cite, `${block.id}-cite`),
           cite,
           quoteAlign,
-          formatRow(block.id, block, store),
+          formatRow(block.id, block, update),
           quoteSize,
           quoteMargins,
         );
@@ -1225,10 +1346,10 @@ export function initCanvas(
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         const thickness = document.createElement("input");
@@ -1238,7 +1359,7 @@ export function initCanvas(
         thickness.value = String(block.thickness);
         thickness.setAttribute("aria-label", "Grosor en píxeles");
         thickness.addEventListener("input", () => {
-          store.update(block.id, { thickness: sanitizeMargin(thickness.value) });
+          update({ thickness: sanitizeMargin(thickness.value) });
         });
         wrap.append(
           note,
@@ -1255,7 +1376,7 @@ export function initCanvas(
         label.placeholder = "Texto del botón";
         label.setAttribute("aria-label", "Texto del botón");
         label.addEventListener("input", () => {
-          store.update(block.id, { label: sanitizeText(label.value).slice(0, 80) });
+          update({ label: sanitizeText(label.value).slice(0, 80) });
         });
         const phone = document.createElement("input");
         phone.type = "tel";
@@ -1263,7 +1384,7 @@ export function initCanvas(
         phone.placeholder = "317 515 0821";
         phone.setAttribute("aria-label", "Celular sin indicativo, solo dígitos");
         phone.addEventListener("input", () => {
-          store.update(block.id, { phone: sanitizePhone(phone.value) });
+          update({ phone: sanitizePhone(phone.value) });
         });
         const message = document.createElement("input");
         message.type = "text";
@@ -1272,20 +1393,20 @@ export function initCanvas(
         message.setAttribute("aria-label", "Mensaje predeterminado de WhatsApp");
         message.addEventListener("input", () => {
           // En crudo (recorte + tope): se codifica para URL al renderizar, nunca toca HTML.
-          store.update(block.id, { message: message.value.trim().slice(0, 300) });
+          update({ message: message.value.trim().slice(0, 300) });
         });
         const btnAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
+          update({ align: isButtonAlign(value) ? value : "center" });
         });
         const btnMargins = marginControls(
           block.id,
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         wrap.append(
@@ -1308,7 +1429,7 @@ export function initCanvas(
         height.value = String(block.height);
         height.setAttribute("aria-label", "Altura en píxeles");
         height.addEventListener("input", () => {
-          store.update(block.id, { height: sanitizeMargin(height.value) });
+          update({ height: sanitizeMargin(height.value) });
         });
         wrap.append(labelFor("Altura (px)", height, `${block.id}-height`), height);
         break;
@@ -1320,14 +1441,14 @@ export function initCanvas(
         logo.placeholder = "https://…";
         logo.setAttribute("aria-label", "URL del logo (https)");
         logo.addEventListener("input", () => {
-          store.update(block.id, { logoSrc: sanitizeImageSrc(logo.value) });
+          update({ logoSrc: sanitizeImageSrc(logo.value) });
         });
         const logoAlt = document.createElement("input");
         logoAlt.type = "text";
         logoAlt.value = block.logoAlt;
         logoAlt.placeholder = "Texto alternativo del logo";
         logoAlt.addEventListener("input", () => {
-          store.update(block.id, { logoAlt: sanitizeAlt(logoAlt.value) });
+          update({ logoAlt: sanitizeAlt(logoAlt.value) });
         });
         const tagline = document.createElement("input");
         tagline.type = "text";
@@ -1335,19 +1456,33 @@ export function initCanvas(
         tagline.placeholder = "Tagline";
         tagline.setAttribute("aria-label", "Tagline del encabezado");
         tagline.addEventListener("input", () => {
-          store.update(block.id, { tagline: sanitizeText(tagline.value).slice(0, 200) });
+          update({ tagline: sanitizeText(tagline.value).slice(0, 200) });
+        });
+        const headerTitle = document.createElement("input");
+        headerTitle.type = "text";
+        headerTitle.value = block.title;
+        headerTitle.placeholder = "Título o marca (opcional)";
+        headerTitle.setAttribute("aria-label", "Título del encabezado (opcional)");
+        headerTitle.addEventListener("input", () => {
+          update({ title: sanitizeText(headerTitle.value).slice(0, 120) });
         });
         const headerAlign = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del encabezado", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isTextAlign(value) ? value : "center" });
+          update({ align: isTextAlign(value) ? value : "center" });
+        });
+        const textPosition = selectField(block.textPosition, HEADER_POSITION_OPTIONS, "Posición del texto", `${block.id}-textpos`, "Texto", (value) => {
+          update({ textPosition: isHeaderTextPosition(value) ? value : "bottom" });
         });
         wrap.append(
           labelFor("Logo", logo, `${block.id}-logo`),
           logo,
           labelFor("Alt logo", logoAlt, `${block.id}-logoalt`),
           logoAlt,
+          labelFor("Título", headerTitle, `${block.id}-headertitle`),
+          headerTitle,
           labelFor("Tagline", tagline, `${block.id}-tagline`),
           tagline,
           headerAlign,
+          textPosition,
         );
         break;
       }
@@ -1358,7 +1493,7 @@ export function initCanvas(
         address.placeholder = "Dirección física";
         address.setAttribute("aria-label", "Dirección física del pie");
         address.addEventListener("input", () => {
-          store.update(block.id, { address: sanitizeText(address.value).slice(0, 500) });
+          update({ address: sanitizeText(address.value).slice(0, 500) });
         });
         const unsubscribe = document.createElement("input");
         unsubscribe.type = "url";
@@ -1366,7 +1501,7 @@ export function initCanvas(
         unsubscribe.placeholder = "https://…/unsubscribe";
         unsubscribe.setAttribute("aria-label", "URL de darse de baja (https)");
         unsubscribe.addEventListener("input", () => {
-          store.update(block.id, { unsubscribeUrl: sanitizeHttpsUrl(unsubscribe.value) });
+          update({ unsubscribeUrl: sanitizeHttpsUrl(unsubscribe.value) });
         });
         wrap.append(
           labelFor("Dirección", address, `${block.id}-address`),
@@ -1374,11 +1509,11 @@ export function initCanvas(
           labelFor("Unsubscribe", unsubscribe, `${block.id}-unsub`),
           unsubscribe,
         );
-        appendSocialFields(wrap, block.id);
+        appendSocialFields(wrap, block.id, read, update);
         break;
       }
       case "social": {
-        appendSocialFields(wrap, block.id);
+        appendSocialFields(wrap, block.id, read, update);
         break;
       }
       case "banner": {
@@ -1388,14 +1523,14 @@ export function initCanvas(
         src.placeholder = "https://…";
         src.setAttribute("aria-label", "URL de la imagen (https)");
         src.addEventListener("input", () => {
-          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+          update({ src: sanitizeImageSrc(src.value) });
         });
         const alt = document.createElement("input");
         alt.type = "text";
         alt.value = block.alt;
         alt.placeholder = "Texto alternativo";
         alt.addEventListener("input", () => {
-          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+          update({ alt: sanitizeAlt(alt.value) });
         });
         const href = document.createElement("input");
         href.type = "url";
@@ -1403,7 +1538,7 @@ export function initCanvas(
         href.placeholder = "https://… (video o destino)";
         href.setAttribute("aria-label", "URL de destino (https)");
         href.addEventListener("input", () => {
-          store.update(block.id, { href: sanitizeHttpsUrl(href.value) });
+          update({ href: sanitizeHttpsUrl(href.value) });
         });
         const caption = document.createElement("input");
         caption.type = "text";
@@ -1411,7 +1546,7 @@ export function initCanvas(
         caption.placeholder = "▶ Ver video";
         caption.setAttribute("aria-label", "Texto del pie (opcional)");
         caption.addEventListener("input", () => {
-          store.update(block.id, { caption: sanitizeText(caption.value).slice(0, 120) });
+          update({ caption: sanitizeText(caption.value).slice(0, 120) });
         });
         wrap.append(
           labelFor("Imagen", src, `${block.id}-src`),
@@ -1432,14 +1567,14 @@ export function initCanvas(
         src.placeholder = "https://…";
         src.setAttribute("aria-label", "URL de la imagen del producto (https)");
         src.addEventListener("input", () => {
-          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+          update({ src: sanitizeImageSrc(src.value) });
         });
         const alt = document.createElement("input");
         alt.type = "text";
         alt.value = block.alt;
         alt.placeholder = "Texto alternativo";
         alt.addEventListener("input", () => {
-          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+          update({ alt: sanitizeAlt(alt.value) });
         });
         const name = document.createElement("input");
         name.type = "text";
@@ -1447,7 +1582,7 @@ export function initCanvas(
         name.placeholder = "Nombre del producto";
         name.setAttribute("aria-label", "Nombre del producto");
         name.addEventListener("input", () => {
-          store.update(block.id, { name: sanitizeText(name.value).slice(0, 120) });
+          update({ name: sanitizeText(name.value).slice(0, 120) });
         });
         const price = document.createElement("input");
         price.type = "text";
@@ -1455,7 +1590,7 @@ export function initCanvas(
         price.placeholder = "$0";
         price.setAttribute("aria-label", "Precio del producto");
         price.addEventListener("input", () => {
-          store.update(block.id, { price: sanitizeText(price.value).slice(0, 40) });
+          update({ price: sanitizeText(price.value).slice(0, 40) });
         });
         const url = document.createElement("input");
         url.type = "url";
@@ -1463,7 +1598,7 @@ export function initCanvas(
         url.placeholder = "https://…";
         url.setAttribute("aria-label", "URL del producto (https)");
         url.addEventListener("input", () => {
-          store.update(block.id, { url: sanitizeHttpsUrl(url.value) });
+          update({ url: sanitizeHttpsUrl(url.value) });
         });
         const buttonLabel = document.createElement("input");
         buttonLabel.type = "text";
@@ -1471,7 +1606,7 @@ export function initCanvas(
         buttonLabel.placeholder = "Comprar";
         buttonLabel.setAttribute("aria-label", "Texto del botón");
         buttonLabel.addEventListener("input", () => {
-          store.update(block.id, { buttonLabel: sanitizeText(buttonLabel.value).slice(0, 40) });
+          update({ buttonLabel: sanitizeText(buttonLabel.value).slice(0, 40) });
         });
         wrap.append(
           labelFor("Imagen", src, `${block.id}-src`),
@@ -1496,7 +1631,7 @@ export function initCanvas(
         code.placeholder = "DESCUENTO10";
         code.setAttribute("aria-label", "Código del cupón");
         code.addEventListener("input", () => {
-          store.update(block.id, { code: sanitizeText(code.value).slice(0, 40) });
+          update({ code: sanitizeText(code.value).slice(0, 40) });
         });
         const description = document.createElement("input");
         description.type = "text";
@@ -1504,7 +1639,7 @@ export function initCanvas(
         description.placeholder = "Descripción del cupón";
         description.setAttribute("aria-label", "Descripción del cupón");
         description.addEventListener("input", () => {
-          store.update(block.id, { description: sanitizeText(description.value).slice(0, 200) });
+          update({ description: sanitizeText(description.value).slice(0, 200) });
         });
         wrap.append(
           labelFor("Código", code, `${block.id}-code`),
@@ -1521,7 +1656,7 @@ export function initCanvas(
         name.placeholder = "Tu nombre";
         name.setAttribute("aria-label", "Nombre del remitente");
         name.addEventListener("input", () => {
-          store.update(block.id, { name: sanitizeText(name.value).slice(0, 120) });
+          update({ name: sanitizeText(name.value).slice(0, 120) });
         });
         const role = document.createElement("input");
         role.type = "text";
@@ -1529,7 +1664,7 @@ export function initCanvas(
         role.placeholder = "Tu cargo";
         role.setAttribute("aria-label", "Cargo del remitente");
         role.addEventListener("input", () => {
-          store.update(block.id, { role: sanitizeText(role.value).slice(0, 120) });
+          update({ role: sanitizeText(role.value).slice(0, 120) });
         });
         const photo = document.createElement("input");
         photo.type = "url";
@@ -1537,14 +1672,14 @@ export function initCanvas(
         photo.placeholder = "https://…";
         photo.setAttribute("aria-label", "URL de la foto (https)");
         photo.addEventListener("input", () => {
-          store.update(block.id, { photoSrc: sanitizeImageSrc(photo.value) });
+          update({ photoSrc: sanitizeImageSrc(photo.value) });
         });
         const photoAlt = document.createElement("input");
         photoAlt.type = "text";
         photoAlt.value = block.photoAlt;
         photoAlt.placeholder = "Texto alternativo de la foto";
         photoAlt.addEventListener("input", () => {
-          store.update(block.id, { photoAlt: sanitizeAlt(photoAlt.value) });
+          update({ photoAlt: sanitizeAlt(photoAlt.value) });
         });
         wrap.append(
           labelFor("Nombre", name, `${block.id}-name`),
@@ -1565,17 +1700,17 @@ export function initCanvas(
         src.placeholder = "https://…";
         src.setAttribute("aria-label", "URL del logotipo (https)");
         src.addEventListener("input", () => {
-          store.update(block.id, { src: sanitizeImageSrc(src.value) });
+          update({ src: sanitizeImageSrc(src.value) });
         });
         const alt = document.createElement("input");
         alt.type = "text";
         alt.value = block.alt;
         alt.placeholder = "Texto alternativo";
         alt.addEventListener("input", () => {
-          store.update(block.id, { alt: sanitizeAlt(alt.value) });
+          update({ alt: sanitizeAlt(alt.value) });
         });
         const align = selectField(block.align, TEXT_ALIGN_OPTIONS, "Alineación del logotipo", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isTextAlign(value) ? value : "center" });
+          update({ align: isTextAlign(value) ? value : "center" });
         });
         const width = document.createElement("input");
         width.type = "number";
@@ -1584,17 +1719,17 @@ export function initCanvas(
         width.value = String(block.width);
         width.setAttribute("aria-label", "Ancho en píxeles");
         width.addEventListener("input", () => {
-          store.update(block.id, { width: sanitizeImageWidth(width.value) });
+          update({ width: sanitizeImageWidth(width.value) });
         });
         const margins = marginControls(
           block.id,
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         wrap.append(
@@ -1616,7 +1751,7 @@ export function initCanvas(
         ctaLabel.placeholder = "Texto del botón";
         ctaLabel.setAttribute("aria-label", "Texto del botón");
         ctaLabel.addEventListener("input", () => {
-          store.update(block.id, { label: sanitizeText(ctaLabel.value).slice(0, 80) });
+          update({ label: sanitizeText(ctaLabel.value).slice(0, 80) });
         });
         const url = document.createElement("input");
         url.type = "url";
@@ -1624,20 +1759,20 @@ export function initCanvas(
         url.placeholder = "https://…";
         url.setAttribute("aria-label", "URL de destino (https)");
         url.addEventListener("input", () => {
-          store.update(block.id, { url: sanitizeHttpsUrl(url.value) });
+          update({ url: sanitizeHttpsUrl(url.value) });
         });
         const ctaAlign = selectField(block.align, BUTTON_ALIGN_OPTIONS, "Alineación del botón", `${block.id}-align`, "Alineación", (value) => {
-          store.update(block.id, { align: isButtonAlign(value) ? value : "center" });
+          update({ align: isButtonAlign(value) ? value : "center" });
         });
         const ctaMargins = marginControls(
           block.id,
           block.marginTop,
           block.marginBottom,
           (n) => {
-            store.update(block.id, { marginTop: n });
+            update({ marginTop: n });
           },
           (n) => {
-            store.update(block.id, { marginBottom: n });
+            update({ marginBottom: n });
           },
         );
         wrap.append(
@@ -1692,13 +1827,13 @@ export function initCanvas(
           add.addEventListener("change", () => {
             if (!isBlockType(add.value)) return;
             const type: BlockType = add.value;
-            const host = liveColumns(block.id);
+            const host = read();
             if (host === undefined || host.type !== "columns") return;
             const next = cloneColumns(host.columns);
             const dest = next[colIndex];
             if (dest === undefined) return;
             dest.blocks = [...dest.blocks, createBlockData(type, createId())];
-            writeColumns(block.id, next);
+            update({ columns: next });
             announce(liveEl, "Bloque añadido a la columna.");
           });
           colBox.append(colTitle, ul, add);
@@ -1711,10 +1846,10 @@ export function initCanvas(
         addCol.textContent = "Añadir columna";
         addCol.disabled = block.columns.length >= 3;
         addCol.addEventListener("click", () => {
-          const host = liveColumns(block.id);
+          const host = read();
           if (host === undefined || host.type !== "columns") return;
           if (host.columns.length >= 3) return;
-          writeColumns(block.id, [...cloneColumns(host.columns), { blocks: [] }]);
+          update({ columns: [...cloneColumns(host.columns), { blocks: [] }] });
           announce(liveEl, "Columna añadida.");
         });
         const delCol = document.createElement("button");
@@ -1723,10 +1858,10 @@ export function initCanvas(
         delCol.textContent = "Quitar columna";
         delCol.disabled = block.columns.length <= 2;
         delCol.addEventListener("click", () => {
-          const host = liveColumns(block.id);
+          const host = read();
           if (host === undefined || host.type !== "columns") return;
           if (host.columns.length <= 2) return;
-          writeColumns(block.id, cloneColumns(host.columns).slice(0, -1));
+          update({ columns: cloneColumns(host.columns).slice(0, -1) });
           announce(liveEl, "Columna quitada.");
         });
         colsRow.append(addCol, delCol);
@@ -1738,7 +1873,7 @@ export function initCanvas(
         headerBox.type = "checkbox";
         headerBox.checked = block.headerRow;
         headerBox.addEventListener("change", () => {
-          store.update(block.id, { headerRow: headerBox.checked });
+          update({ headerRow: headerBox.checked });
         });
         const headerRow = el("div", "block__inline");
         headerRow.appendChild(inlinePair("Fila de cabecera", headerBox, `${block.id}-headerrow`));
@@ -1748,7 +1883,7 @@ export function initCanvas(
         headers.placeholder = "Nombre | Precio";
         headers.setAttribute("aria-label", "Cabeceras separadas por |");
         headers.addEventListener("input", () => {
-          store.update(block.id, {
+          update({
             headers: headers.value.split("|").slice(0, 6).map((v) => sanitizeText(v).slice(0, 200)),
           });
         });
@@ -1758,7 +1893,7 @@ export function initCanvas(
         rows.placeholder = "Una fila por línea, celdas con |";
         rows.setAttribute("aria-label", "Filas de la tabla, una por línea");
         rows.addEventListener("input", () => {
-          store.update(block.id, {
+          update({
             rows: rows.value
               .split("\n")
               .slice(0, 20)
@@ -1775,7 +1910,7 @@ export function initCanvas(
         break;
       }
     }
-    wrap.appendChild(appearanceControls(block, store));
+    wrap.appendChild(appearanceControls(block, update));
     return wrap;
   }
 }

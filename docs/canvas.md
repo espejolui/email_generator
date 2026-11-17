@@ -45,12 +45,14 @@ Columna 2 (`main`). Edita y reordena; escribe en el `EditorStore`.
   - `lucideIcon` / `refreshIcons` — iconos Lucide tras cada render.
   - `ensurePlaceholder` / `clearPlaceholder` / `movePlaceholder` —
     indicador visual de inserción.
-  - `handleDrop` — `drop` → `insertAt` (nuevo) o `move` (reorden);
-    ignora payloads con `fromColumn` (los gestiona su columna).
-  - `liveColumns` / `writeColumns` / `cloneColumns` — lectura y edición
-    mayorista de columnas (el store no cambia).
+  - `handleDrop` — `drop` → `insertAt` (nuevo), `move` (reorden) o
+    rescate de un bloque anidado al nivel superior.
+  - `findDeep` / `updateDeep` / `readHostColumns` / `writeHostColumns` /
+    `cloneColumns` — lectura y edición mayorista de columnas, también
+    anidadas (el store no cambia de forma; `renderFields` recibe un
+    `BlockUpdater` que resuelve la ruta).
   - `handleColumnDrop` — drop en una columna: clona, acoge del nivel
-    superior o reordena/mueve internos.
+    superior o reordena/mueve internos (con guarda anti-ciclos).
   - `moveNested` / `removeNested` — subir/bajar/quitar bloque interno.
   - `renderNestedItem` — fila compacta anidada (reutiliza `renderFields`,
     admite columnas dentro de columnas).

@@ -48,7 +48,7 @@ de columnas.
 | `divider` | Separador | Degradado bulletproof (fallback sólido en Outlook) |
 | `button` | Botón WhatsApp | Enlace `wa.me` oficial (verde/azul) |
 | `spacer` | Espaciador | Altura fija Outlook-safe |
-| `header` | Encabezado | Logo + tagline de marca |
+| `header` | Encabezado | Logo + título/tagline (arriba, debajo, izquierda o derecha) |
 | `footer` | Pie de página | Dirección + darse de baja + redes (CAN-SPAM) |
 | `cta` | Botón enlace | URL genérica (Comprar ahora, Ver más…) |
 | `columns` | Columnas | 2–3 columnas con bloques anidados (cualquiera) |

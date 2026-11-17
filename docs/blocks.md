@@ -49,7 +49,8 @@ sanitiza en sus setters decorados con `@Editable()` y convierte a datos con
 - `ButtonBlock` — `label`, `phone` (dígitos, sin indicativo), `message`,
   `color`, `align`, `marginTop`, `marginBottom`.
 - `SpacerBlock` — `height` (0–80 px).
-- `HeaderBlock` — `logoSrc` (solo https/data), `logoAlt`, `tagline`, `align`.
+- `HeaderBlock` — `logoSrc` (solo https/data), `logoAlt`, `title` (opcional),
+  `tagline`, `align`, `textPosition` (`top`/`bottom`/`left`/`right`).
 - `FooterBlock` — `address`, `unsubscribeUrl` (solo https), `social`
   (urls https por red, ver `SocialUrls`).
 - `CtaBlock` — `label`, `url` (solo https), `color` (`#rrggbb` personalizado,
